@@ -808,3 +808,39 @@
 
     code { font-family: var(--font-mono); }
 
+    /* ==================== 请求更新 · 后台（2026-11-22） ==================== */
+    /* 游戏编辑弹窗：渠道多选（胶囊复选框） */
+    .chk-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chk-grid label.chk {
+      height: 32px; padding: 0 12px; border-radius: 999px; gap: 6px;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, .03);
+      color: var(--ink-2); font-size: var(--ctrl-fs-sm);
+      transition: border-color var(--dur-hover) var(--ease),
+                  background var(--dur-hover) var(--ease),
+                  color var(--dur-hover) var(--ease),
+                  box-shadow var(--dur-hover) var(--ease);
+    }
+    .chk-grid label.chk:hover { border-color: var(--line-bright); color: var(--ink); }
+    /* 不支持 :has() 的旧内核只会少了高亮，勾选与提交逻辑不受影响 */
+    .chk-grid label.chk:has(input:checked) {
+      border-color: var(--brand); background: rgba(155, 126, 216, .18);
+      color: var(--brand-bright); box-shadow: 0 0 0 3px rgba(155, 126, 216, .12);
+    }
+    .chk-grid input[type="checkbox"] { accent-color: var(--brand); }
+
+    /* 「请求更新」详情弹窗：问题列可换行、时间列不折行 */
+    .rq-problem {
+      max-width: 340px; white-space: pre-wrap; word-break: break-word;
+      color: var(--ink-2); line-height: 1.55;
+    }
+    .rq-time { white-space: nowrap; font-size: 12px; }
+
+    /* 统一确认框（core.js confirmDialog）：正文保留换行，长内容可滚动 */
+    .confirm-title.danger { color: var(--error); }
+    .confirm-body {
+      margin: 6px 0 20px; color: var(--ink-2);
+      font-size: 13.5px; line-height: 1.75;
+      white-space: pre-line; word-break: break-word;
+      max-height: 46vh; overflow-y: auto;
+    }
+

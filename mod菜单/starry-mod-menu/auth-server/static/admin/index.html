@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/admin/css/time-picker.css?v=4" />
-  <link rel="stylesheet" href="/admin/css/admin.css?v=29" />
+  <link rel="stylesheet" href="/admin/css/admin.css?v=31" />
 
 
 </head>
@@ -73,6 +73,8 @@
         <button data-page="announcements">远程公告</button>
         <button data-page="toasts">开屏Toast</button>
         <button data-page="events">设备日志</button>
+        <button data-page="requests">请求更新</button>
+        <button data-page="wishes">许愿游戏</button>
         <button data-page="audit">操作日志</button>
         <button data-page="settings">后台设置</button>
       </nav>
@@ -373,7 +375,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>game_id</th><th>名称</th><th>渠道</th><th>菜单模板</th><th>卡密</th><th>状态</th><th>操作</th></tr></thead>
+              <thead><tr><th>game_id</th><th>名称</th><th>渠道</th><th>菜单模板</th><th>卡密</th><th>状态</th><th>请求更新</th><th>操作</th></tr></thead>
               <tbody id="games-body"></tbody>
             </table>
           </div>
@@ -438,6 +440,50 @@
         </div>
       </section>
 
+      <section id="page-requests" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <h3>请求更新</h3>
+            <span class="muted" id="rq-note">只显示有访客提交过请求的游戏；一行 = 一个游戏，点「详情」看具体请求人</span>
+          </div>
+          <div class="filters">
+            <div class="field grow">
+              <label for="rq-q">搜索</label>
+              <input id="rq-q" placeholder="游戏名 / game_id / 提交人" onkeydown="if(event.key==='Enter'){loadUpdateRequests()}" />
+            </div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="loadUpdateRequests()">筛选</button></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>游戏名</th><th>game_id</th><th>渠道</th><th>人数</th><th>详情</th><th>操作</th></tr></thead>
+              <tbody id="requests-body"><tr><td colspan="6" class="empty">加载中…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-wishes" class="hidden">
+        <div class="panel">
+          <div class="toolbar">
+            <h3>许愿游戏</h3>
+            <span class="muted" id="wq-note">前台许愿的游戏，一行 = 一款，按人数从多到少；点「详情」看具体许愿人与 IP</span>
+          </div>
+          <div class="filters">
+            <div class="field grow">
+              <label for="wq-q">搜索</label>
+              <input id="wq-q" placeholder="游戏名 / 渠道 / 许愿人" onkeydown="if(event.key==='Enter'){loadWishRequests()}" />
+            </div>
+            <div class="field actions"><label>&nbsp;</label><button class="btn ghost" onclick="loadWishRequests()">筛选</button></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>游戏名</th><th>渠道</th><th>人数</th><th>详情</th><th>操作</th></tr></thead>
+              <tbody id="wishes-body"><tr><td colspan="5" class="empty">加载中…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <section id="page-audit" class="hidden">
         <div class="panel">
           <div class="toolbar">
@@ -490,15 +536,17 @@
   <div class="toast" id="toast"></div>
 
   <script src="/admin/js/time-picker.js?v=3"></script>
-  <script src="/admin/js/core.js?v=5"></script>
+  <script src="/admin/js/core.js?v=7"></script>
   <script src="/admin/js/audit.js?v=2"></script>
   <script src="/admin/js/events.js?v=6"></script>
-  <script src="/admin/js/features.js?v=2"></script>
+  <script src="/admin/js/requests.js?v=3"></script>
+  <script src="/admin/js/wishes.js?v=1"></script>
+  <script src="/admin/js/features.js?v=3"></script>
   <script src="/admin/js/dashboard.js?v=9"></script>
-  <script src="/admin/js/games.js?v=8"></script>
-  <script src="/admin/js/cards.js?v=3"></script>
-  <script src="/admin/js/announcements.js?v=2"></script>
-  <script src="/admin/js/toasts.js?v=1"></script>
+  <script src="/admin/js/games.js?v=12"></script>
+  <script src="/admin/js/cards.js?v=4"></script>
+  <script src="/admin/js/announcements.js?v=3"></script>
+  <script src="/admin/js/toasts.js?v=2"></script>
   <script src="/admin/js/settings.js?v=2"></script>
   <script>
     /* -------- modal -------- */
@@ -777,6 +825,8 @@
       if (page === 'templates') loadTemplatesTable();
       if (page === 'audit') loadAudit();
       if (page === 'events') loadEvents();
+      if (page === 'requests') loadUpdateRequests();
+      if (page === 'wishes') loadWishRequests();
     }
 
     function goManageFeatures(gameId) {

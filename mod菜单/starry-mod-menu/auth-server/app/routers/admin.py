@@ -14,9 +14,12 @@ from ..models import (
     CardKey,
     FeatureFlag,
     Game,
+    GameChannel,
     OnlinePresence,
     SessionToken,
     ToastMessage,
+    UpdateRequest,
+    WishRequest,
 )
 from ..schemas import (
     AnnouncementCreate,
@@ -118,7 +121,11 @@ def _parse_iso_dt(value: str | None, *, end_of_day: bool = False) -> datetime | 
     return dt
 
 
-def _game_dict(g: Game, feature_count: int | None = None) -> dict:
+def _game_dict(
+    g: Game, feature_count: int | None = None, channels: list[str] | None = None
+) -> dict:
+    # channels 为空列表也算「已提供」；None 表示调用方没查 → 返回空数组
+    ch_list = list(channels) if channels is not None else []
     data = {
         "id": g.id,
         "game_id": g.game_id,
@@ -127,13 +134,55 @@ def _game_dict(g: Game, feature_count: int | None = None) -> dict:
         "card_auth_enabled": bool(getattr(g, "card_auth_enabled", True)),
         "menu_template": g.menu_template,
         "download_url": getattr(g, "download_url", None),
-        "channel": getattr(g, "channel", None),
+        # 渠道多值（2026-11-22）：前台「请求更新」按此列出可选渠道
+        "channels": ch_list,
+        "request_updates_enabled": bool(getattr(g, "request_updates_enabled", True)),
         "updated_at": g.updated_at.isoformat() if getattr(g, "updated_at", None) else None,
         "created_at": g.created_at.isoformat() if g.created_at else None,
     }
     if feature_count is not None:
         data["feature_count"] = feature_count
     return data
+
+
+def _normalize_channels(raw: list[str] | None) -> list[str]:
+    """渠道多选清洗：去空白、去重、限长 64、上限 12 个、保持传入顺序。"""
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in raw or []:
+        s = str(item or "").strip()[:64]
+        if not s or s in seen:
+            continue
+        seen.add(s)
+        out.append(s)
+        if len(out) >= 12:
+            break
+    return out
+
+
+def _set_game_channels(db: Session, game_id: str, channels: list[str]) -> None:
+    """整体覆盖某游戏的渠道（先删后插，保证顺序与唯一键安全，不 commit）。"""
+    db.query(GameChannel).filter(GameChannel.game_id == game_id).delete(
+        synchronize_session=False
+    )
+    for i, ch in enumerate(channels):
+        db.add(GameChannel(game_id=game_id, channel=ch, sort_order=i))
+
+
+def _channels_map(db: Session, game_ids: list[str]) -> dict[str, list[str]]:
+    """批量取多个游戏的渠道（按 sort_order, id 排序），避免 N+1 查询。"""
+    if not game_ids:
+        return {}
+    rows = (
+        db.query(GameChannel.game_id, GameChannel.channel)
+        .filter(GameChannel.game_id.in_(game_ids))
+        .order_by(GameChannel.sort_order.asc(), GameChannel.id.asc())
+        .all()
+    )
+    out: dict[str, list[str]] = {}
+    for gid, ch in rows:
+        out.setdefault(gid, []).append(ch)
+    return out
 
 
 def _audit_dict(r: AdminAuditLog) -> dict:
@@ -475,7 +524,8 @@ def create_menu_template(
             game_id=data["id"],
             name=data["name"],
             enabled=True,
-            card_auth_enabled=True,
+            # 2026-11-23（lead 定）：模板联动自动建游戏也默认关卡密，需要卡密再手动开
+            card_auth_enabled=False,
             menu_template=data["id"],
         )
         db.add(g)
@@ -608,9 +658,12 @@ def list_games(
     counts = dict(
         db.query(FeatureFlag.game_id, func.count(FeatureFlag.id)).group_by(FeatureFlag.game_id).all()
     )
+    chan_map = _channels_map(db, [g.game_id for g in rows])
     return {
         "ok": True,
-        "data": [_game_dict(g, counts.get(g.game_id, 0)) for g in rows],
+        "data": [
+            _game_dict(g, counts.get(g.game_id, 0), chan_map.get(g.game_id, [])) for g in rows
+        ],
         "meta": _page_meta(total, page, page_size),
     }
 
@@ -632,10 +685,13 @@ def create_game(
         card_auth_enabled=body.card_auth_enabled,
         menu_template=tid,
         download_url=body.download_url or None,
-        channel=(body.channel or "").strip() or None,
     )
     db.add(g)
     db.flush()
+
+    # 渠道多值（2026-11-22）：旧的单一 channel 列已删除，只认 channels 数组
+    channels = _normalize_channels(body.channels or [])
+    _set_game_channels(db, g.game_id, channels)
 
     sync_result = None
     if body.sync_features and tid:
@@ -663,7 +719,8 @@ def create_game(
             "card_auth_enabled": bool(g.card_auth_enabled),
             "menu_template": g.menu_template,
             "download_url": g.download_url,
-            "channel": g.channel,
+            "channels": channels,
+            "request_updates_enabled": bool(getattr(g, "request_updates_enabled", True)),
             "synced_features": sync_result,
         },
     }
@@ -690,9 +747,12 @@ def update_game(
         g.menu_template = body.menu_template or None
     if body.download_url is not None:
         g.download_url = body.download_url or None
-    # 空串=清空渠道；null=不更新（与 download_url 同语义）
-    if body.channel is not None:
-        g.channel = (body.channel or "").strip() or None
+    # 渠道多值：None=不改；[]=清空；数组=整体覆盖
+    if body.channels is not None:
+        _set_game_channels(db, g.game_id, _normalize_channels(body.channels))
+    # 「请求更新」展示开关（停用更新 = False）
+    if body.request_updates_enabled is not None:
+        g.request_updates_enabled = bool(body.request_updates_enabled)
     # 显式刷新编辑时间：值未变化时 SQLAlchemy 不发 UPDATE，onupdate 不会触发
     g.updated_at = datetime.now(timezone.utc)
     record_admin_audit(
@@ -707,10 +767,12 @@ def update_game(
         commit=False,
     )
     db.commit()
+    db.refresh(g)
+    chan_map = _channels_map(db, [g.game_id])
     return {
         "ok": True,
         "message": "游戏已更新",
-        "data": _game_dict(g),
+        "data": _game_dict(g, None, chan_map.get(g.game_id, [])),
     }
 
 
@@ -738,6 +800,8 @@ def delete_game(
     # 关联数据：功能门控、在线统计、授权事件、会话（全局卡密的会话保留，只删该游戏的）
     feats = db.query(FeatureFlag).filter(FeatureFlag.game_id == gid).delete(synchronize_session=False)
     pres = db.query(OnlinePresence).filter(OnlinePresence.game_id == gid).delete(synchronize_session=False)
+    # 渠道多值（2026-11-22）：游戏删除后不该留下孤儿渠道行
+    chans = db.query(GameChannel).filter(GameChannel.game_id == gid).delete(synchronize_session=False)
     evts = db.query(AuthEvent).filter(AuthEvent.game_id == gid).delete(synchronize_session=False)
     sess = db.query(SessionToken).filter(SessionToken.game_id == gid).delete(synchronize_session=False)
     cards = 0
@@ -758,7 +822,7 @@ def delete_game(
         payload.get("sub") or "unknown",
         "games.delete",
         detail=(
-            f"游戏={gid} 功能={feats} 在线记录={pres} 事件={evts} 会话={sess}"
+            f"游戏={gid} 功能={feats} 在线记录={pres} 事件={evts} 会话={sess} 渠道={chans}"
             + (f" 卡密={cards} 设备绑定={devs}" if force else "")
             + ("（强制）" if force else "")
         ),
@@ -769,7 +833,7 @@ def delete_game(
     db.commit()
     return {
         "ok": True,
-        "message": f"游戏 {gid} 已删除（功能 {feats}、在线记录 {pres}、事件 {evts}、会话 {sess}"
+        "message": f"游戏 {gid} 已删除（功能 {feats}、在线记录 {pres}、事件 {evts}、会话 {sess}、渠道 {chans}"
         + (f"、卡密 {cards}" if force else "")
         + "）",
     }
@@ -1763,3 +1827,310 @@ def delete_toast(
     )
     db.commit()
     return {"ok": True, "message": "开屏 Toast 已删除"}
+
+
+# ==================== 请求更新（2026-11-22） ====================
+# 前台数据来自 WordPress 页面提交，经 mu-plugin 服务端转发进入 update_requests 表。
+# 后台只读展示：外层按游戏聚合，详情列出该游戏全部请求人。
+
+
+def _count_request_people(rows: list[UpdateRequest]) -> int:
+    """去重人数：同账号算 1 人；不同账号但同 (ip, device_hash) 也算同一人。
+
+    传入顺序建议按时间正序，保证「先出现的账号代表这个人」的判定稳定。
+    """
+    users: set[int] = set()
+    devices: set[tuple[str, str]] = set()
+    n = 0
+    for r in rows:
+        dev = (r.ip or "", r.device_hash or "")
+        if dev[1] and dev in devices:
+            continue
+        if r.wp_user_id in users:
+            continue
+        users.add(r.wp_user_id)
+        if dev[1]:
+            devices.add(dev)
+        n += 1
+    return n
+
+
+@router.get("/update-requests")
+def list_update_requests(
+    q: str | None = None,
+    _: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """外层列表：一行一个游戏，只包含「还有未处理请求」的游戏，按人数从多到少排序。
+
+    处理过的记录（status=done）不再出现；之后有人再次请求会写入新的 pending 记录，
+    该游戏会自动重新回到列表里。
+    """
+    query = db.query(UpdateRequest).filter(UpdateRequest.status == "pending")
+    if q and q.strip():
+        like = f"%{q.strip()}%"
+        query = query.filter(
+            or_(
+                UpdateRequest.game_name.ilike(like),
+                UpdateRequest.game_id.ilike(like),
+                UpdateRequest.wp_username.ilike(like),
+            )
+        )
+    rows = query.order_by(UpdateRequest.created_at.desc(), UpdateRequest.id.desc()).all()
+
+    groups: dict[str, list[UpdateRequest]] = {}
+    for r in rows:
+        groups.setdefault(r.game_id, []).append(r)
+
+    data = []
+    for gid, items in groups.items():
+        # 渠道合集：按最近出现顺序去重
+        channels: list[str] = []
+        for i in items:
+            if i.channel and i.channel not in channels:
+                channels.append(i.channel)
+        data.append(
+            {
+                "game_id": gid,
+                "game_name": items[0].game_name,  # 最新一条的名字快照
+                "channels": channels,
+                "people": _count_request_people(list(reversed(items))),
+                "last_at": items[0].created_at.isoformat() if items[0].created_at else None,
+            }
+        )
+    # 人数多的先排；人数相同按最近提交时间降序
+    data.sort(key=lambda x: (-int(x["people"] or 0), x["last_at"] or ""))
+    return {"ok": True, "data": data}
+
+
+@router.get("/update-requests/{game_id}")
+def update_request_detail(
+    game_id: str,
+    _: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """详情：该游戏全部请求人（最新在前），含渠道 / IP / 问题 / 时间。"""
+    rows = (
+        db.query(UpdateRequest)
+        .filter(UpdateRequest.game_id == game_id)
+        .order_by(UpdateRequest.created_at.desc(), UpdateRequest.id.desc())
+        .all()
+    )
+    if not rows:
+        raise HTTPException(404, "没有该游戏的请求记录")
+    items = [
+        {
+            "id": r.id,
+            "wp_username": r.wp_username,
+            "channel": r.channel,
+            "ip": r.ip,
+            "problem": r.problem,
+            "status": r.status,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+    return {
+        "ok": True,
+        "data": {
+            "game_id": game_id,
+            "game_name": rows[0].game_name,
+            "total": len(items),
+            "people": _count_request_people(list(reversed(rows))),
+            "items": items,
+        },
+    }
+
+
+@router.patch("/update-requests/{game_id}/done")
+def mark_update_requests_done(
+    game_id: str,
+    request: Request,
+    payload: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """把某游戏当前所有「未处理」请求标记为已处理。
+
+    处理完该游戏就从列表消失；之后有人再提交会写入新的 pending 记录，
+    该游戏会重新出现在列表里（旧记录仍保留在库里，不会被删）。
+    """
+    rows = (
+        db.query(UpdateRequest)
+        .filter(UpdateRequest.game_id == game_id, UpdateRequest.status == "pending")
+        .all()
+    )
+    if not rows:
+        raise HTTPException(404, "该游戏没有待处理的请求")
+    now = datetime.now(timezone.utc)
+    for r in rows:
+        r.status = "done"
+        r.processed_at = now
+        r.processed_by = payload.get("sub") or "unknown"
+    record_admin_audit(
+        db,
+        payload.get("sub") or "unknown",
+        "update_requests.done",
+        detail=f"游戏={game_id} 处理数量={len(rows)}",
+        ip=_client_ip(request),
+        commit=False,
+    )
+    db.commit()
+    return {
+        "ok": True,
+        "message": f"已处理 {len(rows)} 条请求",
+        "data": {"game_id": game_id, "count": len(rows)},
+    }
+
+
+# ==================== 许愿游戏（2026-11-22） ====================
+# 前台「许愿游戏」页提交后写入 wish_requests 表。游戏名由用户自由填写，
+# 后台按归一化名字的哈希 game_key 聚合，「人数」决定优先做哪款。
+
+
+def _count_wish_people(rows: list[WishRequest]) -> int:
+    """去重人数：同账号算 1 人；不同账号但同 (ip, device_hash) 也算同一人。
+
+    传入顺序按时间正序，保证「先出现的账号代表这个人」的判定稳定。
+    """
+    users: set[int] = set()
+    devices: set[tuple[str, str]] = set()
+    n = 0
+    for r in rows:
+        dev = (r.ip or "", r.device_hash or "")
+        if dev[1] and dev in devices:
+            continue
+        if r.wp_user_id in users:
+            continue
+        users.add(r.wp_user_id)
+        if dev[1]:
+            devices.add(dev)
+        n += 1
+    return n
+
+
+@router.get("/wish-requests")
+def list_wish_requests(
+    q: str | None = None,
+    _: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """外层列表：一行一个游戏，只包含「还有未处理许愿」的游戏，人数多的排前面。
+
+    处理过的记录（status=done）不再出现；之后有人再许愿会写入新的 pending 记录，
+    该游戏会自动重新回到列表里。
+    """
+    query = db.query(WishRequest).filter(WishRequest.status == "pending")
+    if q and q.strip():
+        like = f"%{q.strip()}%"
+        query = query.filter(
+            or_(
+                WishRequest.game_name.ilike(like),
+                WishRequest.channel.ilike(like),
+                WishRequest.wp_username.ilike(like),
+            )
+        )
+    rows = query.order_by(WishRequest.created_at.desc(), WishRequest.id.desc()).all()
+
+    groups: dict[str, list[WishRequest]] = {}
+    for r in rows:
+        groups.setdefault(r.game_key, []).append(r)
+
+    data = []
+    for key, items in groups.items():
+        # 渠道合集：按最近出现顺序去重
+        channels: list[str] = []
+        for i in items:
+            if i.channel and i.channel not in channels:
+                channels.append(i.channel)
+        data.append(
+            {
+                "game_key": key,
+                "game_name": items[0].game_name,  # 最新一条的名字快照
+                "channels": channels,
+                "people": _count_wish_people(list(reversed(items))),
+                "total": len(items),
+                "last_at": items[0].created_at.isoformat() if items[0].created_at else None,
+            }
+        )
+    # 人数多的先排；人数相同按最近提交时间降序（两次稳定排序，避免字符串比较方向错）
+    data.sort(key=lambda x: x["last_at"] or "", reverse=True)
+    data.sort(key=lambda x: -int(x["people"] or 0))
+    return {"ok": True, "data": data}
+
+
+@router.get("/wish-requests/{game_key}")
+def wish_request_detail(
+    game_key: str,
+    _: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """详情：该游戏全部许愿人（最新在前），含渠道 / IP / 状态 / 时间。"""
+    rows = (
+        db.query(WishRequest)
+        .filter(WishRequest.game_key == game_key)
+        .order_by(WishRequest.created_at.desc(), WishRequest.id.desc())
+        .all()
+    )
+    if not rows:
+        raise HTTPException(404, "没有该游戏的许愿记录")
+    items = [
+        {
+            "id": r.id,
+            "wp_username": r.wp_username,
+            "channel": r.channel,
+            "ip": r.ip,
+            "status": r.status,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+    return {
+        "ok": True,
+        "data": {
+            "game_key": game_key,
+            "game_name": rows[0].game_name,
+            "total": len(items),
+            "people": _count_wish_people(list(reversed(rows))),
+            "items": items,
+        },
+    }
+
+
+@router.patch("/wish-requests/{game_key}/done")
+def mark_wish_requests_done(
+    game_key: str,
+    request: Request,
+    payload: dict = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """把某游戏当前所有「未处理」许愿标记为已处理。
+
+    处理完该游戏就从列表消失；之后有人再许愿会写入新的 pending 记录，
+    该游戏会重新出现在列表里（旧记录仍保留在库里，不会被删）。
+    """
+    rows = (
+        db.query(WishRequest)
+        .filter(WishRequest.game_key == game_key, WishRequest.status == "pending")
+        .all()
+    )
+    if not rows:
+        raise HTTPException(404, "该游戏没有待处理的许愿")
+    now = datetime.now(timezone.utc)
+    for r in rows:
+        r.status = "done"
+        r.processed_at = now
+        r.processed_by = payload.get("sub") or "unknown"
+    record_admin_audit(
+        db,
+        payload.get("sub") or "unknown",
+        "wish_requests.done",
+        detail=f"游戏={rows[0].game_name}({game_key}) 处理数量={len(rows)}",
+        ip=_client_ip(request),
+        commit=False,
+    )
+    db.commit()
+    return {
+        "ok": True,
+        "message": f"已处理 {len(rows)} 条许愿",
+        "data": {"game_key": game_key, "count": len(rows)},
+    }

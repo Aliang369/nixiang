@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import sys
 import tempfile
+import uuid
 import unittest
 from unittest import mock
 
@@ -37,6 +38,7 @@ from app.database import Base, SessionLocal, engine  # noqa: E402
 from app.models import (  # noqa: E402
     CardDevice,
     CardKey,
+    FeatureFlag,
     Game,
     OnlinePresence,
     SessionToken,
@@ -77,6 +79,12 @@ def _card(db, key_code, **kw):
 class GrantV2OnlyTest(unittest.TestCase):
     def setUp(self):
         self.db = SessionLocal()
+        # 2026-11-23：掩码改为「只认后台登记位」后，游戏必须有功能记录才签得出有效票
+        if not self.db.query(Game).filter(Game.game_id == "g_v2").first():
+            self.db.add(Game(game_id="g_v2", name="v2", card_auth_enabled=True, enabled=True))
+        if not self.db.query(FeatureFlag).filter_by(game_id="g_v2", feat_num=1).first():
+            self.db.add(FeatureFlag(game_id="g_v2", feat_num=1, name="f1", enabled=True))
+        self.db.commit()
 
     def tearDown(self):
         self.db.close()
@@ -111,6 +119,7 @@ class GrantV2OnlyTest(unittest.TestCase):
 
     def test_bootstrap_open_mode_is_v2_only(self):
         self.db.add(Game(game_id="g_open", name="open", card_auth_enabled=False, enabled=True))
+        self.db.add(FeatureFlag(game_id="g_open", feat_num=1, name="f1", enabled=True))
         self.db.commit()
         boot = bootstrap_with_grant(self.db, "g_open", device_id="dev_33333333333333333333333333333333")
         self.assertIn("grant2", boot)
@@ -221,3 +230,46 @@ class GrantV2OnlyTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class OpenModeUnregisteredTest(unittest.TestCase):
+    """2026-11-23（lead 定）：未注册 game_id 不放行；掩码只认后台登记位。
+
+    依据：用户 2026-11-23「功能开关必须由服务器下发……拿不到服务器授权就不放行」
+    「未注册 game_id 就不能使用功能」。
+    """
+
+    def setUp(self):
+        self.db = SessionLocal()
+
+    def tearDown(self):
+        self.db.close()
+
+    def test_unregistered_game_gets_no_features_and_no_grant(self):
+        gid = "unreg_" + uuid.uuid4().hex[:6]
+        boot = bootstrap_with_grant(self.db, gid, device_id="dev_" + "6" * 32)
+        self.assertFalse(boot["card_auth_enabled"], "未注册按关卡密处理（隐藏账号 Tab）")
+        self.assertFalse(boot["menu_enabled"], "未注册不得放行菜单功能")
+        self.assertEqual(boot["features"], [])
+        self.assertNotIn("grant2", boot, "未注册不签票：没有票客户端就锁死功能")
+
+    def test_registered_but_no_feature_rows_masks_zero(self):
+        gid = "nofeat_" + uuid.uuid4().hex[:6]
+        self.db.add(Game(game_id=gid, name=gid, card_auth_enabled=False, enabled=True))
+        self.db.commit()
+        boot = bootstrap_with_grant(self.db, gid, device_id="dev_" + "7" * 32)
+        self.assertIn("grant2", boot)
+        mask = int(boot["grant2"].rsplit(".", 1)[0].split("|")[4])
+        self.assertEqual(mask, 0, "后台一条功能记录都没有 ⇒ 掩码 0（票无效，功能不可用）")
+
+    def test_mask_only_contains_enabled_registered_bits(self):
+        gid = "mask_" + uuid.uuid4().hex[:6]
+        self.db.add(Game(game_id=gid, name=gid, card_auth_enabled=False, enabled=True))
+        self.db.add_all([
+            FeatureFlag(game_id=gid, feat_num=1, name="a", enabled=True),
+            FeatureFlag(game_id=gid, feat_num=3, name="b", enabled=False),
+        ])
+        self.db.commit()
+        boot = bootstrap_with_grant(self.db, gid, device_id="dev_" + "8" * 32)
+        mask = int(boot["grant2"].rsplit(".", 1)[0].split("|")[4])
+        self.assertEqual(mask, 1 << 1, "只保留后台启用的位；停用位与未登记位一律 0")

@@ -36,17 +36,17 @@ def compute_feat_mask(db, game_id: str, *, menu_enabled: bool = True) -> int:
     <b>从不下发到掩码</b>。于是「后台关掉某功能」对已经拿到票的进程完全无效：
     `feat_ok()` 仍返回 true，玩家改回开关照样生效。这是把 UI 开关当安全手段的典型误用。
 
-    <h3>兼容口径（关键）</h3>
-    逐位计算只对「后台确实有记录且被显式停用」的位清 0；**其余位一律保持 1**。
-    这样：
-    - 存量游戏（`feature_flags` 全是 enabled=true）→ 掩码仍是全 1，现网行为不变；
-    - 新游戏后台还没建功能记录 → 同上；
-    - 只有管理员主动停用某位 → 该位变 0，`feat_ok(i)` 拒绝，`nativeSetFeature` 也拒绝
-      （`MainModern.cpp` 的开关/滑块/按钮/文本四条入口都查 `feat_ok`）。
-    - `menu_enabled=false` → 整票掩码 0，客户端 `apply()` 拒绝（沿用原语义）。
+    <h3>口径（2026-11-23 改，lead 定）</h3>
+    掩码**只由后台已登记且 enabled=true 的功能位构成**，其余位一律 0：
+    - 后台没登记的功能位 → 0，`feat_ok(i)` 拒绝、`nativeSetFeature` 也拒绝
+      （`MainModern.cpp` 的开关/滑块/按钮/文本四条入口都查 `feat_ok`）；
+    - 后台登记了但停用某位 → 该位 0；
+    - 后台一条功能记录都没有 → 整票掩码 0，客户端 `apply()` 拒绝（功能不可用）；
+    - `menu_enabled=false` → 整票掩码 0（维护中，沿用原语义）。
 
-    老包（32 位截断）不受影响：只有 bit ≥ 32 被停用时它们才「看不见」这个限制，
-    而那些位在老包里本来就没有功能。
+    依据：用户 2026-11-23「功能开关必须由服务器下发……拿不到服务器授权就不放行」。
+    旧口径「未登记位保持 1」= 后台从没配过也能全开，与上述要求冲突，已废止。
+    影响：出包前必须先在后台建游戏并从模板同步功能，否则菜单点了不生效（这是预期行为）。
     """
     if not menu_enabled:
         return 0
@@ -58,15 +58,16 @@ def compute_feat_mask(db, game_id: str, *, menu_enabled: bool = True) -> int:
             .all()
         )
     except Exception:  # noqa: BLE001
-        log.warning("compute_feat_mask 查询失败（%s）：退回全开", game_id, exc_info=True)
-        return FEAT_MASK_ALL
-    mask = FEAT_MASK_ALL
+        log.error("compute_feat_mask 查询失败（%s）：fail closed 返回 0", game_id, exc_info=True)
+        return 0
+    # 2026-11-23（lead 定）：掩码只由「后台已登记且 enabled」的功能位构成。
+    # 未登记 = 后台没下发 = 不允许使用（旧口径「未登记位保持 1」等于自动全开，已废止）。
+    mask = 0
     for r in rows:
         n = int(r.feat_num)
-        if n < 0 or n > 63:
+        if n < 0 or n > 63 or not bool(r.enabled):
             continue
-        if not bool(r.enabled):
-            mask &= ~(1 << n)
+        mask |= (1 << n)
     return mask & FEAT_MASK_ALL
 
 log = logging.getLogger(__name__)

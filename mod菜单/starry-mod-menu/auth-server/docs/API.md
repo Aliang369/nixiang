@@ -85,10 +85,14 @@ Base URL：`http://<服务器IP>:8000`
 响应额外字段：
 
 - `startup_toasts`：开屏 Toast 队列（`[{content,type}]`，按排序依次弹出；空则启动不弹）
-- `card_auth_enabled`：游戏是否要求卡密（`false` 时客户端隐藏账号 Tab，功能仅需联网拉取配置）
-- `menu_enabled`：游戏是否启用
-- `offline_cache_seconds`：离线缓存建议秒数
-- `grant`：仅当 `card_auth_enabled=false` 且请求带了 `device_id` 时下发
+- `card_auth_enabled`：游戏是否要求卡密（`false` 时客户端隐藏账号 Tab，功能仅需联网拉取配置）。
+  **2026-11-23 起后台新建游戏默认 `false`（关卡密）**，只有显式开启才要求卡密。
+- `menu_enabled`：游戏是否启用；**未在后台注册的 `game_id` 一律返回 `false`**
+- `offline_cache_seconds`：离线缓存建议秒数（当前 86400，断网 1 天内仍可玩）
+- `grant2`：v2 授权票，仅当 `card_auth_enabled=false`、游戏已注册且带 `device_id` 时下发；
+  未注册 `game_id` **不签票**（客户端无票即锁死全部功能）
+- `features`：后台已登记的功能开关；**只有登记且 `enabled=true` 的位进入票内掩码**，
+  未登记位与停用位一律 0（后台一条记录都没有 ⇒ 掩码 0，票无效）
 
 ---
 

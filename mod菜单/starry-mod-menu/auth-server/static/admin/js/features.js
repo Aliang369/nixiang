@@ -110,9 +110,11 @@
         menu_template = input.trim();
       }
       if (pruneExtra) {
-        const ok = confirm(
-          `将按模板「${menu_template}」同步，并删除该游戏中不在模板里的多余功能。\n已有功能的开关状态会保留。\n\n确认继续？`
-        );
+        const ok = await confirmDialog({
+          title: '同步并清理多余功能',
+          message: `将按模板「${menu_template}」同步，并删除该游戏中不在模板里的多余功能。\n已有功能的开关状态会保留。\n\n确认继续？`,
+          okText: '继续', danger: true
+        });
         if (!ok) return;
       }
       try {
@@ -137,7 +139,11 @@
     }
 
     async function deleteFeat(id, featNum, name) {
-      if (!confirm(`删除功能 #${featNum}「${name}」？\n客户端若仍有该编号项，将因门控缺失而不可用。`)) return;
+      if (!(await confirmDialog({
+        title: '删除功能',
+        message: `删除功能 #${featNum}「${name}」？\n客户端若仍有该编号项，将因门控缺失而不可用。`,
+        okText: '删除', danger: true
+      }))) return;
       try {
         await api('/v1/admin/features/' + id, { method: 'DELETE' });
         toast('已删除');

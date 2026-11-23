@@ -12,7 +12,7 @@ from sqlalchemy import text
 from .config import get_settings
 from .database import Base, SessionLocal, engine
 from .models import AdminUser, CardDevice, FeatureFlag, Game
-from .routers import admin, client
+from .routers import admin, client, public
 from .security import hash_password
 from .services.feature_sync import sync_game_features
 from .services.menu_templates import resolve_template_id, seed_builtin_templates
@@ -158,8 +158,6 @@ def ensure_schema() -> None:
                 conn.execute(
                     text("ALTER TABLE games ADD COLUMN updated_at TIMESTAMP")
                 )
-            if "channel" not in game_cols:
-                conn.execute(text("ALTER TABLE games ADD COLUMN channel VARCHAR(64)"))
             card_cols = {
                 r[1] for r in conn.execute(text("PRAGMA table_info(card_keys)")).fetchall()
             }
@@ -200,6 +198,26 @@ def ensure_schema() -> None:
                 conn.execute(
                     text("ALTER TABLE toast_messages ADD COLUMN sort_order INTEGER DEFAULT 0")
                 )
+        elif dialect.startswith("mysql") or dialect.startswith("mariadb"):
+            # MySQL 5.7 不支持 ADD COLUMN IF NOT EXISTS，只能先查 information_schema 再决定。
+            # 新表（game_channels / update_requests）由上面的 create_all 自动建立，这里只补老表新增列。
+            # 2026-11-22：「请求更新」用的游戏级开关
+            game_cols = {
+                r[0]
+                for r in conn.execute(
+                    text(
+                        "SELECT COLUMN_NAME FROM information_schema.COLUMNS "
+                        "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'games'"
+                    )
+                ).fetchall()
+            }
+            if "request_updates_enabled" not in game_cols:
+                conn.execute(
+                    text(
+                        "ALTER TABLE games ADD COLUMN request_updates_enabled "
+                        "TINYINT(1) NOT NULL DEFAULT 1"
+                    )
+                )
         elif dialect.startswith("postgres"):
             # 注意：以下均为 PostgreSQL 专有语法（ADD COLUMN IF NOT EXISTS /
             # ALTER COLUMN ... TYPE）。MySQL 不支持，会在启动时抛错。
@@ -221,9 +239,6 @@ def ensure_schema() -> None:
             )
             conn.execute(
                 text("ALTER TABLE games ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ")
-            )
-            conn.execute(
-                text("ALTER TABLE games ADD COLUMN IF NOT EXISTS channel VARCHAR(64)")
             )
             conn.execute(
                 text("ALTER TABLE card_keys ADD COLUMN IF NOT EXISTS legacy_device_ids TEXT")
@@ -396,6 +411,8 @@ def on_startup():
 
 app.include_router(client.router)
 app.include_router(admin.router)
+# 前台「请求更新」公开接口（2026-11-22）
+app.include_router(public.router)
 
 static_dir = Path(__file__).resolve().parent.parent / "static" / "admin"
 if static_dir.exists():

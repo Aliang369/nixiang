@@ -351,7 +351,11 @@
     }
     async function batchBanCards(status) {
       if (!selectedCardIds.size) return;
-      if (!confirm(`对选中的 ${selectedCardIds.size} 张执行${status === 'banned' ? '封禁' : '解封'}？`)) return;
+      if (!(await confirmDialog({
+        title: status === 'banned' ? '批量封禁卡密' : '批量解封卡密',
+        message: `对选中的 ${selectedCardIds.size} 张卡密执行${status === 'banned' ? '封禁' : '解封'}？`,
+        okText: '确定', danger: status === 'banned'
+      }))) return;
       try {
         for (const id of [...selectedCardIds]) {
           await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify({ status }) });
@@ -361,7 +365,11 @@
     }
     async function batchExtendCards(days) {
       if (!selectedCardIds.size) return;
-      if (!confirm(`对选中的 ${selectedCardIds.size} 张延期 ${days} 天？`)) return;
+      if (!(await confirmDialog({
+        title: '批量延期',
+        message: `对选中的 ${selectedCardIds.size} 张卡密延期 ${days} 天？`,
+        okText: '确定'
+      }))) return;
       try {
         await api('/v1/admin/cards/batch', {
           method: 'POST',
@@ -378,7 +386,11 @@
     }
     async function batchDeleteCards() {
       if (!selectedCardIds.size) return;
-      if (!confirm(`确认删除选中的 ${selectedCardIds.size} 张卡密？已绑定设备会被踢下线，删除后不可恢复。`)) return;
+      if (!(await confirmDialog({
+        title: '批量删除卡密',
+        message: `确认删除选中的 ${selectedCardIds.size} 张卡密？\n已绑定设备会被踢下线，删除后不可恢复。`,
+        okText: '删除', danger: true
+      }))) return;
       try {
         await api('/v1/admin/cards/batch-delete', {
           method: 'POST',
@@ -427,14 +439,18 @@
       } catch (e) { toast(e.message); }
     }
     async function forceUnbind(id) {
-      if (!confirm('强制解绑该卡全部设备？')) return;
+      if (!(await confirmDialog({
+        title: '强制解绑',
+        message: '强制解绑该卡全部设备？解绑后这些设备需要重新登录。',
+        okText: '解绑', danger: true
+      }))) return;
       try {
         await api('/v1/admin/cards/' + id, { method: 'PATCH', body: JSON.stringify({ force_unbind: true }) });
         toast('已强制解绑'); loadCards();
       } catch (e) { toast(e.message); }
     }
     async function delCard(id) {
-      if (!confirm('确认删除该卡密？')) return;
+      if (!(await confirmDialog({ title: '删除卡密', message: '确认删除该卡密？删除后不可恢复。', okText: '删除', danger: true }))) return;
       try { await api('/v1/admin/cards/' + id, { method: 'DELETE' }); toast('已删除'); loadCards(); loadDashboard(true); }
       catch (e) { toast(e.message); }
     }

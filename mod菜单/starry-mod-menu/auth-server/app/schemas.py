@@ -74,13 +74,14 @@ class GameCreate(BaseModel):
     game_id: str
     name: str
     enabled: bool = True
-    card_auth_enabled: bool = True
+    # 2026-11-23（lead 定）：默认关卡密，前台隐藏账号 Tab；只有显式传 True 才要求卡密
+    card_auth_enabled: bool = False
     # 菜单模板 id（库表 menu_templates）；空则尝试用 game_id 匹配
     menu_template: Optional[str] = None
     # 星光包下载渠道（JSON 数组 [{name,url}]，最多 3 个；兼容旧纯 URL）
     download_url: Optional[str] = Field(default=None, max_length=2048)
-    # 游戏来源渠道；选「其它」时存自定义文本，最长 64
-    channel: Optional[str] = Field(default=None, max_length=64)
+    # 游戏渠道多选（2026-11-22）：旧的单一 channel 列/字段已删除，只认这个
+    channels: Optional[list[str]] = None
     # 创建时是否自动写入模板功能（默认是）
     sync_features: bool = True
 
@@ -91,7 +92,10 @@ class GameUpdate(BaseModel):
     card_auth_enabled: Optional[bool] = None
     menu_template: Optional[str] = None
     download_url: Optional[str] = Field(default=None, max_length=2048)
-    channel: Optional[str] = Field(default=None, max_length=64)
+    # 渠道多选：None=不改；[]=清空全部渠道；数组=整体覆盖
+    channels: Optional[list[str]] = None
+    # 「请求更新」页是否展示（停用更新 = False）
+    request_updates_enabled: Optional[bool] = None
 
 
 class GameSyncFeaturesRequest(BaseModel):
@@ -203,3 +207,37 @@ class ToastUpdate(BaseModel):
     scope: Optional[str] = None
     game_id: Optional[str] = None
     sort_order: Optional[int] = None
+
+
+class UpdateRequestCreate(BaseModel):
+    """前台「请求更新」提交（2026-11-22）。
+
+    wp_user_id / wp_username 由 WordPress mu-plugin 在服务端注入，
+    前端页面无权填写；接口侧再用共享令牌校验来源。
+    """
+
+    game_id: str = Field(..., max_length=64)
+    channel: str = Field(..., max_length=64)
+    # 先由 pydantic 兜一层长度，业务层再按 100 字精确校验
+    problem: str = Field(..., max_length=400)
+    wp_user_id: int = Field(..., ge=1)
+    wp_username: str = Field(..., max_length=64)
+    # 设备指纹哈希（仅去重用，不展示）；可空
+    device_hash: Optional[str] = Field(default=None, max_length=64)
+
+
+class WishRequestCreate(BaseModel):
+    """前台「许愿游戏」提交（2026-11-22）。
+
+    游戏名由用户自由填写（没有 game_id）；渠道必须是「定制游戏」那套固定枚举。
+    wp_user_id / wp_username 由 WordPress mu-plugin 在服务端注入，
+    前端页面无权填写；接口侧再用共享令牌校验来源。
+    """
+
+    # 先由 pydantic 兜一层长度，业务层再按 40 字精确校验
+    game_name: str = Field(..., max_length=120)
+    channel: str = Field(..., max_length=64)
+    wp_user_id: int = Field(..., ge=1)
+    wp_username: str = Field(..., max_length=64)
+    # 设备指纹哈希（仅去重用，不展示）；可空
+    device_hash: Optional[str] = Field(default=None, max_length=64)

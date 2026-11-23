@@ -18,12 +18,17 @@ class Game(Base):
     # 菜单模板 id，对应 menu_templates.template_id；用于一键同步功能门控
     menu_template: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-    # True=客户端需卡密登录并显示账号 Tab；False=隐藏账号 Tab，功能仅要求联网 bootstrap
-    card_auth_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    # True=客户端需卡密登录并显示账号 Tab；False=隐藏账号 Tab（默认关卡密），功能仍由服务端下发
+    # 2026-11-23（lead 定）：默认 False —— 后台新建游戏默认关卡密，只有显式打开才要求卡密登录
+    card_auth_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     # 星光包下载渠道（JSON 数组 [{name,url}]，最多 3 个；旧数据为纯 URL 字符串）
     download_url: Mapped[Optional[str]] = mapped_column(String(2048), nullable=True)
-    # 游戏来源渠道（TapTap/九游/4399/好游快爆/B站/国际服，选「其它」存自定义文本）；空=未设置
-    channel: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # 游戏渠道：2026-11-22 起改为多值，统一由 GameChannel 表维护。
+    # 旧的 games.channel 列已在本日删除（先重启加载新代码，再 DROP COLUMN）。
+    # 「请求更新」页是否展示该游戏（2026-11-22）；False=停用更新，前台不出现
+    request_updates_enabled: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default=text("1"), nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     # 最近编辑时间（后台每次修改游戏自动刷新）
     updated_at: Mapped[Optional[datetime]] = mapped_column(
@@ -266,3 +271,102 @@ class SiteSetting(Base):
 
     key: Mapped[str] = mapped_column(String(64), primary_key=True)
     value: Mapped[str] = mapped_column(String(512), default="")
+
+
+class GameChannel(Base):
+    """游戏 ↔ 渠道（多值，2026-11-22）。
+
+    后台游戏管理页可为一个游戏配多个渠道；前台「请求更新」表单只能选其中一个。
+    渠道只由本表维护：旧的 games.channel 列已于 2026-11-22 删除。
+    """
+
+    __tablename__ = "game_channels"
+    __table_args__ = (UniqueConstraint("game_id", "channel", name="uq_game_channel"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    game_id: Mapped[str] = mapped_column(String(64), index=True)
+    channel: Mapped[str] = mapped_column(String(64))
+    # 后台展示顺序（越小越前）；留 0 表示不排序，按 id 兜底
+    sort_order: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class UpdateRequest(Base):
+    """前台「请求更新」页的提交记录（2026-11-22）。
+
+    一条 = 一个登录用户对某个游戏的一次请求。
+    限流（自然日，按北京时间算）：
+      · 同 wp_user_id + game_id → 当天最多 1 条
+      · 同 wp_user_id          → 当天最多 3 个不同 game_id
+    """
+
+    __tablename__ = "update_requests"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # 游戏：game_id 用于关联后台；game_name 是提交时快照，游戏改名/删除后仍可追溯
+    game_id: Mapped[str] = mapped_column(String(64), index=True)
+    game_name: Mapped[str] = mapped_column(String(128))
+    # 该条选择的渠道（前台单选；游戏无渠道时该游戏不会出现在前台）
+    channel: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # 问题描述：前台限 100 字，列宽留余量存 300 字符
+    problem: Mapped[str] = mapped_column(String(300))
+    # 提交人（WordPress 账号；由 mu-plugin 服务端注入，前端无法伪造）
+    wp_user_id: Mapped[int] = mapped_column(Integer, index=True)
+    wp_username: Mapped[str] = mapped_column(String(64))
+    # 权威来源 = socket peer（受信反代下取 X-Real-IP）；ip_forwarded 仅留档
+    ip: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    ip_forwarded: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    ua: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    # 设备指纹哈希（前端生成，仅用于「人数」去重，不在任何界面展示；可空）
+    device_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    # pending | done | blacklisted（已处理 / 拉黑功能暂未开放，先留字段）
+    status: Mapped[str] = mapped_column(
+        String(16), default="pending", server_default=text("'pending'"), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    processed_by: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+
+
+class WishRequest(Base):
+    """前台「许愿游戏」页的提交记录（2026-11-22）。
+
+    一条 = 一个登录用户许愿一款游戏。限流：同一 wp_user_id 每个自然日（北京时间）
+    最多 1 条，且不分游戏（全局每天只能许愿一款）。
+
+    游戏名由用户自由填写，没有 game_id：
+      · game_name 是本次提交的原文快照（最新一条用于后台展示）
+      · game_key  是归一化名字的哈希，把「原神」「 原神」「原　神」归并为同一款
+    """
+
+    __tablename__ = "wish_requests"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # 分组键：归一化名字的 sha1 前 16 位（URL 安全，可直接进接口路径）
+    game_key: Mapped[str] = mapped_column(String(32), index=True)
+    # 展示名：提交原文快照，游戏写法变化不影响历史记录追溯
+    game_name: Mapped[str] = mapped_column(String(128))
+    # 归一化后的名字（排重用，不在任何界面展示）
+    name_norm: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    # 该条选择的渠道（前台单选：与「定制游戏」下拉同一套 8 项）
+    channel: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # 许愿人（WordPress 账号；由 mu-plugin 服务端注入，前端无法伪造）
+    wp_user_id: Mapped[int] = mapped_column(Integer, index=True)
+    wp_username: Mapped[str] = mapped_column(String(64))
+    # 权威来源 = socket peer（受信反代下取 X-Real-IP）；ip_forwarded 仅留档
+    ip: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    ip_forwarded: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
+    ua: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
+    # 设备指纹哈希（前端生成，仅用于「人数」去重，不在任何界面展示；可空）
+    device_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True, index=True)
+    # pending | done | blacklisted（已处理 / 拉黑；拉黑本期未开放，先留字段）
+    status: Mapped[str] = mapped_column(
+        String(16), default="pending", server_default=text("'pending'"), nullable=False, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    processed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    processed_by: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)

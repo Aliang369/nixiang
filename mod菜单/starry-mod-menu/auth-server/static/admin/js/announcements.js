@@ -167,7 +167,7 @@
       catch (e) { toast(e.message); }
     }
     async function delAnn(id) {
-      if (!confirm('删除公告？')) return;
+      if (!(await confirmDialog({ title: '删除公告', message: '删除后前台不再展示该公告，确定删除？', okText: '删除', danger: true }))) return;
       try { await api('/v1/admin/announcements/' + id, { method: 'DELETE' }); loadAnnouncements(); }
       catch (e) { toast(e.message); }
     }

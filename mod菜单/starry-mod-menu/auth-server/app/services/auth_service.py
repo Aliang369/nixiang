@@ -811,8 +811,13 @@ def build_bootstrap(db: Session, game_id: str, logged_in: bool = False) -> dict[
     ]
 
     game = db.query(Game).filter(Game.game_id == game_id).first()
-    menu_enabled = True if game is None else bool(game.enabled)
-    card_auth_enabled = True if game is None else bool(getattr(game, "card_auth_enabled", True))
+    # 2026-11-23（lead 定）：未在后台注册的 game_id 一律按「关卡密 + 功能不可用」下发。
+    # 新包必须先到后台建游戏并连通，功能开关全部由后台下发；未注册不得放行。
+    registered = game is not None
+    menu_enabled = bool(game.enabled) if registered else False
+    card_auth_enabled = (
+        bool(getattr(game, "card_auth_enabled", False)) if registered else False
+    )
 
     return {
         "game_id": game_id,
@@ -865,12 +870,17 @@ def bootstrap_with_grant(
         did = ""
     if did:
         open_mode = not boot.get("card_auth_enabled", True)
+        # 2026-11-23（lead 定）：未注册 game_id 不签票 —— 没有票客户端就锁死全部功能，
+        # 这是「新包必须先到后台建游戏并连通才能用功能」的执行点。
+        registered = (
+            db.query(Game.id).filter(Game.game_id == game_id).first() is not None
+        )
         # 2026-11-16 分层口径（lead 定）：
         # - 需卡游戏：bootstrap 是未认证入口，**不得**写 presence；活跃只认
         #   login 成功 / 带 token 的 heartbeat 成功（两者都写 card_verified_at）。
         # - 免卡游戏：没有认证链，bootstrap 写下的只能算「观察值」，不冒充可信样本；
         #   看板 verified 不计入，后续若要匿名可信采集需客户端配合（暂不做）。
-        if open_mode:
+        if open_mode and registered:
             # 免卡游戏（card_auth_enabled=false）没有 login/heartbeat 认证链，
             # 只能保留 bootstrap 观察值（明确标为不可信样本，看板不计入 verified）。
             # 需卡游戏一律不写：那是「未认证 bootstrap 计活跃」的灌水入口。

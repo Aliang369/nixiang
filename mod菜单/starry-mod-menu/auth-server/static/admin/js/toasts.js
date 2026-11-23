@@ -96,7 +96,7 @@
       } catch (e) { toast(e.message); }
     }
     async function delToast(id) {
-      if (!confirm('删除这条开屏 Toast？')) return;
+      if (!(await confirmDialog({ title: '删除开屏 Toast', message: '删除后客户端启动时不再弹出这条提示。', okText: '删除', danger: true }))) return;
       try { await api('/v1/admin/toasts/' + id, { method: 'DELETE' }); loadToasts(); }
       catch (e) { toast(e.message); }
     }

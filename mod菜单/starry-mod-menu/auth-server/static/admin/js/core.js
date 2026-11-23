@@ -10,6 +10,8 @@
       toasts: ['开屏 Toast', '启动时依次弹出的提示'],
       audit: ['操作日志', '管理操作审计记录'],
       events: ['设备日志', '按设备查看登录成功/失败与在线状态'],
+      requests: ['请求更新', '前台提交的游戏更新请求，按游戏聚合'],
+      wishes: ['许愿游戏', '前台许愿的游戏，按人数从多到少'],
       settings: ['后台设置', '设置项整理中'],
     };
     const STATUS_CN = { unused: '未使用', active: '使用中', expired: '已过期', banned: '已封禁', exhausted: '次数用尽' };
@@ -85,6 +87,54 @@
       el.textContent = msg;
       el.classList.add('show');
       setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    /* ---------- 统一确认框（2026-11-22） ----------
+       全站所有二次确认都走这里，不再用浏览器原生 confirm()（样式不可控、与主题割裂）。
+       用法：if (!(await confirmDialog({ title:'删除游戏', message:'…', okText:'删除', danger:true }))) return;
+       点遮罩或 ESC 关闭也会 resolve(false)，不会让 Promise 永久挂起。 */
+    let __xgConfirmSettled = null;
+    window.__xgConfirm = function (v) {
+      if (typeof __xgConfirmSettled === 'function') __xgConfirmSettled(v);
+    };
+
+    function confirmDialog(opts) {
+      const o = Object.assign(
+        { title: '确认操作', message: '', okText: '确定', cancelText: '取消', danger: false },
+        opts || {}
+      );
+      // 已有确认框没关就又开一个：先按「取消」收掉旧的，避免 Promise 泄漏
+      if (typeof __xgConfirmSettled === 'function') window.__xgConfirm(false);
+      return new Promise(resolve => {
+        let done = false;
+        const finish = v => {
+          if (done) return;
+          done = true;
+          __xgConfirmSettled = null;
+          // 自己关掉弹窗：点按钮路径不会经过 closeModal，不关会留在页面上
+          if (typeof closeModal === 'function') closeModal();
+          resolve(v);
+        };
+        __xgConfirmSettled = finish;
+        openModal(`
+          <h3 class="confirm-title${o.danger ? ' danger' : ''}">${escapeHtml(o.title)}</h3>
+          <div class="confirm-body">${escapeHtml(o.message)}</div>
+          <div class="modal-actions">
+            <button class="btn ghost" onclick="__xgConfirm(false)">${escapeHtml(o.cancelText)}</button>
+            <button class="btn${o.danger ? ' danger' : ''}" onclick="__xgConfirm(true)">${escapeHtml(o.okText)}</button>
+          </div>`);
+        // 遮罩点击 / ESC 都走 closeModal，这里监听 modal-root 隐藏来兜底 resolve(false)
+        const root = document.getElementById('modal-root');
+        if (root) {
+          const obs = new MutationObserver(() => {
+            if (root.classList.contains('hidden')) {
+              obs.disconnect();
+              finish(false);
+            }
+          });
+          obs.observe(root, { attributes: true, attributeFilter: ['class'] });
+        }
+      });
     }
 
     function chineseApiError(status, message) {

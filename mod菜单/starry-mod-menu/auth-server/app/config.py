@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     login_fail_max_keys_per_ip: int = 60
     # 事件保留天数（仅用于后台展示与人工清理脚本口径，不做自动删除）
     auth_event_retention_days: int = 90
+    # ---- 2026-11-22「请求更新」 ----
+    # 前台提交用的共享令牌：由 WordPress mu-plugin 在服务端转发时通过
+    # X-Request-Token 头携带。**留空 = 提交接口直接 503（fail closed）**，
+    # 避免任何人都能伪造 wp_user_id 直接 POST。前台页面永远拿不到这个值。
+    request_submit_token: str = ""
 
 
 @lru_cache

@@ -43,10 +43,14 @@ def _req(peer: str = "10.0.0.9", headers: dict | None = None) -> Request:
     return Request({"type": "http", "headers": raw, "client": (peer, 1234)})
 
 
-def _new_game(db, prefix: str) -> str:
-    """每个测试用唯一 game_id，避免同一临时库内 UNIQUE 冲突与跨用例串味。"""
+def _new_game(db, prefix: str, card_auth: bool = True) -> str:
+    """每个测试用唯一 game_id，避免同一临时库内 UNIQUE 冲突与跨用例串味。
+
+    2026-11-23：模型默认改为关卡密后，本文件的「需卡游戏」用例必须显式声明 True，
+    否则语义被默认值悄悄改掉（免卡用例本来就显式 update 成 False）。
+    """
     gid = prefix + uuid.uuid4().hex[:6]
-    db.add(Game(game_id=gid, name=gid))
+    db.add(Game(game_id=gid, name=gid, card_auth_enabled=card_auth))
     db.commit()
     return gid
 

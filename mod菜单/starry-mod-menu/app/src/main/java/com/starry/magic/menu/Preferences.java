@@ -655,7 +655,9 @@ public class Preferences {
 
     public static boolean isCardAuthRequired() {
         with(null);
-        return sharedPreferences.getBoolean(KEY_CARD_AUTH_REQUIRED, true);
+        // 2026-11-23（lead 定）：默认按「关卡密」——首启/未联网前不显示账号 Tab、不放功能；
+        // 联通 bootstrap 后由服务端 card_auth_enabled 覆盖（后台开卡密才显示账号 Tab）。
+        return sharedPreferences.getBoolean(KEY_CARD_AUTH_REQUIRED, false);
     }
 
     public static void setCardAuthRequired(boolean required) {

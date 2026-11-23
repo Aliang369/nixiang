@@ -31,16 +31,21 @@
         <tr>
           <td><code>${escapeHtml(g.game_id)}</code></td>
           <td>${escapeHtml(g.name)}</td>
-          <td>${g.channel ? `<span class="tag">${escapeHtml(g.channel)}</span>` : '<span class="muted">—</span>'}</td>
+          <td>${(g.channels && g.channels.length)
+            ? g.channels.map(c => `<span class="tag">${escapeHtml(c)}</span>`).join(' ')
+            : '<span class="muted">—</span>'}</td>
           <td>${g.menu_template ? `<code>${escapeHtml(g.menu_template)}</code>` : '<span class="muted">未绑定</span>'}</td>
           <td>${g.card_auth_enabled !== false
             ? '<span class="tag ok">需卡密</span>'
             : '<span class="tag warn">仅联网</span>'}</td>
           <td>${g.enabled ? statusTag('active') : statusTag('banned')}</td>
+          <td>${g.request_updates_enabled === false
+            ? '<span class="tag bad">更新已停用</span>'
+            : '<span class="tag ok">接收中</span>'}</td>
           <td class="row-actions">
             <button class="btn sm ghost" onclick="openGameRowMenu(event, ${g.id})">操作 ▾</button>
           </td>
-        </tr>`).join('') || '<tr><td colspan="7" class="empty">暂无游戏或无匹配项</td></tr>';
+        </tr>`).join('') || '<tr><td colspan="8" class="empty">暂无游戏或无匹配项</td></tr>';
       renderPager('games-pager', gamesMeta, `gamesPage=${gamesPage - 1};loadGamesTable()`, `gamesPage=${gamesPage + 1};loadGamesTable()`);
     }
 
@@ -57,15 +62,18 @@
       if (!g) { toast('游戏数据不存在'); return; }
       const noCard = g.card_auth_enabled === false;
       const disabled = !g.enabled;
+      // 「请求更新」展示开关（2026-11-22）：默认开；false=已停用更新
+      const reqOff = g.request_updates_enabled === false;
       const menu = document.createElement('div');
       menu.className = 'card-row-menu';
       menu.dataset.forId = String(id);
       menu.innerHTML = `
-        <div class="crm-item" data-act="edit">编辑</div>
+        <div class="crm-item" data-act="edit">编辑游戏</div>
         <div class="crm-item" data-act="features">功能管理</div>
-        <div class="crm-item" data-act="card">${noCard ? '开卡密' : '关卡密'}</div>
-        <div class="crm-item" data-act="toggle">${disabled ? '启用' : '停用'}</div>
-        <div class="crm-item crm-danger" data-act="del">删除</div>`;
+        <div class="crm-item" data-act="card">${noCard ? '开启卡密' : '关闭卡密'}</div>
+        <div class="crm-item" data-act="toggle">${disabled ? '开启游戏' : '停止游戏'}</div>
+        <div class="crm-item" data-act="update">${reqOff ? '启用更新' : '停用更新'}</div>
+        <div class="crm-item crm-danger" data-act="del">删除游戏</div>`;
       menu.addEventListener('click', e => e.stopPropagation());
       menu.addEventListener('click', e => {
         const item = e.target.closest('.crm-item');
@@ -75,14 +83,15 @@
         if (act === 'edit') openGameModal(g);
         else if (act === 'features') goManageFeatures(g.game_id);
         else if (act === 'card') toggleCardAuth(g.id, noCard);
-        else if (act === 'toggle') toggleGame(g.id, !disabled);
+        else if (act === 'toggle') toggleGame(g.id, disabled);
+        else if (act === 'update') toggleRequestUpdates(g.id, reqOff);
         else if (act === 'del') delGame(g.id, g.game_id);
       });
       document.body.appendChild(menu);
       gameRowMenuEl = menu;
       const r = ev.currentTarget.getBoundingClientRect();
       menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 148)) + 'px';
-      menu.style.top = Math.min(r.bottom + 4, window.innerHeight - 220) + 'px';
+      menu.style.top = Math.min(r.bottom + 4, window.innerHeight - 260) + 'px';
     }
 
     function openGameModal(game) {
@@ -109,10 +118,10 @@
           </div>
           <div class="full"><label>卡密启用</label>
             <select id="m-g-card-auth">
-              <option value="1" ${(!game || game.card_auth_enabled !== false) ? 'selected' : ''}>开启（需卡密 + 显示账号 Tab）</option>
-              <option value="0" ${(game && game.card_auth_enabled === false) ? 'selected' : ''}>关闭（隐藏账号 Tab，仅需联网）</option>
+              <option value="1" ${(game && game.card_auth_enabled === true) ? 'selected' : ''}>开启（需卡密 + 显示账号 Tab）</option>
+              <option value="0" ${(!game || game.card_auth_enabled === false) ? 'selected' : ''}>关闭（隐藏账号 Tab，仅需联网）</option>
             </select>
-            <p class="muted" style="margin:6px 0 0">关闭后客户端不走卡密登录，但仍需成功拉取服务器配置才能用功能。</p>
+            <p class="muted" style="margin:6px 0 0">关闭后客户端不走卡密登录，但仍需成功拉取服务器配置才能用功能；游戏未在后台注册时功能一律不可用。</p>
           </div>
           <div class="full"><label>下载渠道（前端下载弹窗展示，最多 3 个，可空）</label>
             <div id="m-g-dl-rows"></div>
@@ -120,13 +129,13 @@
               style="width:100%;border-style:dashed;margin-top:2px">+ 添加一行</button>
             <p class="muted" style="margin:6px 0 0">每行 = 渠道 + 链接；链接留空的行保存时会被忽略。</p>
           </div>
-          <div class="full"><label>游戏渠道（前端卡片名字下展示）</label>
-            <select id="m-g-channel" onchange="onGameChannelChange()">
-              <option value="">不设置</option>
-              ${GAME_CHANNELS.map(c => `<option value="${escapeHtml(c)}" ${c === (game?.channel || '') ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
-            </select>
-            <input id="m-g-channel-custom" placeholder="输入自定义渠道名" style="display:none;margin-top:8px"
-              value="${escapeHtml(game?.channel && !GAME_CHANNELS.includes(game.channel) ? game.channel : '')}" />
+          <div class="full"><label>游戏渠道（可多选）</label>
+            <div class="chk-grid" id="m-g-channels">
+              ${GAME_CHANNELS.map(c => `<label class="chk"><input type="checkbox" value="${escapeHtml(c)}"${gameChannelPreset(game).includes(c) ? ' checked' : ''} />${escapeHtml(c)}</label>`).join('')}
+            </div>
+            <input id="m-g-channels-custom" placeholder="其它渠道：多个用英文逗号分隔，可留空" style="margin-top:10px"
+              value="${escapeHtml(gameChannelCustom(game))}" />
+            <p class="muted" style="margin:6px 0 0">前台「请求更新」只列出【已启用 + 未停用更新 + 至少 1 个渠道】的游戏；一个游戏可配多个渠道，访客提交时只能选其中一个。</p>
           </div>
           ${isEdit ? `<div class="full"><label>游戏启用</label>
             <select id="m-g-enabled"><option value="1" ${game.enabled ? 'selected' : ''}>启用</option>
@@ -147,12 +156,8 @@
       const nameEl = document.getElementById('m-g-name');
       if (nameEl) delete nameEl.dataset.autofilled;
       renderGameDownloadRows(parseGameDownloads(game?.download_url));
-      // 编辑回填：历史渠道不在预定义列表（旧「其它」自定义值）→ 选中其它并展开输入框
-      if (game?.channel && !GAME_CHANNELS.includes(game.channel)) {
-        const sel = document.getElementById('m-g-channel');
-        if (sel) sel.value = '其它';
-      }
-      onGameChannelChange();
+      // 渠道多选已在模板里按 gameChannelPreset / gameChannelCustom 回填（含旧单一 channel 兼容），
+      // 这里不再需要额外的 onGameChannelChange 调用。
       if (isEdit) {
         // 编辑模式：回填现有绑定并渲染功能预览（非静默会触发 onchange，见下）
         setGamePickerValue('m-g-template', game?.menu_template || '', true);
@@ -199,24 +204,41 @@
       if (nameEl) delete nameEl.dataset.autofilled;
     }
 
-    // ----- 游戏来源渠道（单选；「其它」可自定义输入） -----
-    const GAME_CHANNELS = ['TapTap', '九游', '4399', '好游快爆', 'B站', '国际服', '其它'];
+    // ----- 游戏来源渠道（多选；2026-11-22 起一个游戏可配多个渠道） -----
+    // 预定义列表不含「其它」：其它/自定义渠道统一走下面的自定义输入框
+    const GAME_CHANNELS = ['TapTap', '九游', '4399', '好游快爆', 'B站', '国际服'];
+    const GAME_CHANNELS_MAX = 12;
 
-    /** 渠道选「其它」时显示自定义输入框 */
-    function onGameChannelChange() {
-      const sel = document.getElementById('m-g-channel');
-      const custom = document.getElementById('m-g-channel-custom');
-      if (!sel || !custom) return;
-      custom.style.display = sel.value === '其它' ? '' : 'none';
-      if (sel.value !== '其它') custom.value = '';
+    /** 取游戏当前渠道数组（2026-11-22 起只有 channels 多值字段，旧的单一 channel 已删除） */
+    function gameChannelsOf(game) {
+      return (game && Array.isArray(game.channels)) ? game.channels.slice() : [];
     }
 
-    /** 收集渠道值：预定义原样；其它取自定义输入；未设置/清空返回 ''（PATCH 空串=清空） */
-    function collectGameChannel() {
-      const sel = document.getElementById('m-g-channel');
-      if (!sel || !sel.value) return '';
-      if (sel.value !== '其它') return sel.value;
-      return (document.getElementById('m-g-channel-custom')?.value || '').trim();
+    /** 回填：命中预定义列表的部分 → 勾选 */
+    function gameChannelPreset(game) {
+      return gameChannelsOf(game).filter(c => GAME_CHANNELS.includes(c));
+    }
+
+    /** 回填：不在预定义列表的部分（旧「其它」自定义值）→ 自定义输入框，逗号拼接 */
+    function gameChannelCustom(game) {
+      return gameChannelsOf(game).filter(c => !GAME_CHANNELS.includes(c)).join('，');
+    }
+
+    /** 收集本次勾选 + 自定义输入 → 数组（去重、去空、限 12 个） */
+    function collectGameChannels() {
+      const box = document.getElementById('m-g-channels');
+      const picked = box
+        ? Array.from(box.querySelectorAll('input[type="checkbox"]')).filter(i => i.checked).map(i => i.value)
+        : [];
+      const raw = (document.getElementById('m-g-channels-custom')?.value || '');
+      const custom = raw.split(/[,，;；\n]/).map(s => s.trim()).filter(Boolean);
+      const out = [];
+      for (const c of picked.concat(custom)) {
+        const v = String(c).slice(0, 64);
+        if (v && !out.includes(v)) out.push(v);
+        if (out.length >= GAME_CHANNELS_MAX) break;
+      }
+      return out;
     }
 
     // ----- 游戏下载渠道多行编辑（最多 3 行） -----
@@ -301,13 +323,15 @@
         const card_auth_enabled = document.getElementById('m-g-card-auth').value === '1';
         // 空渠道传空串而非 null：PATCH 中 null=不更新，无法清空
         const download_url = collectGameDownloads() || '';
-        const channel = collectGameChannel();
+        // 渠道多选：始终传数组；空数组=清空该游戏全部渠道
+        const channels = collectGameChannels();
         if (!game_id || !name) { toast('请填写完整'); return; }
+        if (!channels.length) { toast('请至少选择一个渠道（否则该游戏不会出现在「请求更新」页）'); return; }
         if (id) {
           const enabled = document.getElementById('m-g-enabled').value === '1';
           await api('/v1/admin/games/' + id, {
             method: 'PATCH',
-            body: JSON.stringify({ name, enabled, menu_template, card_auth_enabled, download_url, channel })
+            body: JSON.stringify({ name, enabled, menu_template, card_auth_enabled, download_url, channels })
           });
           if (alsoSync) {
             const g = gamesCache.find(x => x.id === id) || { game_id };
@@ -321,7 +345,7 @@
         } else {
           const data = await api('/v1/admin/games', {
             method: 'POST',
-            body: JSON.stringify({ game_id, name, menu_template, card_auth_enabled, download_url, channel, sync_features: true })
+            body: JSON.stringify({ game_id, name, menu_template, card_auth_enabled, download_url, channels, sync_features: true })
           });
           closeModal();
           await loadGames();
@@ -342,7 +366,7 @@
     async function toggleGame(id, enabled) {
       try {
         await api('/v1/admin/games/' + id, { method: 'PATCH', body: JSON.stringify({ enabled }) });
-        await loadGames(); toast('已更新');
+        await loadGames(); toast(enabled ? '已开启游戏' : '已停止游戏');
       } catch (e) { toast(e.message); }
     }
 
@@ -354,15 +378,35 @@
       } catch (e) { toast(e.message); }
     }
 
+    /** 「请求更新」展示开关（2026-11-22）：停用后前台该游戏不再出现，可随时再开 */
+    async function toggleRequestUpdates(id, enabled) {
+      try {
+        await api('/v1/admin/games/' + id, {
+          method: 'PATCH',
+          body: JSON.stringify({ request_updates_enabled: enabled })
+        });
+        await loadGames();
+        toast(enabled ? '已启用更新（前台可见）' : '已停用更新（前台不再展示）');
+      } catch (e) { toast(e.message); }
+    }
+
     async function delGame(id, gameId) {
-      if (!confirm(`删除游戏「${gameId}」？\n将同时删除该游戏的功能门控、在线统计、授权事件与会话，不可恢复。\n建议先「停用」观察几天再删。`)) return;
+      if (!(await confirmDialog({
+        title: '删除游戏',
+        message: `删除游戏「${gameId}」？\n将同时删除该游戏的功能门控、在线统计、授权事件与会话，不可恢复。\n建议先「停止游戏」观察几天再删。`,
+        okText: '删除游戏', danger: true
+      }))) return;
       try {
         const r = await api('/v1/admin/games/' + id, { method: 'DELETE' });
         toast(r.message || '已删除');
         await loadGames();
         loadDashboard(true);
       } catch (e) {
-        if (e.status === 409 && confirm(e.message + '\n\n是否强制删除（连同该游戏下全部卡密）？')) {
+        if (e.status === 409 && (await confirmDialog({
+          title: '强制删除游戏',
+          message: e.message + '\n\n是否强制删除（连同该游戏下全部卡密）？',
+          okText: '强制删除', danger: true
+        }))) {
           try {
             const r2 = await api('/v1/admin/games/' + id + '?force=1', { method: 'DELETE' });
             toast(r2.message || '已强制删除');

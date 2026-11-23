@@ -610,6 +610,7 @@ public final class NativeMenuController {
         if (text.contains("失败") || text.contains("异常") || text.contains("错误")
                 || text.contains("维护") || text.contains("请先") || text.contains("不可")
                 || text.contains("未开放") || text.contains("未登录") || text.contains("未授权")
+                || text.contains("停止使用")
                 || text.contains("已用过自助解绑")) {
             return "error";
         }
@@ -703,16 +704,20 @@ public final class NativeMenuController {
         GradientDrawable bg = MagicRes.toastBg(appContext);
         toastOverlay.setBackground(bg);
         if ("success".equals(kind)) {
+            toastIcon.setVisibility(View.VISIBLE);
             toastIcon.setImageDrawable(MagicRes.toastOk(appContext));
             toastIcon.clearColorFilter();
             bg.setStroke(dp(1), 0x4D7EE0A0);
         } else if ("error".equals(kind)) {
+            toastIcon.setVisibility(View.VISIBLE);
             toastIcon.setImageDrawable(MagicRes.toastErr(appContext));
             toastIcon.clearColorFilter();
             bg.setStroke(dp(1), 0x4DE07E7E);
         } else {
-            toastIcon.setImageDrawable(MagicRes.toastSparkles(appContext));
-            toastIcon.setColorFilter(MagicRes.BRAND);
+            // 2026-11-23（lead 定）：info Toast 去掉前面的星芒图标，只留文字。
+            // success 的对勾 / error 的叉保留。
+            toastIcon.setVisibility(View.GONE);
+            toastIcon.setImageDrawable(null);
             bg.setStroke(dp(1), 0x408B5CF6);
         }
     }
@@ -1709,6 +1714,11 @@ public final class NativeMenuController {
     }
 
     private String authBlockedToast(int featNum) {
+        // 2026-11-23（lead 定）：后台「停止游戏」后功能被整体锁掉，与卡密无关。
+        // 旧文案会落到「未授权，请先登录」，把停用说成卡密问题，误导玩家去登录。
+        if (!Preferences.isMenuEnabled()) {
+            return "游戏停止使用，功能已关闭";
+        }
         int left = ModBridge.getAceGateRemainSec();
         if (left > 0) {
             return "过检测中，还剩 " + left + " 秒";
@@ -2604,7 +2614,7 @@ public final class NativeMenuController {
             enterOpenNetworkMode(grant, cacheSec, bootJson);
             if (!menuEnabled) {
                 bridge.lockAllFeatures();
-                toasts.add("游戏维护中，功能已关闭");
+                toasts.add("游戏停止使用，功能已关闭");
             } else {
                 toasts.add("已关闭卡密验证，功能已开放");
             }
@@ -2613,13 +2623,13 @@ public final class NativeMenuController {
             toasts.add("已开启卡密验证，请登录后使用");
             if (!menuEnabled) {
                 bridge.lockAllFeatures();
-                toasts.add("游戏维护中，功能已关闭");
+                toasts.add("游戏停止使用，功能已关闭");
             }
         } else if (!cardAuth) {
             enterOpenNetworkMode(grant, cacheSec, bootJson);
             if (!menuEnabled) {
                 bridge.lockAllFeatures();
-                toasts.add("游戏维护中，功能已关闭");
+                toasts.add("游戏停止使用，功能已关闭");
             } else if (!prevMenu) {
                 toasts.add("游戏已恢复，可使用功能");
             }
@@ -2627,7 +2637,7 @@ public final class NativeMenuController {
             Preferences.setCardAuthRequired(true);
             if (!menuEnabled) {
                 bridge.lockAllFeatures();
-                toasts.add("游戏维护中，功能已关闭");
+                toasts.add("游戏停止使用，功能已关闭");
             } else {
                 bridge.syncNativeAuthorizedPublic();
                 if (!prevMenu) {
@@ -3711,7 +3721,7 @@ public final class NativeMenuController {
                 // 2026-11-21：先判「后端明确停用菜单」再决定要不要动票。
                 // 维护态服务端签的是 mask=0（grant_service.compute_feat_mask），而 native 侧
                 // SgAuth.h:257 明确拒绝 mask=0 ⇒ 若走下面的「缺票/坏票」判据，就会把原有的
-                // 「游戏维护中，功能已关闭」变成「授权票据校验未通过」，且旧的锁定/刷新语义不可达。
+                // 「游戏停止使用，功能已关闭」变成「授权票据校验未通过」，且旧的锁定/刷新语义不可达。
                 // 因此维护态：不尝试激活零掩码票、不把它当授权、不把它存成已授权会话。
                 boolean menuDisabled = !Preferences.isMenuEnabled();
                 if (menuDisabled) {
@@ -3752,7 +3762,7 @@ public final class NativeMenuController {
                         // 静默自愈成功：不打扰用户，只留证据（云机第二次打开应直接恢复会话）
                         Log.i(TAG, "[auth] cold-start self-heal ok, session restored silently");
                     } else if (!Preferences.isMenuEnabled()) {
-                        showToast("游戏维护中，功能已关闭", "error");
+                        showToast("游戏停止使用，功能已关闭", "error");
                     } else {
                         showToast("登录成功", "success");
                     }
