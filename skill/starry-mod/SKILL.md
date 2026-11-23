@@ -302,6 +302,16 @@ bash 04_scripts/_common/starry_prefs_edit.sh --seed-features 5,7,8,9,10,11,12 [-
      装机前跑 `pre_install_gate.sh --apk <成品> --base-apk <底包>`（**查12** 会自动判「底包有门闩类却没改包」）
    - `TapLoginForceWeb` 白名单**仅用于核对未迁移的老包**，新包不得再走（`SignSpoof` 证书表已随该类删除）
 5. **game_id 独立性**：新渠道/新包禁止复用其他渠道 game_id（历史事故：临时复用同 id 致后台模板错位、返工重建 so）；按命名规则独立申请并四点同步（GameConfig.h/后台/菜单模板/文档）
+6. **后台注册与功能下发（2026-11-23 起，缺一不装机）**：客户端功能**只认服务端下发的票与掩码**，包本身不再自带「装上就能用」。
+   - `games` 表必须有该 `game_id`：**未注册 ⇒ 不签票、不出功能、账号 Tab 按关卡密隐藏**。菜单能开，但点任何功能都没反应（现象极易被误判成 hook 写错）。
+   - 后台必须从菜单模板**同步功能**（`feature_flags`）：掩码只保留「后台登记且 enabled」的位，**一条记录都没有 ⇒ 掩码 0 ⇒ 票无效**；`menu_enabled=false`（后台「停止游戏」）同样整票 0。
+   - 卡密默认关闭（关卡密，不显示账号 Tab）；确需卡密才在后台打开。
+   - 装机前实测判据（出包机执行，换成自己的 id；三项任一不符 ⇒ 回后台修，不装机）：
+     ```bash
+     curl -s "https://auth.xgmfyx.cn/v1/bootstrap?game_id=<id>&device_id=dev_$(openssl rand -hex 16)" \
+       | python3 -c 'import sys,json;d=json.load(sys.stdin)["data"];print("features",len(d["features"]),"grant2","grant2" in d,"menu",d["menu_enabled"],"card",d["card_auth_enabled"])'
+     ```
+     期望：`features` = 模板功能条数、`grant2` 存在、`menu` True。
 
 **收尾交付物（icon / 菜单模板为按需产出：新游戏首次交付或用户点名时才生成）**：
 - icon 提取（按需）：交付副本放 `08_output/{游戏}/delivery_YYYYMMDD/icon_{游戏}_{源图边长}.png`（**边长＝源图自身像素，不放大**；2026-10-14 用户 m00631/m00668 定案，旧 `_512`/`_144` 双档已废弃）；`02_apks/` 只作为用户管理的不可再生输入，AI 不默认写入。
