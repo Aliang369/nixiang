@@ -12,9 +12,9 @@ Android 游戏 MOD 菜单框架。UI 为全原生「星光魔法阵」（`Native
 
 ## 快速导航
 
-- [技术架构文档](ARCHITECTURE.md) — 三层架构、引擎模块、体积控制
+- [技术架构文档（历史，勿按此开发）](docs/history/ARCHITECTURE.md) — WebView/HTML 菜单时期的三层架构留档
 - [打包注入流程](INJECT_GUIDE.md) — 编译 / 注入脚本 / 进包清单
-- [功能说明文档](功能说明文档.md) — 控件与当前功能列表
+- [功能说明文档（历史，勿按此开发）](docs/history/功能说明文档.md) — HTML 菜单控件说明留档
 - [**原生菜单「星光魔法阵」**](docs/原生菜单_星光魔法阵_20260813.md) — Activity 主路径 / 星空·花藤 / 本轮 UI 结案
 - [设计规范](设计风格美术规范.md) — UI / 美术权威规范（菜单 + 后台）
 - [设计规范索引](DESIGN_SPEC.md) — 速查
@@ -49,7 +49,8 @@ cd auth-server && docker compose up -d --build
 
 ```
 starry-mod-menu/
-├── ARCHITECTURE.md / INJECT_GUIDE.md / 功能说明文档.md / DESIGN_SPEC.md
+├── INJECT_GUIDE.md / DESIGN_SPEC.md / 设计风格美术规范.md
+├── docs/history/                        ← 已废弃 HTML 方案留档（ARCHITECTURE / 功能说明 / design-spec）
 ├── scripts/
 │   ├── inject_dwct_12.37.sh             ← 动物餐厅注入
 │   ├── inject_zhmr.sh                   ← 战魂铭人注入（当前）
@@ -164,6 +165,6 @@ NativeMenuController  →  ModBridge.java  →  Main.cpp (JNI)
 3. **`Android_<tag>.mk`** — 私有构建（差异区只填源文件组合，构建传独立 `NDK_OUT=../../obj_<tag>`）  
 4. **注入脚本** — 参考 `scripts/inject_dwct_12.37.sh` / `inject_zhmr.sh`；Cocos 若需改 jsc，另用 patch 脚本  
 
-`MainModern.cpp` / `Main.cpp` / `GameConfig.h` / 公共 `Android.mk` **零接触**。菜单外观改 `menu/NativeMenuController` + `menu/MagicRes`。详见 [ARCHITECTURE.md](ARCHITECTURE.md#七适配新游戏)。
+`MainModern.cpp` / `Main.cpp` / `GameConfig.h` / 公共 `Android.mk` **零接触**。菜单外观改 `menu/NativeMenuController` + `menu/MagicRes`。详见 [docs/GAME_MOD_GUIDE.md](docs/GAME_MOD_GUIDE.md)。
 
 （legacy 存量三处接线 `GameConfig.h` / `Main.cpp g_featureList` / 公共 `Android.mk` 仅为旧游戏保留，重新出包时顺手迁移注册表。）

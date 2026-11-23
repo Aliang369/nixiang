@@ -47,4 +47,4 @@
 3. `Games/{Game}Entry.cpp` 填注册表：`authGameId` / `waitLib` / `featureList` / 初始化参数  
 4. **先 `nm` 看导出符号体积**，再决定能否 inline hook；审查红线=共享文件（MainModern/Main/GameConfig/公共 mk）必须零改动  
 
-详见 `ARCHITECTURE.md` §4.4。
+详见 `docs/history/ARCHITECTURE.md` §4.4（历史文档，WebView/HTML 时期）。
