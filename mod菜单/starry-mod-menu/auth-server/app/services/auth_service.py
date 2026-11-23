@@ -491,17 +491,18 @@ def login_card(
             card_id=card.id,
             detail=f"{migration_from} -> {device_id}",
             result="ok",
+            identity="card",
             request=request,
         )
     # detail 只放内部标识：卡密明文不得入库（历史行已存在，脱敏属独立写操作）
     if freshly_activated:
         record_auth_event(
             db, "activate", game_id=game_id, device_id=device_id, card_id=card.id,
-            detail=f"card#{card.id}", result="ok", request=request,
+            detail=f"card#{card.id}", result="ok", identity="card", request=request,
         )
     record_auth_event(
         db, "login_ok", game_id=game_id, device_id=device_id, card_id=card.id,
-        detail=f"card#{card.id}", result="ok", request=request,
+        detail=f"card#{card.id}", result="ok", identity="card", request=request,
     )
 
     return {
@@ -549,7 +550,10 @@ def unbind_card(
     # 解绑是显式业务动作：解除本机卡关联（同时清 verified，统计不会再把它算「已验证」）
     db.query(OnlinePresence).filter(
         OnlinePresence.device_id == device_id, OnlinePresence.card_id == card.id
-    ).update({"card_id": None, "card_verified_at": None}, synchronize_session=False)
+    ).update(
+        {"card_id": None, "card_verified_at": None, "identity": "guest"},
+        synchronize_session=False,
+    )
     # 成功事件同样要带来源元数据（后台按设备追溯）；detail 只放内部标识，不放卡密
     record_auth_event(
         db,
@@ -558,6 +562,7 @@ def unbind_card(
         card_id=card.id,
         detail=f"card#{card.id}",
         result="ok",
+        identity="guest",  # 解绑后本机身份回到游客
         request=request,
     )
     db.commit()
@@ -661,6 +666,7 @@ def heartbeat(
             device_id=device_id,
             card_id=card.id,
             detail=f"session={getattr(session, 'id', None)} migrated",
+            identity="card",
             request=request,
             commit=False,
         )
@@ -858,6 +864,8 @@ def bootstrap_with_grant(
     game_id: str,
     device_id: str | None = None,
     logged_in: bool = False,
+    *,
+    count_presence: bool = True,
 ) -> dict[str, Any]:
     """公开 bootstrap；带 device_id 时刷新在线（打开菜单即计总在线）。
 
@@ -878,16 +886,16 @@ def bootstrap_with_grant(
         registered = (
             db.query(Game.id).filter(Game.game_id == game_id).first() is not None
         )
-        # 2026-11-16 分层口径（lead 定）：
-        # - 需卡游戏：bootstrap 是未认证入口，**不得**写 presence；活跃只认
-        #   login 成功 / 带 token 的 heartbeat 成功（两者都写 card_verified_at）。
-        # - 免卡游戏：没有认证链，bootstrap 写下的只能算「观察值」，不冒充可信样本；
-        #   看板 verified 不计入，后续若要匿名可信采集需客户端配合（暂不做）。
+        # 2026-11-23 口径（lead 定，游客统计改造）：
+        # - 需卡游戏的游客同样是真实用户（进游戏就会 bootstrap），**必须留痕**：
+        #   未认证 bootstrap 只写 last_seen / guest_seen_at / identity=guest，
+        #   **不写** card_id 与任何认证时间列 —— 认证事实只由 login / 带 token 心跳写入。
+        # - 灌水防护改由「可疑上报直接丢弃」（routers/client.py + services/dropstats.py）
+        #   与客户端协议证据承担，不再靠「干脆不记录」。
+        # - 未注册 game_id 仍然什么都不写（否则后台没建的游戏会污染统计）。
+        if registered and did and count_presence:
+            touch_presence(db, game_id, did)  # 游客/观察值：不写 card_id / 认证时间
         if open_mode and registered:
-            # 免卡游戏（card_auth_enabled=false）没有 login/heartbeat 认证链，
-            # 只能保留 bootstrap 观察值（明确标为不可信样本，看板不计入 verified）。
-            # 需卡游戏一律不写：那是「未认证 bootstrap 计活跃」的灌水入口。
-            touch_presence(db, game_id, did)  # 观察值：不写 card_id / 认证时间
             # 关卡密也不该是「无票自由发挥」：只发 v2 掩码票，签不出就 503
             # 先签票、后落库：签发失败整体回滚，不刷 presence
             boot["grant2"] = _issue_menu_grant(

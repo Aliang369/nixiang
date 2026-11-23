@@ -645,6 +645,13 @@ public class MenuService extends Service {
             mainHandler.postDelayed(standaloneAttachRunnable, 1500L);
         }
         mainHandler.postDelayed(heartbeatRunnable, HEARTBEAT_INTERVAL_MS);
+        // 2026-11-23 游客统计：进程内 5 分钟一次在线心跳（游客与卡密共用）。
+        // 失败/被丢弃都不动功能，异常全在 PresenceReporter 内部吞掉。
+        try {
+            com.starry.magic.auth.PresenceReporter.start(this);
+        } catch (Throwable t) {
+            Log.e(TAG, "onCreate presence reporter failed", t);
+        }
     }
 
     /** 独立助手：常驻悬浮球自愈（授权后 / 被系统回收后自动重挂） */
@@ -1148,6 +1155,10 @@ public class MenuService extends Service {
         super.onDestroy();
         stopShakeListener();
         mainHandler.removeCallbacks(heartbeatRunnable);
+        try {
+            com.starry.magic.auth.PresenceReporter.stop();
+        } catch (Throwable ignored) {
+        }
         unregisterResumeWatcher();
         hideMenu();
         instance = null;

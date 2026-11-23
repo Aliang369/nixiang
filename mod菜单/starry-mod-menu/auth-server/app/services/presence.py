@@ -28,6 +28,37 @@ def _aware(value: datetime | None) -> datetime | None:
         return value.replace(tzinfo=timezone.utc)
     return value
 
+IDENTITY_CARD = "card"
+IDENTITY_GUEST = "guest"
+
+
+def _apply_identity(
+    row: OnlinePresence,
+    now: datetime,
+    card_id: int | None,
+    verified: bool,
+) -> None:
+    """统一维护身份快照（2026-11-23 游客统计）。
+
+    - 认证上报（login / 带 token 的 heartbeat 成功）→ identity=card，并写
+      card_id / card_verified_at / last_authenticated_at；
+    - 未认证上报（bootstrap 游客上报）→ 只写 guest_seen_at；identity 仅在**当前不是 card**
+      时才置 guest —— 登录过的设备不会因为一次游客上报被改回游客（否则统计会随最后一次
+      请求漂移）。
+    """
+    row.last_seen_at = now
+    if verified:
+        row.card_id = card_id
+        row.card_verified_at = now
+        row.identity = IDENTITY_CARD
+        # 事实列只前进不倒退（并发请求携带的 now 可能先后颠倒）
+        prev = _aware(row.last_authenticated_at)
+        row.last_authenticated_at = now if prev is None or now > prev else prev
+        return
+    row.guest_seen_at = now
+    if row.identity != IDENTITY_CARD:
+        row.identity = IDENTITY_GUEST
+
 
 def touch_presence(
     db: Session,
@@ -55,13 +86,7 @@ def touch_presence(
             seconds=WRITE_COALESCE_SECONDS
         ):
             return False
-        row.last_seen_at = now
-        if verified:
-            row.card_id = card_id
-            row.card_verified_at = now
-            # 事实列只前进不倒退（并发请求携带的 now 可能先后颠倒）
-            prev = _aware(row.last_authenticated_at)
-            row.last_authenticated_at = now if prev is None or now > prev else prev
+        _apply_identity(row, now, card_id, verified)
         return True
 
     try:
@@ -75,6 +100,9 @@ def touch_presence(
                     last_authenticated_at=now if verified else None,
                     last_seen_at=now,
                     created_at=now,  # 只有新行知道「首次观察时间」；历史行为 NULL=unknown
+                    # 2026-11-23：身份快照与游客上报时间（游客行 card_id 恒为 NULL）
+                    identity=IDENTITY_CARD if verified else IDENTITY_GUEST,
+                    guest_seen_at=None if verified else now,
                 )
             )
         return True
@@ -87,13 +115,7 @@ def touch_presence(
         )
         if row is None:
             return False
-        row.last_seen_at = now
-        if verified:
-            row.card_id = card_id
-            row.card_verified_at = now
-            # 事实列只前进不倒退（并发请求携带的 now 可能先后颠倒）
-            prev = _aware(row.last_authenticated_at)
-            row.last_authenticated_at = now if prev is None or now > prev else prev
+        _apply_identity(row, now, card_id, verified)
         return True
 
 
@@ -107,5 +129,8 @@ def clear_card_presence(db: Session, card_id: int) -> int:
     return (
         db.query(OnlinePresence)
         .filter(OnlinePresence.card_id == card_id)
-        .update({"card_id": None, "card_verified_at": None}, synchronize_session=False)
+        .update(
+            {"card_id": None, "card_verified_at": None, "identity": IDENTITY_GUEST},
+            synchronize_session=False,
+        )
     )

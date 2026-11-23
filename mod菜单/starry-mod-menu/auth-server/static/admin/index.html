@@ -388,7 +388,7 @@
         <div class="panel">
           <div class="toolbar">
             <h3>设备日志</h3>
-            <span class="muted" id="ev-note">仅管理员可见；设备号列表打码、点设备号复制完整值，卡密只显示内部编号</span>
+            <span class="muted" id="ev-note">仅管理员可见；设备号列表打码、点设备号复制完整值；「身份」列区分卡密与游客（游客=没登录过卡密的设备）</span>
           </div>
           <div class="filters">
             <div class="field grow">
@@ -400,6 +400,14 @@
               <input id="ev-card-id" placeholder="如 12（留空=全部）" onkeydown="if(event.key==='Enter'){eventsPage=1;loadEvents()}" />
             </div>
             <div class="field">
+              <label for="ev-identity">身份</label>
+              <select id="ev-identity">
+                <option value="">全部</option>
+                <option value="card">卡密</option>
+                <option value="guest">游客</option>
+              </select>
+            </div>
+            <div class="field">
               <label for="ev-type">事件</label>
               <select id="ev-type">
                 <option value="">全部</option>
@@ -409,6 +417,7 @@
                 <option value="bootstrap_reject">启动配置被拒</option>
                 <option value="activate">激活</option>
                 <option value="device_migrate">设备迁移</option>
+                <option value="guest_seen">游客出现</option>
               </select>
             </div>
             <div class="field">
@@ -432,8 +441,8 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>时间</th><th>事件</th><th>结果</th><th>设备</th><th>游戏</th><th>卡密</th><th>原因</th><th>IP</th><th>重复</th><th></th></tr></thead>
-              <tbody id="events-body"><tr><td colspan="10" class="empty">加载中…</td></tr></tbody>
+              <thead><tr><th>时间</th><th>事件</th><th>身份</th><th>结果</th><th>设备</th><th>游戏</th><th>卡密</th><th>原因</th><th>IP</th><th>重复</th><th></th></tr></thead>
+              <tbody id="events-body"><tr><td colspan="11" class="empty">加载中…</td></tr></tbody>
             </table>
           </div>
           <div class="pager" id="events-pager"></div>
@@ -538,11 +547,11 @@
   <script src="/admin/js/time-picker.js?v=3"></script>
   <script src="/admin/js/core.js?v=7"></script>
   <script src="/admin/js/audit.js?v=2"></script>
-  <script src="/admin/js/events.js?v=6"></script>
+  <script src="/admin/js/events.js?v=7"></script>
   <script src="/admin/js/requests.js?v=3"></script>
   <script src="/admin/js/wishes.js?v=1"></script>
   <script src="/admin/js/features.js?v=3"></script>
-  <script src="/admin/js/dashboard.js?v=9"></script>
+  <script src="/admin/js/dashboard.js?v=10"></script>
   <script src="/admin/js/games.js?v=12"></script>
   <script src="/admin/js/cards.js?v=4"></script>
   <script src="/admin/js/announcements.js?v=4"></script>

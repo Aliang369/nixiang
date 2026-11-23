@@ -95,11 +95,15 @@ class BootstrapCardPreservationTest(unittest.TestCase):
         self.assertIsNotNone(row.card_verified_at)
 
     def test_self_reported_logged_in_is_not_verification(self):
-        # 需卡游戏：bootstrap 连观测行都不写（防灌水）
+        # 2026-11-23 口径变更（游客统计）：需卡游戏的游客也要留痕（identity=guest），
+        # 但 logged_in 自报**不得**产生任何认证事实或卡关联。
         auth_service.bootstrap_with_grant(self.db, self.gid, device_id=DEV40, logged_in=True)
-        self.assertEqual(
-            self.db.query(OnlinePresence).filter_by(game_id=self.gid, device_id=DEV40).count(), 0
-        )
+        row = self.db.query(OnlinePresence).filter_by(game_id=self.gid, device_id=DEV40).one()
+        self.assertIsNone(row.card_id)
+        self.assertIsNone(row.card_verified_at)
+        self.assertIsNone(row.last_authenticated_at)
+        self.assertEqual(row.identity, "guest")
+        self.assertIsNotNone(row.guest_seen_at)
 
     def test_self_reported_logged_in_on_open_game_is_not_verification(self):
         # 免卡游戏：可写观测行，但 logged_in 自报不得产生认证/关联
@@ -181,8 +185,14 @@ class DashboardTrustTest(unittest.TestCase):
             now = utcnow()
             db.add_all(
                 [
-                    OnlinePresence(game_id=gid, device_id=DEV32, last_seen_at=now, created_at=now),
-                    OnlinePresence(game_id=gid, device_id=DEV40, last_seen_at=now, created_at=now),
+                    OnlinePresence(
+                        game_id=gid, device_id=DEV32, last_seen_at=now, created_at=now,
+                        identity="guest", guest_seen_at=now,
+                    ),
+                    OnlinePresence(
+                        game_id=gid, device_id=DEV40, last_seen_at=now, created_at=now,
+                        identity="guest", guest_seen_at=now,
+                    ),
                     OnlinePresence(game_id=gid, device_id="devA", last_seen_at=now, created_at=now),
                     OnlinePresence(
                         game_id=gid, device_id="' OR 1=1 --", last_seen_at=now, created_at=now
@@ -444,13 +454,17 @@ class LayeredActivityTest(unittest.TestCase):
     def tearDown(self):
         self.db.close()
 
-    def test_bootstrap_never_writes_or_refreshes_card_game(self):
+    def test_bootstrap_on_card_game_records_guest_only(self):
+        # 2026-11-23 口径变更（游客统计）：需卡游戏的游客也要留痕，
+        # 但只能是 identity=guest + 无任何认证事实（不得刷成卡密/活跃认证）。
         auth_service.bootstrap_with_grant(
             self.db, self.gid_card, device_id=DEV32, logged_in=True
         )
-        self.assertEqual(
-            self.db.query(OnlinePresence).filter_by(game_id=self.gid_card).count(), 0
-        )
+        row = self.db.query(OnlinePresence).filter_by(game_id=self.gid_card, device_id=DEV32).one()
+        self.assertEqual(row.identity, "guest")
+        self.assertIsNone(row.card_id)
+        self.assertIsNone(row.card_verified_at)
+        self.assertIsNone(row.last_authenticated_at)
 
     def test_open_game_bootstrap_records_observed_only(self):
         auth_service.bootstrap_with_grant(self.db, self.gid_open, device_id=DEV32)
@@ -479,6 +493,8 @@ class LayeredActivityTest(unittest.TestCase):
         self.assertEqual(row.last_authenticated_at, durable)
 
     def test_fake_shape_rows_do_not_enter_dashboard(self):
+        # 2026-11-23：合法形态但 identity 为空 = 未经可信判定/历史行（例如已清理的假数据），
+        # 一律不得计入在线与活跃。
         now = utcnow()
         self.db.add_all(
             [
@@ -491,7 +507,7 @@ class LayeredActivityTest(unittest.TestCase):
         )
         self.db.commit()
         data = admin_router.dashboard(_={}, db=self.db)["data"]
-        self.assertEqual(data["today_active_devices"], 0, "无认证证据的合法形态行不得计活跃")
+        self.assertEqual(data["today_active_devices"], 0, "无身份证据的合法形态行不得计活跃")
         self.assertEqual(data["all_active_devices"], 0)
 
 class ClientIpTrustTest(unittest.TestCase):

@@ -17,7 +17,7 @@
         const aAc = d.all_card_devices ?? 0;
         const aAg = d.all_guest_devices ?? 0;
         document.getElementById('stats').innerHTML = `
-          <button class="stat" type="button">
+          <button class="stat" type="button" title="口径：最近 ${Math.round((d.online_window_seconds||360)/60)} 分钟内有上报的设备（登录/心跳/游客上报都算）；卡密=有认证上报的设备，游客=只有未认证上报的设备，两者按设备互斥">
             <div class="k">总在线</div><div class="v">${d.total_online}</div>
             <div class="s">设备 · 卡密 ${oc} · 游客 ${og}</div>
           </button>
@@ -35,7 +35,7 @@
         if (todayEl) {
           todayEl.style.display = '';
           todayEl.innerHTML = `
-          <button class="stat" type="button">
+          <button class="stat" type="button" title="口径：按设备去重（observed=最后上报时间）；卡密=该设备有过认证上报，游客=只有未认证上报">
             <div class="k">今日活跃</div><div class="v">${d.today_active_devices ?? 0}</div>
             <div class="s">卡密 ${tc} · 游客 ${tg}</div>
           </button>

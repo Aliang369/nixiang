@@ -150,6 +150,10 @@ STARRY_INSTALL_ONLY=1 SERIAL=<serial> bash mod菜单/starry-mod-menu/scripts/sur
 > 先例（写死 dex 下标导致启动即崩）：`10_docs/圣翼传说/技能先例.md`。
 
 ### 构建环境
+> **Windows 出包**：一键 `mod菜单/starry-mod-menu/scripts/win_build.cmd`（自动探测 SDK/JDK、
+> 临时改写 `local.properties`、构建后还原）。完整实测环境、三个坑与自检见
+> `mod菜单/starry-mod-menu/docs/win_build_20261123.md`（2026-11-23 实测 BUILD SUCCESSFUL）。
+
 
 ```bash
 export JAVA_HOME=$(/usr/libexec/java_home -v 17)  # Gradle 需 JDK 17

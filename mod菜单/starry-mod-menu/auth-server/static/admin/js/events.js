@@ -10,8 +10,14 @@
       login_ok: '登录成功', login_fail: '登录失败', heartbeat_fail: '心跳失败',
       bootstrap_reject: '启动配置被拒', activate: '激活', device_migrate: '设备迁移',
       unbind: '解绑', unbind_fail: '解绑失败', heartbeat_device_drift: '设备漂移',
-      request_invalid: '请求参数非法',
+      request_invalid: '请求参数非法', guest_seen: '游客出现',
     };
+    // 2026-11-23：身份列（卡密 / 游客）。历史行没有身份，显示「—」而不是猜。
+    const IDENTITY_LABELS = { card: '卡密', guest: '游客' };
+    function formatIdentity(v) {
+      if (!v) return '—';
+      return IDENTITY_LABELS[v] || ('未知身份（' + v + '）');
+    }
     const EVENT_RESULT_LABELS = { ok: '成功', deny: '拒绝', error: '错误' };
     // 原因码中文：覆盖后端所有已知 code；未知码保底显示中文 + 原码（不隐藏根因）
     const EVENT_REASON_LABELS = {
@@ -73,7 +79,9 @@
         const toIso = tpISOString('ev-to', true);          // 结束时间含当天 23:59:59
         if (device) qs.set('device_id', device);
         if (/^\d+$/.test(cardId)) qs.set('card_id', cardId);  // 只传内部 ID，不传卡密明文
+        const identity = document.getElementById('ev-identity')?.value || '';
         if (type) qs.set('event_type', type);
+        if (identity) qs.set('identity', identity);
         if (result) qs.set('result', result);
         if (fromIso) qs.set('from_at', fromIso);
         if (toIso) qs.set('to_at', toIso);
@@ -88,6 +96,7 @@
             <tr>
               <td>${r.created_at ? escapeHtml(fmtLocal(r.created_at)) : '—'}</td>
               <td>${escapeHtml(formatEventType(r.event_type))}</td>
+              <td>${escapeHtml(formatIdentity(r.identity))}</td>
               <td>${escapeHtml(formatResult(r.result))}</td>
               <td>${r.device_id_full
                 ? `<code class="card-key" title="点击复制完整设备号" tabindex="0" data-copy="${escapeHtml(r.device_id_full)}">${escapeHtml(r.device_id || '')}</code>`
@@ -99,11 +108,11 @@
               <td>${r.suppressed ? '+' + r.suppressed : '—'}</td>
               <td>${r.device_id_full ? `<button class="btn ghost" type="button" data-dev="${escapeHtml(r.device_id_full)}">详情</button>` : ''}</td>
             </tr>`).join('')
-          : '<tr><td colspan="10" class="empty">暂无事件或无匹配项</td></tr>';
+          : '<tr><td colspan="11" class="empty">暂无事件或无匹配项</td></tr>';
         renderPager('events-pager', meta, `eventsPage=${eventsPage - 1};loadEvents()`, `eventsPage=${eventsPage + 1};loadEvents()`);
       } catch (e) {
         document.getElementById('events-body').innerHTML =
-          `<tr><td colspan="10" class="empty">${escapeHtml(e.message)}</td></tr>`;
+          `<tr><td colspan="11" class="empty">${escapeHtml(e.message)}</td></tr>`;
         renderPager('events-pager', { total: 0, page: 1, page_size: eventsPageSize }, '', '');
         toast(e.message);
       }

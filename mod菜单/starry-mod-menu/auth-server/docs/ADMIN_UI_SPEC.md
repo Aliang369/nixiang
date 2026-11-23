@@ -26,10 +26,12 @@
 ## 表格铁律
 
 - 全列表每页 **20 条**（core.js 各 PageSize；数据看板/菜单模板为本地分页）
+- **改 `static/admin/js/*.js` 必须同步 bump `index.html` 里的 `?v=N`**（2026-11-23 事故：events.js 加了「身份」列但版本号没动，浏览器沿用旧 JS ⇒ 表头 11 列、行 10 格，结果值错位显示到「身份」下面，最后按钮列空一格）。改完强刷一次验证。
 - 无斑马纹；th/td 水平居中；td `nowrap + ellipsis`（max-width 340）
 - **`.row-actions` 禁止改 td 的 display**（flex/block 会让 td 脱离 table-cell，行分隔线错位——已踩坑两次）；按钮 inline 排列 + `white-space: nowrap`，`td.row-actions { max-width: none }`，宽度不够靠 `.table-wrap` 横向滚动
 - 卡密/游戏操作列收缩为「操作 ▾」二级下拉（time-picker.css 的 `.card-row-menu` 紫色主题）
 - 设备日志「设备」列：**展示打码值、点击复制完整设备号**（复用卡密 `code.card-key` + `data-copy`，`title="点击复制完整设备号"`）；完整值走 API 的 `device_id_full`（仅管理员可读），列表绝不直接渲染完整号
+- 设备日志「身份」列（2026-11-23）：显示 `卡密` / `游客`，历史无身份行显示 `—`；筛选区「身份」下拉可选 全部/卡密/游客，与后端 `identity` 参数同名
 
 ## 账号与交互
 

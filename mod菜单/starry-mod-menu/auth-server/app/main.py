@@ -363,6 +363,15 @@ def ensure_schema() -> None:
                         "last_authenticated_at TIMESTAMP"
                     )
                 )
+            # 2026-11-23 游客统计：identity + guest_seen_at
+            if "guest_seen_at" not in pcols:
+                conn.execute(
+                    text("ALTER TABLE online_presence ADD COLUMN guest_seen_at TIMESTAMP")
+                )
+            if "identity" not in pcols:
+                conn.execute(
+                    text("ALTER TABLE online_presence ADD COLUMN identity VARCHAR(8)")
+                )
             ecols = {
                 r[1] for r in conn.execute(text("PRAGMA table_info(auth_events)")).fetchall()
             }
@@ -375,6 +384,7 @@ def ensure_schema() -> None:
                 ("request_id", "VARCHAR(36)"),
                 ("suppressed", "INTEGER DEFAULT 0"),
                 ("last_occurred_at", "TIMESTAMP"),
+                ("identity", "VARCHAR(8)"),
             ):
                 if col not in ecols:
                     conn.execute(text(f"ALTER TABLE auth_events ADD COLUMN {col} {ddl}"))
@@ -394,6 +404,17 @@ def ensure_schema() -> None:
                     "last_authenticated_at TIMESTAMPTZ"
                 )
             )
+            conn.execute(
+                text(
+                    "ALTER TABLE online_presence ADD COLUMN IF NOT EXISTS "
+                    "guest_seen_at TIMESTAMPTZ"
+                )
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE online_presence ADD COLUMN IF NOT EXISTS identity VARCHAR(8)"
+                )
+            )
             for col, ddl in (
                 ("result", "VARCHAR(8)"),
                 ("reason", "VARCHAR(32)"),
@@ -403,10 +424,49 @@ def ensure_schema() -> None:
                 ("request_id", "VARCHAR(36)"),
                 ("suppressed", "INTEGER DEFAULT 0"),
                 ("last_occurred_at", "TIMESTAMPTZ"),
+                ("identity", "VARCHAR(8)"),
             ):
                 conn.execute(
                     text(f"ALTER TABLE auth_events ADD COLUMN IF NOT EXISTS {col} {ddl}")
                 )
+
+        elif dialect in ("mysql", "mariadb"):
+            # MySQL 5.7 不支持 ADD COLUMN IF NOT EXISTS：查 information_schema 再补。
+            # 生产库历史上靠手工 ALTER，这里补齐后新环境可自动就位（幂等）。
+            def _cols(table: str) -> set[str]:
+                rows = conn.execute(
+                    text(
+                        "SELECT COLUMN_NAME FROM information_schema.COLUMNS "
+                        "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t"
+                    ),
+                    {"t": table},
+                ).fetchall()
+                return {(r[0] or "").lower() for r in rows}
+
+            pcols = _cols("online_presence")
+            for col, ddl in (
+                ("created_at", "DATETIME NULL"),
+                ("card_verified_at", "DATETIME NULL"),
+                ("last_authenticated_at", "DATETIME NULL"),
+                ("identity", "VARCHAR(8) NULL"),
+                ("guest_seen_at", "DATETIME NULL"),
+            ):
+                if col not in pcols:
+                    conn.execute(text(f"ALTER TABLE online_presence ADD COLUMN {col} {ddl}"))
+            ecols = _cols("auth_events")
+            for col, ddl in (
+                ("result", "VARCHAR(8) NULL"),
+                ("reason", "VARCHAR(32) NULL"),
+                ("ip", "VARCHAR(45) NULL"),
+                ("ip_forwarded", "VARCHAR(45) NULL"),
+                ("ua", "VARCHAR(120) NULL"),
+                ("request_id", "VARCHAR(36) NULL"),
+                ("suppressed", "INT NOT NULL DEFAULT 0"),
+                ("last_occurred_at", "DATETIME NULL"),
+                ("identity", "VARCHAR(8) NULL"),
+            ):
+                if col not in ecols:
+                    conn.execute(text(f"ALTER TABLE auth_events ADD COLUMN {col} {ddl}"))
 
         # 一码多设备（2026-10-31）：新表由 create_all 建好；这里兜底建一次并回填老数据
         CardDevice.__table__.create(bind=conn, checkfirst=True)

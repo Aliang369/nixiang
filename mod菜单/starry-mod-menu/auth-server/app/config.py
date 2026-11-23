@@ -41,6 +41,20 @@ class Settings(BaseSettings):
     login_fail_dedupe_seconds: int = 600
     # 每个 IP 在聚合窗口内最多记录多少条「不同」失败事件，超出只计一次 rate_limited 标记
     login_fail_max_keys_per_ip: int = 60
+    # ---- 2026-11-23 游客统计 / 在线口径 ----
+    # 「在线」判定窗口（秒）。客户端 5 分钟一次低频心跳 ⇒ 窗口必须大于心跳周期（默认 360）。
+    # 看板总在线、分游戏在线、设备详情共用同一个值，禁止各处硬编码。
+    online_window_seconds: int = 360
+    # 客户端上报的 APK 证书 SHA-256 白名单（逗号分隔，小写 hex）。
+    # 空 = 不校验（兼容未改造的包）；配置后不在名单内的 bootstrap/心跳一律按可疑丢弃。
+    client_cert_sha256: str = ""
+    # 客户端最低 versionCode；0 = 不校验。低于此值按可疑丢弃（只影响统计，不影响功能）。
+    client_min_version_code: int = 0
+    # 可疑上报计数的落盘路径（只存「原因 + 累计次数」，不存设备号/明细，不进后台看板）
+    drop_stats_path: str = "data/dropped_stats.jsonl"
+    # 同一 IP 每小时最多允许出现多少台「首次见到的设备」；0 = 不限制（默认关闭，
+    # 避免 NAT 大出口/网吧误杀）。开启后超出部分按可疑丢弃，只计数不落表。
+    guest_max_new_devices_per_ip_per_hour: int = 0
     # 事件保留天数（仅用于后台展示与人工清理脚本口径，不做自动删除）
     auth_event_retention_days: int = 90
     # ---- 2026-11-22「请求更新」 ----

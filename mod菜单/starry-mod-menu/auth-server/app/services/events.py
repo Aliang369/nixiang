@@ -21,6 +21,9 @@ _lock = Lock()
 _fail_keys: dict[str, dict[str, float]] = defaultdict(dict)
 # 触发 key 上限而未落库的累计次数（不静默丢弃：后台看板可见）
 _overflow: dict[str, int] = defaultdict(int)
+# guest_seen 事件节流：key(game|device) -> 上次写入时间
+_guest_seen: dict[str, float] = {}
+GUEST_SEEN_INTERVAL_SECONDS = 86400.0
 
 
 def failure_overflow_since_start() -> int:
@@ -64,6 +67,7 @@ def record_auth_event(
     detail: str | None = None,
     result: str | None = None,
     reason: str | None = None,
+    identity: str | None = None,
     request: Request | None = None,
     ip: str | None = None,
     ip_forwarded: str | None = None,
@@ -89,10 +93,46 @@ def record_auth_event(
             ip_forwarded=_clip(ip_forwarded or meta.get("ip_forwarded"), 45),
             ua=_clip(ua or meta.get("ua"), 120),
             request_id=_clip(request_id or meta.get("request_id"), 36),
+            identity=(identity or None) and identity[:8],
         )
     )
     if commit:
         db.commit()
+
+
+def record_guest_seen(
+    db: Session,
+    *,
+    game_id: str,
+    device_id: str,
+    request: Request | None = None,
+    commit: bool = True,
+) -> bool:
+    """游客出现事件（2026-11-23）：同一设备同一游戏 24 小时内最多记 1 条。
+
+    设备日志靠它区分「游客」身份；成功路径不做失败聚合，但也不允许刷屏。
+    返回是否真的插入（False=窗口内已记过）。
+    """
+    key = f"{game_id}|{device_id}"
+    now = time.time()
+    with _lock:
+        if len(_guest_seen) > 200000:
+            _guest_seen.clear()
+        last = _guest_seen.get(key)
+        if last is not None and (now - last) < GUEST_SEEN_INTERVAL_SECONDS:
+            return False
+        _guest_seen[key] = now
+    record_auth_event(
+        db,
+        "guest_seen",
+        game_id=game_id,
+        device_id=device_id,
+        result="ok",
+        identity="guest",
+        request=request,
+        commit=commit,
+    )
+    return True
 
 
 def record_failure_event(

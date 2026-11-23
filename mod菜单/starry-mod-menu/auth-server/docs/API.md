@@ -65,6 +65,33 @@ Base URL：`http://<服务器IP>:8000`
 
 用于会话续期（+7 天）、卡密状态对账，并下发新的 `grant`。
 **2026-09-06 起不再周期调用**：客户端改为冷启动（进程启动后）调用一次；网络失败有界重试后放弃，功能放行不受影响（native 会话本地永不过期）。硬失败（封禁/删除/过期/解绑）→ 冷启动时踢回登录。
+**2026-11-23 起**：在线统计另走 `POST /v1/presence`（5 分钟一次，游客也发）；
+本接口仍只做冷启动对账，两者互不替代。
+
+### 2b. 在线心跳 `POST /v1/presence`（2026-11-23 新增）
+
+```json
+{
+  "game_id": "starry_self",
+  "device_id": "dev_...",
+  "token": "可空：游客留空/不传",
+  "client_version": "3.11",
+  "client_version_code": 42,
+  "cert_sha256": "APK 签名证书 SHA-256（小写 hex）"
+}
+```
+
+用途：**只刷新在线统计**，5 分钟一次，游客与卡密共用。不会签发任何票、不影响功能与授权。
+
+- 不带 token 或 token 无效 ⇒ 按游客记录（`identity=guest`，不写卡关联）；
+- 带合法 token 且设备/游戏一致 ⇒ 顺带写认证事实（`identity=card`）；
+- 可疑上报（设备号形态非法 / 证书不在白名单 / 版本过低 / IP 突发）**直接丢弃**：
+  返回仍为 200 且 `data.counted=false`，客户端**不得**据此拦截任何功能；
+- 未登记的 `game_id` 同样 `counted=false`。
+
+返回：`{"ok":true,"data":{"counted":true,"identity":"guest|card"}}`
+
+判定与留档口径见 [STATS_DEFINITION.md](./STATS_DEFINITION.md)。
 
 ### 3. 解绑 `POST /v1/auth/unbind`
 

@@ -226,6 +226,16 @@ class OnlinePresence(Base):
         DateTime(timezone=True), nullable=True
     )
 
+    # 2026-11-23（游客统计）：当前身份快照。card=最近一次是认证上报（login/带 token 心跳）；
+    # guest=最近一次是未认证上报（bootstrap / 游客心跳）。写入规则见 services/presence.py：
+    # 认证上报才置 card，未认证只置 guest，**永不把 card 覆盖回 guest**。
+    identity: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
+    # 最近一次「以游客身份」上报的时间（未带有效会话的 bootstrap / 游客心跳）。
+    # NULL = 无游客上报证据（历史行同样是 NULL，不推测填充）。
+    guest_seen_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
 
 class AuthEvent(Base):
     """登录/激活等客户端事件，供看板今日统计。"""
@@ -249,6 +259,8 @@ class AuthEvent(Base):
     ip_forwarded: Mapped[Optional[str]] = mapped_column(String(45), nullable=True)
     ua: Mapped[Optional[str]] = mapped_column(String(120), nullable=True)
     request_id: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    # 2026-11-23：身份快照。card=携带卡密/会话的上报；guest=无卡游客上报；NULL=历史行无证据
+    identity: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
     # 同 (device, reason, ip) 在聚合窗口内被抑制的重复次数（保留首条，便于追溯且不刷爆）
     suppressed: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"), nullable=False)
     # 被抑制的重复失败最近一次发生时间（created_at 保留首条时间，便于"首条+抑制次数"口径）

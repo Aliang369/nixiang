@@ -35,6 +35,21 @@ class UnbindRequest(BaseModel):
     device_id: str
 
 
+class PresenceRequest(BaseModel):
+    """在线心跳（2026-11-23）：游客与卡密共用，5 分钟一次。
+
+    token 可空（游客）。其余字段只用于「这条上报可不可信」的统计判定，
+    服务端**不会**因此拦截功能。
+    """
+
+    game_id: str = Field(min_length=1, max_length=64)
+    device_id: str = Field(min_length=4, max_length=128)
+    token: Optional[str] = Field(default=None, max_length=256)
+    client_version: Optional[str] = Field(default=None, max_length=64)
+    client_version_code: int = 0
+    cert_sha256: Optional[str] = Field(default=None, max_length=128)
+
+
 class BootstrapQuery(BaseModel):
     game_id: str
 

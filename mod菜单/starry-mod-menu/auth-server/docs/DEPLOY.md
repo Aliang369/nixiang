@@ -247,3 +247,51 @@ information_schema 先查后加），新装库由 `create_all` 直接建全。
 只允许 HTTPS + 443，其他主机在发请求前即被拒绝。因此 APK 必然连本实例，
 `/v1/build/payload-status` 已于 2026-11-22 删除，`~/.starry-keys/api_base.txt` 不再被任何门禁使用（历史遗留）。
 APK 运行时连接不受影响。
+
+### 升级到 2026-11-23 版本（游客统计 / 设备日志身份 / 在线口径）
+
+**口径正文（唯一权威）**：[STATS_DEFINITION.md](./STATS_DEFINITION.md)。改口径先改那份文档。
+
+本版本做四件事：
+
+1. **需卡游戏的游客也落在线表**（`identity=guest`，不写 `card_id`/认证时间）；
+2. **新增在线心跳** `POST /v1/presence`（5 分钟一次，游客与卡密共用），在线窗口 90 秒 → **360 秒**
+   （`ONLINE_WINDOW_SECONDS`）；
+3. **设备日志可区分身份**：新增 `guest_seen` 事件，列表加「身份」列，筛选加「卡密/游客」；
+4. **可疑上报直接丢弃**（非法设备号 / 证书不符 / 版本过低 / IP 突发）：不落库、不记明细，
+   只在 `data/dropped_stats.jsonl` 留累计次数；`GET /v1/admin/dropped-stats` 可查实时值（侧栏无入口）。
+
+**MySQL 必须手工补列**（`create_all` 不会改已存在的表；只动 bt，不动 starlight）：
+
+```sql
+ALTER TABLE online_presence
+  ADD COLUMN identity VARCHAR(8) NULL,
+  ADD COLUMN guest_seen_at DATETIME NULL;
+
+ALTER TABLE auth_events
+  ADD COLUMN identity VARCHAR(8) NULL;
+```
+
+完整脚本（含「从零开始」清空自测数据）：`scripts/ops/sql/mysql_migrate_guest_stats_20261123.sql`。
+
+`.env` 新增（都可留空 = 不启用对应判据）：
+
+```ini
+ONLINE_WINDOW_SECONDS=360
+# 证书白名单：空=不校验；配置后不在名单内的上报按可疑丢弃（只影响统计）
+CLIENT_CERT_SHA256=
+CLIENT_MIN_VERSION_CODE=0
+DROP_STATS_PATH=data/dropped_stats.jsonl
+GUEST_MAX_NEW_DEVICES_PER_IP_PER_HOUR=0
+```
+
+升级后验证（只读）：
+
+```sql
+-- 身份分布（应为 card / guest 两种，NULL 只允许出现在升级前的历史行）
+SELECT game_id, identity, COUNT(*) FROM online_presence GROUP BY game_id, identity;
+SELECT event_type, identity, COUNT(*) FROM auth_events GROUP BY event_type, identity;
+```
+
+后台确认：总在线 = 卡密 + 游客（按设备互斥）；设备日志筛选「游客」能看到 `游客出现`；
+侧栏**不应**出现 dropped-stats 入口。

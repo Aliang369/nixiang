@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy import case, exists, func, or_
+from sqlalchemy import exists, func, or_
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -42,6 +42,8 @@ from ..schemas import (
 from ..security import create_admin_token, hash_password, utcnow, verify_password
 from ..models import AdminUser
 from ..deviceid import mask_card_key, mask_device_id, trusted_device_clause
+from ..config import get_settings
+from ..services import dropstats
 from ..services.events import failure_overflow_since_start
 from ..services.presence import clear_card_presence
 from ..services.feature_sync import sync_game_features
@@ -291,25 +293,22 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
     now = utcnow()
     now_bj = now.astimezone(STATS_TZ)
     today_start = now_bj.replace(hour=0, minute=0, second=0, microsecond=0).astimezone(timezone.utc)
-    online_cut = now - timedelta(seconds=90)
+    # 2026-11-23：在线窗口由配置决定（客户端 5 分钟心跳 ⇒ 默认 360 秒）。
+    # 看板与设备详情共用，禁止各处硬编码。
+    online_window = int(get_settings().online_window_seconds or 90)
+    online_cut = now - timedelta(seconds=online_window)
 
     # 只统计游戏列表里已登记的游戏：测试期客户端乱传的 game_id 不进看板
     registered_ids = {row[0] for row in db.query(Game.game_id).all()}
     # 2026-11-15：只统计形态合法的设备号（^dev_[0-9a-f]{32}$ 或 40 位）。
     trusted_device = trusted_device_clause(OnlinePresence.device_id)
-    # 2026-11-16 活动口径（不新增 tile / 不改字段名）：
-    # - 需卡游戏：活跃 = 服务端认证过的活动时间 last_authenticated_at（login/心跳成功写入，
-    #   解绑/撤销不清），未认证的 bootstrap 不再计入；
-    # - 免卡游戏：无认证链，沿用 last_seen_at 的观测值（明确不可信，但保留样本）。
-    card_games = {
-        gid
-        for gid, card_auth in db.query(Game.game_id, Game.card_auth_enabled).all()
-        if card_auth
-    }
-    activity_at = case(
-        (OnlinePresence.game_id.in_(card_games), OnlinePresence.last_authenticated_at),
-        else_=OnlinePresence.last_seen_at,
-    )
+    # 2026-11-23 活动口径（lead 定，游客统计改造）：
+    # - **observed（观测活跃）**：last_seen_at —— 设备任何一个入口（登录/心跳/游客 bootstrap）
+    #   有过上报就算；游客也在内。这是看板「今日/7日/30日/历史活跃」的默认口径。
+    # - **verified（认证活跃）**：card_verified_at / last_authenticated_at —— 只有卡密
+    #   login 或带 token 的心跳成功才有，游客永远不计入（见 _verified_devices）。
+    # 两者互不替代：verified ⊆ observed，unverified = observed - verified。
+    activity_at = OnlinePresence.last_seen_at
 
     def _online_devices(extra=None) -> int:
         """总在线按设备去重（同机多游戏只计 1）。"""
@@ -317,15 +316,29 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
             activity_at >= online_cut,
             OnlinePresence.game_id.in_(registered_ids),
             trusted_device,
+            # 2026-11-23：只认有身份快照的行（card/guest）。identity 为空 =
+            # 历史行或未经可信判定的直接插库（如已清理的假数据），一律不计入。
+            OnlinePresence.identity.isnot(None),
         )
         if extra is not None:
             q = q.filter(extra)
         return q.scalar() or 0
 
-    # 卡密设备：窗口内至少有一条带 card_id 的在线；游客 = 总设备 − 卡密设备（避免同机一卡一游客双计）
+    # 2026-11-23：卡密与游客**按设备去重后互斥**，不再用「总数 − 卡密」的减法。
+    # 判定顺序：该设备在当前窗口内任一游戏有过认证上报 ⇒ 卡密；否则 ⇒ 游客。
     total_online = _online_devices()
-    online_card = _online_devices(OnlinePresence.card_id.isnot(None))
-    online_guest = max(total_online - online_card, 0)
+    online_card = _online_devices(OnlinePresence.identity == "card")
+    online_guest = _online_devices(
+        (OnlinePresence.identity == "guest")
+        & ~OnlinePresence.device_id.in_(
+            db.query(OnlinePresence.device_id).filter(
+                activity_at >= online_cut,
+                OnlinePresence.game_id.in_(registered_ids),
+                trusted_device,
+                OnlinePresence.identity == "card",
+            )
+        )
+    )
 
     # 自然日窗口（分游戏活跃与总活跃共用）
     d7_start = today_start - timedelta(days=6)
@@ -336,7 +349,8 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
         q = db.query(OnlinePresence.game_id, func.count(OnlinePresence.id)).filter(
             OnlinePresence.game_id.in_(registered_ids),
             trusted_device,
-            # 需卡游戏的历史活跃也只算有认证事实的行（all 窗口无 since，仍要排除 shape-only 行）
+            # 2026-11-23：与总览同口径 —— 只认有身份快照（card/guest）的行
+            OnlinePresence.identity.isnot(None),
             activity_at.isnot(None),
         )
         if since is not None:
@@ -347,8 +361,8 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
 
     # 分游戏：当前在线 + 7/30/历史活跃（看哪款玩的人多）
     by_game_total = _by_game_count(online_cut)
-    by_game_card = _by_game_count(online_cut, OnlinePresence.card_id.isnot(None))
-    by_game_guest = _by_game_count(online_cut, OnlinePresence.card_id.is_(None))
+    by_game_card = _by_game_count(online_cut, OnlinePresence.identity == "card")
+    by_game_guest = _by_game_count(online_cut, OnlinePresence.identity == "guest")
     by_game_d7 = _by_game_count(d7_start)
     by_game_d30 = _by_game_count(d30_start)
     by_game_all = _by_game_count(None)
@@ -395,6 +409,7 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
             q = db.query(func.count(func.distinct(OnlinePresence.device_id))).filter(
                 OnlinePresence.game_id.in_(registered_ids),
                 trusted_device,
+                OnlinePresence.identity.isnot(None),
                 activity_at.isnot(None),
             )
             if since is not None:
@@ -404,8 +419,19 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
             return q.scalar() or 0
 
         total = _distinct()
-        card = _distinct(OnlinePresence.card_id.isnot(None))
-        guest = max(total - card, 0)
+        card = _distinct(OnlinePresence.identity == "card")
+        # 游客：窗口内有游客上报、且同一设备在窗口内没有任何认证行的设备
+        authed = db.query(OnlinePresence.device_id).filter(
+            OnlinePresence.game_id.in_(registered_ids),
+            trusted_device,
+            OnlinePresence.identity == "card",
+        )
+        if since is not None:
+            authed = authed.filter(activity_at >= since)
+        guest = _distinct(
+            (OnlinePresence.identity == "guest")
+            & ~OnlinePresence.device_id.in_(authed)
+        )
         return total, card, guest
 
     today_active_devices, today_card_devices, today_guest_devices = _active_split(today_start)
@@ -479,11 +505,20 @@ def dashboard(_: dict = Depends(require_admin), db: Session = Depends(get_db)):
             "all_unverified_devices": max(all_active_devices - all_verified, 0),
             "untrusted_rejects_24h": untrusted_rejects_24h,
             "log_overflow_since_start": failure_overflow_since_start(),
-            "observed_definition": "格式合法设备号（dev_+32/40 位十六进制）且属已登记游戏",
+            "online_window_seconds": online_window,
+            "observed_definition": (
+                "格式合法设备号（dev_+32/40 位十六进制）+ 属已登记游戏 + 客户端协议证据"
+                "（证书/版本，服务端配置了才校验）；observed=last_seen_at 口径"
+            ),
             "verified_definition": "同一窗口内由 token/卡密登录成功确认过的设备（card_verified_at）",
+            "identity_definition": (
+                "按 (游戏, 设备) 行记录：card=最近一次是认证上报；guest=最近一次是未认证上报。"
+                "总览里同一设备只要有一个游戏是 card 就计入卡密，否则计入游客（两者互斥、按设备去重）"
+            ),
             "data_note": (
-                "设备数≠人数；活跃=online_presence 最后出现时间快照，不能还原任意历史日期，"
-                "不声称严格 DAU；卡密关联设备/未关联设备是最后状态快照；"
+                "设备数≠人数；在线/活跃=online_presence 最后上报时间快照，不能还原任意历史日期，"
+                "不声称严格 DAU；游客在打开菜单与每 5 分钟心跳时刷新；"
+                "可疑上报（非法设备号/证书不符/版本过低/IP 突发）直接丢弃，只在本机计数、不落库、不上看板；"
                 "历史行 created_at/card_verified_at 为空表示无证据（unknown），不做推测填充。"
             ),
         },
@@ -1345,6 +1380,8 @@ def _event_dict(r: AuthEvent, card_keys: dict[int, str] | None = None) -> dict:
         "created_at": r.created_at.isoformat() if r.created_at else None,
         "last_occurred_at": r.last_occurred_at.isoformat() if getattr(r, "last_occurred_at", None) else None,
         "event_type": r.event_type,
+        # 2026-11-23：身份快照（card/guest）；历史行 None，前端显示「—」
+        "identity": getattr(r, "identity", None),
         "game_id": r.game_id,
         "device_id": mask_device_id(r.device_id),
         # 完整值供管理端列表「点击复制」与详情回查（接口本身 require_admin）；列表**展示**仍用打码值
@@ -1371,6 +1408,7 @@ def list_events(
     game_id: str | None = None,
     event_type: str | None = None,
     result: str | None = None,
+    identity: str | None = None,
     from_at: str | None = None,
     to_at: str | None = None,
     page: int = 1,
@@ -1396,6 +1434,9 @@ def list_events(
         q = q.filter(AuthEvent.event_type == event_type.strip())
     if result and result.strip():
         q = q.filter(AuthEvent.result == result.strip())
+    # 2026-11-23：身份筛选（card=卡密，guest=游客）；历史行 identity 为空，不归入任何一侧
+    if identity and identity.strip():
+        q = q.filter(AuthEvent.identity == identity.strip())
     start = _parse_iso_dt(from_at)
     end = _parse_iso_dt(to_at, end_of_day=True)
     if start is not None:
@@ -1447,12 +1488,17 @@ def device_detail(
             return False
         if ts.tzinfo is None:
             ts = ts.replace(tzinfo=timezone.utc)
-        return (now_utc - ts).total_seconds() <= 90
+        return (now_utc - ts).total_seconds() <= int(get_settings().online_window_seconds or 90)
 
     presences = [
         {
             "game_id": p.game_id,
             "card_id": p.card_id,
+            # card / guest（历史行可能为空，前端显示「—」）
+            "identity": getattr(p, "identity", None),
+            "guest_seen_at": getattr(p, "guest_seen_at", None).isoformat()
+            if getattr(p, "guest_seen_at", None)
+            else None,
             "last_seen_at": p.last_seen_at.isoformat() if p.last_seen_at else None,
             "last_authenticated_at": getattr(p, "last_authenticated_at", None).isoformat()
             if getattr(p, "last_authenticated_at", None)
@@ -1511,6 +1557,18 @@ def device_detail(
             "last_failure_at": last_fail.created_at.isoformat() if last_fail and last_fail.created_at else None,
         },
     }
+
+
+@router.get("/dropped-stats")
+def dropped_stats(_: dict = Depends(require_admin)):
+    """可疑上报丢弃计数（2026-11-23）。
+
+    口径：可疑数据不统计、不落库、不记录明细，只在服务器本地累计次数。
+    本接口**不在后台侧栏展示**，需要排查时直接访问：
+        GET /v1/admin/dropped-stats
+    返回进程内实时计数；历史累计见服务器文件 data/dropped_stats.jsonl（每行一次快照）。
+    """
+    return {"ok": True, "data": dropstats.snapshot()}
 
 
 # ----- audit logs -----

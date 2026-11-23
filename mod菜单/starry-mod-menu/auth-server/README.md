@@ -43,7 +43,10 @@ DATABASE_URL=sqlite:///./starlight.db SECRET_KEY=devtest \
 | 关卡密默认 | 新建游戏默认 `card_auth_enabled=false`（隐藏账号 Tab，免登录）；未在后台注册的 `game_id` 不发功能、不签票，客户端直接不可用 |
 | Toast | 按 key 远程文案 |
 | 站点设置 | 如 `custom_mod_qq`（菜单「定制 MOD」） |
-| 看板 | 总在线/卡密/游客（按设备）、分游戏在线；今日/7日/30日/历史活跃；卡密总数/激活/未激活/封禁、游戏数 |
+| 看板 | 总在线/卡密/游客（按设备、互斥）、分游戏在线；今日/7日/30日/历史活跃；卡密总数/激活/未激活/封禁、游戏数 |
+| 游客统计 | **需卡游戏的游客也落库**（identity=guest，不写卡关联）；在线心跳 `POST /v1/presence` 5 分钟一次；在线窗口 360 秒；口径正文 [docs/STATS_DEFINITION.md](docs/STATS_DEFINITION.md) |
+| 设备日志 | 按设备追溯；新增 `guest_seen`（游客出现）事件与「身份（卡密/游客）」列与筛选 |
+| 可疑丢弃 | 非法设备号 / 证书不符 / 版本过低 / IP 突发 → 不落库、不记明细，只在本机计数（`GET /v1/admin/dropped-stats`，侧栏无入口） |
 | 客户端 | login / heartbeat / unbind / bootstrap（含 `logged_in`，退出后回游客）；会话心跳续期；离线缓存建议 180 秒 |
 
 ## 内置菜单模板
@@ -64,7 +67,7 @@ auth-server/
 │   ├── schemas.py       # 请求/响应模型
 │   ├── menu_catalog.py  # 内置模板种子（仅 starry_self）
 │   ├── routers/         # admin / client
-│   └── services/        # 授权票、功能同步等
+│   └── services/        # 授权票、功能同步、在线/身份（presence）、可信判定（trust）、丢弃计数（dropstats）
 ├── static/admin/        # 管理后台前端（单页，纯静态）
 ├── docs/                # 部署、接口、备份、安全、授权票文档
 ├── scripts/             # 数据库备份、菜单导出等运维脚本
