@@ -211,6 +211,25 @@ ALTER TABLE games DROP COLUMN payload_sha;
 本版本的 `app/services/auth_service.py` 对**卡密登录 / 心跳 / 免卡 bootstrap** 采用
 v2 非对称签名票，且 `grant_rsa_key_path` 为空时**直接拒绝签发（HTTP 503）**，不再回退 v1 HMAC。
 
+### 升级到 2026-11-23 版本（公告三按钮）
+
+公告卡支持三个按钮：关闭程序（`exit_enabled` / `exit_label`）、跳转链接（沿用
+`action_url` / `action_label`）、关闭弹窗进游戏（`close_label`）。全部可空，不配置时
+客户端表现与旧版完全一致；**新按钮要生效必须重出客户端包**（Java 在 dex 内）。
+
+**MySQL 必须手工补列**（`create_all` 不会改已存在的表；只动 bt，不动 starlight）：
+
+```sql
+ALTER TABLE announcements
+  ADD COLUMN exit_enabled TINYINT(1) NOT NULL DEFAULT 0,
+  ADD COLUMN exit_label VARCHAR(32) NULL,
+  ADD COLUMN close_label VARCHAR(32) NULL;
+```
+
+改完 `systemctl restart starlight-mod-auth`，`/health` 200 即完成。
+`app/main.py` 的 `ensure_schema()` 已同步三种方言的补列逻辑（MySQL 走
+information_schema 先查后加），新装库由 `create_all` 直接建全。
+
 **当前生产状态：已配置并验证通过。**
 
 | 项目 | 值 |

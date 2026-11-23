@@ -191,6 +191,22 @@ def ensure_schema() -> None:
                         "DEFAULT 'every_open'"
                     )
                 )
+            # 2026-11-23 公告卡三按钮（关闭程序 / 跳转 / 关闭进游戏）
+            if "exit_enabled" not in ann_cols:
+                conn.execute(
+                    text(
+                        "ALTER TABLE announcements ADD COLUMN exit_enabled "
+                        "BOOLEAN DEFAULT 0"
+                    )
+                )
+            if "exit_label" not in ann_cols:
+                conn.execute(
+                    text("ALTER TABLE announcements ADD COLUMN exit_label VARCHAR(32)")
+                )
+            if "close_label" not in ann_cols:
+                conn.execute(
+                    text("ALTER TABLE announcements ADD COLUMN close_label VARCHAR(32)")
+                )
             toast_cols = {
                 r[1] for r in conn.execute(text("PRAGMA table_info(toast_messages)")).fetchall()
             }
@@ -217,6 +233,31 @@ def ensure_schema() -> None:
                         "ALTER TABLE games ADD COLUMN request_updates_enabled "
                         "TINYINT(1) NOT NULL DEFAULT 1"
                     )
+                )
+            # 2026-11-23 公告卡三按钮：MySQL 5.7 无 IF NOT EXISTS，先查 information_schema
+            ann_cols = {
+                r[0]
+                for r in conn.execute(
+                    text(
+                        "SELECT COLUMN_NAME FROM information_schema.COLUMNS "
+                        "WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'announcements'"
+                    )
+                ).fetchall()
+            }
+            if "exit_enabled" not in ann_cols:
+                conn.execute(
+                    text(
+                        "ALTER TABLE announcements ADD COLUMN exit_enabled "
+                        "TINYINT(1) NOT NULL DEFAULT 0"
+                    )
+                )
+            if "exit_label" not in ann_cols:
+                conn.execute(
+                    text("ALTER TABLE announcements ADD COLUMN exit_label VARCHAR(32) NULL")
+                )
+            if "close_label" not in ann_cols:
+                conn.execute(
+                    text("ALTER TABLE announcements ADD COLUMN close_label VARCHAR(32) NULL")
                 )
         elif dialect.startswith("postgres"):
             # 注意：以下均为 PostgreSQL 专有语法（ADD COLUMN IF NOT EXISTS /
@@ -274,6 +315,24 @@ def ensure_schema() -> None:
                 text(
                     "ALTER TABLE announcements ADD COLUMN IF NOT EXISTS "
                     "popup_mode VARCHAR(16) DEFAULT 'every_open'"
+                )
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE announcements ADD COLUMN IF NOT EXISTS "
+                    "exit_enabled BOOLEAN DEFAULT FALSE"
+                )
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE announcements ADD COLUMN IF NOT EXISTS "
+                    "exit_label VARCHAR(32)"
+                )
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE announcements ADD COLUMN IF NOT EXISTS "
+                    "close_label VARCHAR(32)"
                 )
             )
             conn.execute(

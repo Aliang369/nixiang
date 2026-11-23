@@ -107,6 +107,11 @@ public final class NativeMenuController {
     private static final int PANEL_LIST_MIN_DP = 110;
     private static final int PANEL_CHROME_H_DP = 190;
     private static final int ANNOUNCE_BODY_PREFERRED_DP = 140;
+    /** 公告三按钮角色：measureAnnouncement 按角色取引用，禁止按索引（2026-11-23） */
+    private static final String ANNOUNCE_ROLE_EXIT = "announce_exit";
+    private static final String ANNOUNCE_ROLE_GO = "announce_go";
+    private static final String ANNOUNCE_ROLE_CLOSE = "announce_close";
+    private static final String ANNOUNCE_EXIT_DEFAULT_LABEL = "退出游戏";
 
     public enum AttachMode { ACTIVITY, OVERLAY, NONE }
 
@@ -214,6 +219,12 @@ public final class NativeMenuController {
     private final List<String> stagedGateToasts = new ArrayList<>();
     private final List<String> stagedStartupToasts = new ArrayList<>();
     private boolean menuHoldForAnnounce;
+    /** 2026-11-23：bootstrap 结果回来前不显示悬浮球（公告优先），上限 2s，超时强制显示 */
+    private static final long BOOTSTRAP_MENU_WAIT_MS = 2000L;
+    private boolean awaitBootstrapForMenu;
+    private final Runnable bootstrapMenuTimeout = this::finishBootstrapWait;
+    /** 外部（MenuService）请求显示过：公告/等待期间只记账，解除后再真正显示 */
+    private boolean menuShowRequested;
     private PopupWindow openDropdown;
     private View toastOverlay;
     private TextView toastText;
@@ -266,8 +277,13 @@ public final class NativeMenuController {
      * Splash→Game / 乐变切章后旧 token 会失效：窗还「看得见」但裁切且无法点击。
      */
     public boolean isBoundHostAlive() {
+        // 2026-11-23：root 被主动收走（公告在播 / 等 bootstrap / 后台隐藏）不等于宿主死。
+        // 否则 MenuService 心跳每 4s 判「host stale」→ 重挂 → 公告被移除再重弹。
+        final boolean intentionallyHidden = shouldHoldMenu() || !menuShowRequested;
         if (attachMode == AttachMode.OVERLAY) {
-            return attached && root != null && root.getParent() != null;
+            if (!attached || root == null) return false;
+            if (intentionallyHidden) return true;
+            return root.getParent() != null;
         }
         if (!attached || attachMode != AttachMode.ACTIVITY || boundActivity == null) {
             return false;
@@ -284,6 +300,7 @@ public final class NativeMenuController {
         } catch (Exception e) {
             return false;
         }
+        if (intentionallyHidden) return true; // 主动隐藏：窗口在，只是没挂 root
         return root != null && root.getParent() != null;
     }
 
@@ -335,7 +352,7 @@ public final class NativeMenuController {
         boolean need = !attached || !isBoundHostAlive() || boundActivity != host;
         if (!need) {
             if (root != null && root.getParent() == null) {
-                if (menuHoldForAnnounce) return; // 公告播放中：不 re-addView，保持隐藏
+                if (menuHoldForAnnounce || awaitBootstrapForMenu) return; // 公告播放中 / 等 bootstrap：不 re-addView
                 Log.i(TAG, "rebind same host: re-addView after hide");
                 setVisible(true);
                 if (root.getParent() == null) {
@@ -358,8 +375,9 @@ public final class NativeMenuController {
         if (!ok && canOverlay()) {
             ok = tryAttachOverlay();
         }
-        if (ok && menuHoldForAnnounce) {
-            applyAnnounceHold(); // 公告播放中：重挂后立即收起，保持公告优先
+        if (ok) {
+            menuShowRequested = true;
+            applyMenuHold(); // 公告播放中 / 等 bootstrap：重挂后立即收起
         }
         if (ok && wasExpanded) {
             setExpanded(true);
@@ -457,29 +475,35 @@ public final class NativeMenuController {
     public boolean show(Activity preferredHost) {
         if (attached) {
             ensureAliveOrRebind(preferredHost);
-            applyAnnounceHold();
+            applyMenuHold();
             return isAttached();
         }
         buildUiIfNeeded();
         if (tryAttachActivity(preferredHost)) {
+            menuShowRequested = true;
+            beginBootstrapWaitIfNeeded();
             fetchBootstrapOnce();
             startGrantBgRenew();
-            applyAnnounceHold();
+            applyMenuHold();
             return true;
         }
         Activity resumed = findResumedHint(preferredHost);
         if (resumed != null && resumed != preferredHost && tryAttachActivity(resumed)) {
+            menuShowRequested = true;
+            beginBootstrapWaitIfNeeded();
             fetchBootstrapOnce();
             startGrantBgRenew();
-            applyAnnounceHold();
+            applyMenuHold();
             return true;
         }
         if (canOverlay()) {
             boolean ok = tryAttachOverlay();
             if (ok) {
+                menuShowRequested = true;
+                beginBootstrapWaitIfNeeded();
                 fetchBootstrapOnce();
                 startGrantBgRenew();
-                applyAnnounceHold();
+                applyMenuHold();
             }
             return ok;
         }
@@ -549,6 +573,9 @@ public final class NativeMenuController {
         stagedGateToasts.clear();
         stagedStartupToasts.clear();
         menuHoldForAnnounce = false;
+        awaitBootstrapForMenu = false;
+        menuShowRequested = false;
+        mainHandler.removeCallbacks(bootstrapMenuTimeout);
         expanded = false;
         attached = false;
         attachMode = AttachMode.NONE;
@@ -556,7 +583,16 @@ public final class NativeMenuController {
     }
 
     public void setVisible(boolean visible) {
+        if (!visible) menuShowRequested = false;
         if (!attached || root == null || layoutParams == null || windowManager == null) return;
+        if (visible) {
+            menuShowRequested = true;
+            if (shouldHoldMenu()) {
+                // 公告在播 / 等 bootstrap：所有显示请求先压住（resume、心跳、布局变化都会走这里）
+                Log.i(TAG, "setVisible(true) held (announce/wait)");
+                return;
+            }
+        }
         try {
             if (visible) {
                 root.setVisibility(View.VISIBLE);
@@ -572,6 +608,19 @@ public final class NativeMenuController {
             }
         } catch (Exception e) {
             Log.w(TAG, "setVisible(" + visible + "): " + e.getMessage());
+        }
+    }
+
+    /** 公告在播 / 等 bootstrap：悬浮球与 Toast 一律让位 */
+    private boolean shouldHoldMenu() {
+        return menuHoldForAnnounce || awaitBootstrapForMenu;
+    }
+
+    /** 解除压住后补上被拒的显示请求（调用方负责在之后排 Toast，保证同屏） */
+    private void flushMenuShowIfAllowed() {
+        if (shouldHoldMenu() || !menuShowRequested) return;
+        if (attached && root != null && root.getParent() == null) {
+            setVisible(true);
         }
     }
 
@@ -915,6 +964,7 @@ public final class NativeMenuController {
             WindowManager.LayoutParams lp = baseLayoutParams();
             lp.type = WindowManager.LayoutParams.TYPE_APPLICATION;
             // Activity WM 自带 token，勿手填 null token
+            root.setVisibility(shouldHoldMenu() ? View.INVISIBLE : View.VISIBLE);
             wm.addView(root, lp);
             windowManager = wm;
             layoutParams = lp;
@@ -951,6 +1001,7 @@ public final class NativeMenuController {
                 lp.type = WindowManager.LayoutParams.TYPE_PHONE;
             }
             lp.alpha = OVERLAY_SAFE_ALPHA;
+            root.setVisibility(shouldHoldMenu() ? View.INVISIBLE : View.VISIBLE);
             wm.addView(root, lp);
             windowManager = wm;
             layoutParams = lp;
@@ -976,8 +1027,8 @@ public final class NativeMenuController {
         removeWmToast();
         removeMagicAnnounce();
         if (announceShowing && currentAnnounce != null) {
-            // 公告随窗口被拆（Activity 切换）：延迟重试等重挂，不丢公告、不死锁队列
-            mainHandler.postDelayed(this::reshowCurrentAnnounce, ANNOUNCE_ATTACH_RETRY_MS);
+            // 公告随窗口被拆（Activity 切换）：立即重建（新窗口已在同一栈后挂好），无动画续显
+            mainHandler.post(this::reshowCurrentAnnounce);
         }
         if (windowManager != null && root != null && root.getParent() != null) {
             try {
@@ -2833,21 +2884,26 @@ public final class NativeMenuController {
                     refreshFeatures();
                     startGrantBgRenew();
                     if (annList.isEmpty()) {
-                        // 无公告：维持原节奏，toast 立即排程
+                        // 无公告：立即放行悬浮球，toast 与球同屏（2026-11-23 定）
+                        finishBootstrapWait();
                         playGateToasts(gateToasts);
                         playStartupToasts(toastTexts);
                     } else {
-                        // 有公告：toast 全部挂起，公告播完后按原节奏补放（releaseAnnounceHold）
+                        // 有公告：先播公告，toast 挂起到公告结束（releaseAnnounceHold 补放）
                         stagedGateToasts.clear();
                         stagedGateToasts.addAll(gateToasts);
                         stagedStartupToasts.clear();
                         stagedStartupToasts.addAll(toastTexts);
                     }
                     enqueueAnnouncements(annList);
+                    finishBootstrapWait(); // 有公告在播时内部保持隐藏
                 });
             } catch (Exception e) {
                 Log.e(TAG, "bootstrap fetch failed", e);
-                mainHandler.post(() -> showToast("bootstrap 失败: " + (e.getMessage() != null ? e.getMessage() : "网络错误")));
+                mainHandler.post(() -> {
+                    finishBootstrapWait(); // 网络失败也要放行悬浮球，不能把菜单锁死
+                    showToast("bootstrap 失败: " + (e.getMessage() != null ? e.getMessage() : "网络错误"));
+                });
             }
         });
     }
@@ -2856,7 +2912,7 @@ public final class NativeMenuController {
         if (texts == null || texts.isEmpty()) return;
         for (int i = 0; i < texts.size(); i++) {
             final String msg = texts.get(i);
-            mainHandler.postDelayed(() -> showToast(msg), 600L + i * 2300L);
+            mainHandler.postDelayed(() -> showToast(msg), i * 2300L); // 首条 0ms：与悬浮球同屏
         }
     }
 
@@ -2865,7 +2921,7 @@ public final class NativeMenuController {
         if (msgs == null || msgs.isEmpty()) return;
         for (int i = 0; i < msgs.size(); i++) {
             final String msg = msgs.get(i);
-            mainHandler.postDelayed(() -> showToast(msg), 200L + i * 1600L);
+            mainHandler.postDelayed(() -> showToast(msg), i * 1600L); // 首条 0ms：与悬浮球同屏
         }
     }
 
@@ -2892,16 +2948,40 @@ public final class NativeMenuController {
         } else {
             // 公告优先：悬浮球视觉收起（状态照常维护），公告播完后恢复
             menuHoldForAnnounce = true;
-            applyAnnounceHold();
+            applyMenuHold();
         }
         drainAnnouncementQueue();
     }
 
-    /** 公告播放期间保持悬浮球视觉隐藏（挂载状态照常，公告播完后 setVisible(true) 恢复） */
-    private void applyAnnounceHold() {
-        if (menuHoldForAnnounce && attached && root != null && root.getParent() != null) {
-            setVisible(false);
+    /** 公告播放中 / 等 bootstrap 期间保持悬浮球视觉隐藏（挂载状态照常，结束后 setVisible(true) 恢复） */
+    private void applyMenuHold() {
+        if (!shouldHoldMenu() || !attached || root == null || root.getParent() == null) return;
+        try {
+            windowManager.removeView(root); // 只移出窗口，不动 menuShowRequested
+        } catch (Exception ignored) {
         }
+    }
+
+    /** 首次拉 bootstrap 前：悬浮球先不露头（等公告判定），最多 BOOTSTRAP_MENU_WAIT_MS */
+    private void beginBootstrapWaitIfNeeded() {
+        if (bootstrapFetched || awaitBootstrapForMenu) return;
+        awaitBootstrapForMenu = true;
+        mainHandler.removeCallbacks(bootstrapMenuTimeout);
+        mainHandler.postDelayed(bootstrapMenuTimeout, BOOTSTRAP_MENU_WAIT_MS);
+        Log.i(TAG, "menu hold: await bootstrap (" + BOOTSTRAP_MENU_WAIT_MS + "ms)");
+    }
+
+    /** bootstrap 已返回 / 超时：结束等待；有公告在播则继续隐藏，否则立即显示悬浮球 */
+    private void finishBootstrapWait() {
+        mainHandler.removeCallbacks(bootstrapMenuTimeout);
+        if (!awaitBootstrapForMenu) return;
+        awaitBootstrapForMenu = false;
+        if (menuHoldForAnnounce) {
+            Log.i(TAG, "menu hold: bootstrap done, announce queued");
+            return;
+        }
+        Log.i(TAG, "menu hold: bootstrap done, show menu");
+        flushMenuShowIfAllowed();
     }
 
     /** 公告全部播完：恢复悬浮球 + 按原节奏补放挂起的 toast（幂等，可随时调用） */
@@ -2916,9 +2996,7 @@ public final class NativeMenuController {
         List<String> startup = new ArrayList<>(stagedStartupToasts);
         stagedGateToasts.clear();
         stagedStartupToasts.clear();
-        if (attached && root != null && root.getParent() == null) {
-            setVisible(true); // 收起过的悬浮球恢复显示
-        }
+        flushMenuShowIfAllowed(); // 收起过的悬浮球恢复显示（尊重后台隐藏/未请求）
         playGateToasts(gate);
         playStartupToasts(startup);
     }
@@ -2959,8 +3037,69 @@ public final class NativeMenuController {
         releaseAnnounceHold();
     }
 
+    /**
+     * 「关闭程序」按钮：直接结束游戏进程。
+     * 2026-11-23 口径（用户定）：不写任何已读标记、不调 finishCurrentAnnounce()，
+     * 因此 every_open / once_device 公告在用户拒绝退出后，下次启动都会再次提醒。
+     */
+    private void exitGameFromAnnounce() {
+        Log.i(TAG, "announce: exit game by user");
+        android.os.Process.killProcess(android.os.Process.myPid());
+        System.exit(0);
+    }
+
+    /** 公告按钮统一样式：等宽、单行、长文案自动降字号（minSdk21 无 autosize API） */
+    private Button announceActionButton(String label, int textColor,
+            android.graphics.drawable.Drawable bg, String role) {
+        Button btn = new Button(appContext);
+        String text = label != null ? label.trim() : "";
+        if (text.isEmpty() || "null".equalsIgnoreCase(text)) text = "关闭";
+        btn.setText(text);
+        btn.setAllCaps(false);
+        btn.setTextColor(textColor);
+        btn.setBackground(bg);
+        setFs(btn, announceBtnFs(text));
+        btn.setSingleLine(true);
+        btn.setEllipsize(TextUtils.TruncateAt.END);
+        btn.setMinHeight(0);
+        btn.setMinimumHeight(0);
+        btn.setPadding(0, dp(10), 0, dp(10));
+        btn.setTag(role);
+        return btn;
+    }
+
+    /** 按钮文案越长字号越小：>6 字 11sp、5-6 字 12sp、其余 13sp */
+    private static float announceBtnFs(String text) {
+        int n = text == null ? 0 : text.trim().length();
+        if (n > 6) return 11f;
+        if (n > 4) return 12f;
+        return 13f;
+    }
+
+    private LinearLayout.LayoutParams announceActionLp(LinearLayout actions) {
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        if (actions.getChildCount() > 0) lp.leftMargin = dp(10);
+        return lp;
+    }
+
+    private static Button findActionButton(LinearLayout actions, String role) {
+        if (actions == null || role == null) return null;
+        for (int i = 0; i < actions.getChildCount(); i++) {
+            View v = actions.getChildAt(i);
+            if (v instanceof Button && role.equals(v.getTag())) return (Button) v;
+        }
+        return null;
+    }
+
     /** 安卓自绘公告（对齐 HTML .mod-announce），非系统 AlertDialog */
     private void showMagicAnnounce(String title, String content, String actionUrl, String actionLabel) {
+        showMagicAnnounce(title, content, actionUrl, actionLabel, true);
+    }
+
+    /** @param animate false=重建续显（切 Activity 后），不播入场动画，避免"消失一下又弹出来" */
+    private void showMagicAnnounce(String title, String content, String actionUrl, String actionLabel,
+            boolean animate) {
         if (windowManager == null || !attached) {
             // 窗口暂时分离（Activity 切换空窗期）：保持公告状态等待重挂重试，超限才降级 toast
             if (announceAttachRetry < ANNOUNCE_ATTACH_RETRY_MAX) {
@@ -3058,32 +3197,24 @@ public final class NativeMenuController {
             final String url = actionUrl != null ? actionUrl.trim() : "";
             // 无有效链接时不显示「前往」（含后台 JSON null → 字面量 "null"）
             final boolean hasGo = !url.isEmpty() && !"null".equalsIgnoreCase(url);
+            // 2026-11-23 三按钮：顺序固定「关闭程序 → 跳转 → 关闭进游戏」（后台可分别配置）
+            final JSONObject annCfg = currentAnnounce;
+            final boolean exitEnabled = annCfg != null && annCfg.optBoolean("exit_enabled", false);
+            final String exitLabel = jsonText(annCfg, "exit_label", ANNOUNCE_EXIT_DEFAULT_LABEL);
+            final String closeLabel = jsonText(annCfg, "close_label", hasGo ? "关闭" : "我知道了");
 
-            Button closeBtn = new Button(appContext);
-            closeBtn.setText(hasGo ? "关闭" : "我知道了");
-            closeBtn.setAllCaps(false);
-            closeBtn.setTextColor(MagicRes.INK_2);
-            closeBtn.setBackground(MagicRes.announceBtnClose(appContext));
-            setFs(closeBtn, 13f);
-            closeBtn.setMinHeight(0);
-            closeBtn.setMinimumHeight(0);
-            closeBtn.setPadding(0, dp(10), 0, dp(10));
-            closeBtn.setOnClickListener(v -> finishCurrentAnnounce());
-            LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            actions.addView(closeBtn, clp);
+            if (exitEnabled) {
+                Button exitBtn = announceActionButton(exitLabel, MagicRes.INK_2,
+                        MagicRes.announceBtnClose(appContext), ANNOUNCE_ROLE_EXIT);
+                exitBtn.setOnClickListener(v -> exitGameFromAnnounce());
+                actions.addView(exitBtn, announceActionLp(actions));
+            }
 
             if (hasGo) {
-                Button goBtn = new Button(appContext);
                 String label = actionLabel != null ? actionLabel.trim() : "";
                 if (label.isEmpty() || "null".equalsIgnoreCase(label)) label = "立即前往";
-                goBtn.setText(label);
-                goBtn.setAllCaps(false);
-                goBtn.setTextColor(0xFFFFFFFF);
-                goBtn.setBackground(MagicRes.announceBtnPrimary(appContext));
-                setFs(goBtn, 13f);
-                goBtn.setMinHeight(0);
-                goBtn.setMinimumHeight(0);
-                goBtn.setPadding(0, dp(10), 0, dp(10));
+                Button goBtn = announceActionButton(label, MagicRes.INK_2,
+                        MagicRes.announceBtnClose(appContext), ANNOUNCE_ROLE_GO);
                 goBtn.setOnClickListener(v -> {
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -3094,10 +3225,13 @@ public final class NativeMenuController {
                     }
                     finishCurrentAnnounce();
                 });
-                LinearLayout.LayoutParams glp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-                glp.leftMargin = dp(10);
-                actions.addView(goBtn, glp);
+                actions.addView(goBtn, announceActionLp(actions));
             }
+
+            Button closeBtn = announceActionButton(closeLabel, MagicRes.INK_2,
+                    MagicRes.announceBtnClose(appContext), ANNOUNCE_ROLE_CLOSE);
+            closeBtn.setOnClickListener(v -> finishCurrentAnnounce());
+            actions.addView(closeBtn, announceActionLp(actions));
 
             shell.addView(card, new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -3128,13 +3262,23 @@ public final class NativeMenuController {
                 announceLp.token = layoutParams.token;
             }
             announceOverlay = shell;
-            // 先设不可见再挂窗，避免角饰先露、卡片后入
-            shell.setAlpha(0f);
-            shell.setScaleX(0.94f);
-            shell.setScaleY(0.94f);
-            shell.setTranslationY(dp(10));
+            if (animate) {
+                // 先设不可见再挂窗，避免角饰先露、卡片后入
+                shell.setAlpha(0f);
+                shell.setScaleX(0.94f);
+                shell.setScaleY(0.94f);
+                shell.setTranslationY(dp(10));
+            } else {
+                // 续显：直接到位，视觉上不重新弹入
+                shell.setAlpha(1f);
+                shell.setScaleX(1f);
+                shell.setScaleY(1f);
+                shell.setTranslationY(0f);
+            }
             windowManager.addView(announceOverlay, announceLp);
-            shell.animate().alpha(1f).scaleX(1f).scaleY(1f).translationY(0f).setDuration(320).start();
+            if (animate) {
+                shell.animate().alpha(1f).scaleX(1f).scaleY(1f).translationY(0f).setDuration(320).start();
+            }
         } catch (Exception e) {
             Log.w(TAG, "announce show failed: " + e.getMessage());
             showToast((title != null ? title + "：" : "") + (content != null ? content : ""), "info");
@@ -3160,14 +3304,22 @@ public final class NativeMenuController {
         divider.setVisibility(View.VISIBLE);
         LinearLayout.LayoutParams actionsLp = (LinearLayout.LayoutParams) actions.getLayoutParams();
         actionsLp.topMargin = dp(12);
-        Button close = (Button) actions.getChildAt(0);
+        Button close = findActionButton(actions, ANNOUNCE_ROLE_CLOSE);
+        if (close == null && actions.getChildCount() > 0) {
+            close = (Button) actions.getChildAt(actions.getChildCount() - 1);
+        }
+        if (close == null) return; // 关闭按钮恒存在；防御空操作行
         ViewGroup.LayoutParams closeLp = close.getLayoutParams();
         boolean wasHeightLimited = closeLp.height != ViewGroup.LayoutParams.WRAP_CONTENT;
         closeLp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
         close.setPadding(0, dp(10), 0, dp(10));
-        setFs(close, 13f);
-        View secondaryAction = actions.getChildAt(1);
-        if (secondaryAction != null) secondaryAction.setVisibility(View.VISIBLE);
+        setFs(close, announceBtnFs(close.getText() != null ? close.getText().toString() : ""));
+        final List<View> secondaryActions = new ArrayList<>();
+        for (int i = 0; i < actions.getChildCount(); i++) {
+            View v = actions.getChildAt(i);
+            if (v != close) secondaryActions.add(v);
+        }
+        for (View v : secondaryActions) v.setVisibility(View.VISIBLE);
         boolean wasUnreadable = shell.getForeground() != null && scroll != null
                 && (scroll.getVisibility() == View.GONE || scroll.getLayoutParams().height < dp(24));
         if (scroll != null) scroll.setVisibility(View.GONE);
@@ -3188,8 +3340,9 @@ public final class NativeMenuController {
                 title.setVisibility(View.GONE);
                 card.measure(widthSpec, naturalHeight);
                 chromeHeight = card.getMeasuredHeight();
-                if (chromeHeight > maxHeight && secondaryAction != null) {
-                    secondaryAction.setVisibility(View.GONE);
+                if (chromeHeight > maxHeight && !secondaryActions.isEmpty()) {
+                    // 空间不足先牺牲非关闭按钮（关闭按钮必须可点，否则公告关不掉）
+                    for (View v : secondaryActions) v.setVisibility(View.GONE);
                     card.measure(widthSpec, naturalHeight);
                     chromeHeight = card.getMeasuredHeight();
                 }
@@ -3243,7 +3396,8 @@ public final class NativeMenuController {
                 jsonText(a, "title", "公告"),
                 jsonText(a, "content", ""),
                 jsonText(a, "action_url", ""),
-                jsonText(a, "action_label", "立即前往"));
+                jsonText(a, "action_label", "立即前往"),
+                false);
     }
 
     private void removeMagicAnnounce() {

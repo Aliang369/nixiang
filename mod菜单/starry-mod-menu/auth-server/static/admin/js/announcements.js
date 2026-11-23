@@ -36,7 +36,8 @@
         return `
         <tr>
           <td><strong>${escapeHtml(a.title)}</strong><div class="muted">${escapeHtml(a.content).slice(0,80)}</div>
-            ${a.action_url ? '<div class="muted">跳转：' + escapeHtml(a.action_url) + '</div>' : ''}</td>
+            ${a.action_url ? '<div class="muted">跳转：' + escapeHtml(a.action_url) + '</div>' : ''}
+            <div class="muted">按钮：${annButtonsSummary(a)}</div></td>
           <td>${a.scope === 'global' ? '全游戏' : '单游戏'}${a.game_id ? ' / ' + escapeHtml(gameLabel(a.game_id)) : ''}</td>
           <td>${VIS_CN[a.visibility] || a.visibility || '始终'}</td>
           <td>${POPUP_CN[a.popup_mode] || a.popup_mode || '每次打开'}</td>
@@ -58,16 +59,17 @@
       const content = document.getElementById('m-a-content')?.value || '';
       const url = (document.getElementById('m-a-url')?.value || '').trim();
       const label = (document.getElementById('m-a-label')?.value || '').trim() || '立即前往';
+      const exitOn = !!document.getElementById('m-a-exit')?.checked;
+      const exitLabel = (document.getElementById('m-a-exit-label')?.value || '').trim() || '退出游戏';
+      const closeLabel = (document.getElementById('m-a-close-label')?.value || '').trim()
+        || (url ? '关闭' : '我知道了');
       const box = document.getElementById('m-a-preview');
       if (!box) return;
-      const actions = url
-        ? `<div class="ann-preview-actions">
-             <button class="btn sm ghost" type="button">关闭</button>
-             <button class="btn sm" type="button">${escapeHtml(label)}</button>
-           </div>`
-        : `<div class="ann-preview-actions">
-             <button class="btn sm ghost" type="button">关闭</button>
-           </div>`;
+      const btns = [];
+      if (exitOn) btns.push(`<button class="btn sm danger" type="button">${escapeHtml(exitLabel)}</button>`);
+      if (url) btns.push(`<button class="btn sm" type="button">${escapeHtml(label)}</button>`);
+      btns.push(`<button class="btn sm ghost" type="button">${escapeHtml(closeLabel)}</button>`);
+      const actions = `<div class="ann-preview-actions">${btns.join('')}</div>`;
       box.innerHTML = `
         <div class="ann-preview-title">${escapeHtml(title) || '<span class="muted">标题预览</span>'}</div>
         <p class="ann-preview-body">${escapeHtml(content) || '内容预览…'}</p>
@@ -109,12 +111,21 @@
           <div><label>跳转链接（可选）</label>
             <input id="m-a-url" type="url" placeholder="https://… 不填则只显示关闭"
               value="${escapeHtml(a?.action_url || '')}" oninput="updateAnnPreview()" /></div>
-          <div><label>按钮文案</label>
-            <input id="m-a-label" placeholder="立即前往" value="${escapeHtml(a?.action_label || '')}"
+          <div><label>跳转按钮文案</label>
+            <input id="m-a-label" placeholder="立即前往" maxlength="10" value="${escapeHtml(a?.action_label || '')}"
               oninput="updateAnnPreview()" /></div>
+          <div><label>关闭程序按钮</label>
+            <label class="muted" style="display:flex;align-items:center;gap:6px;margin:6px 0 4px">
+              <input id="m-a-exit" type="checkbox" ${a?.exit_enabled ? 'checked' : ''} onchange="updateAnnPreview()" />
+              显示「关闭程序」（点击直接结束游戏进程）</label>
+            <input id="m-a-exit-label" placeholder="退出游戏" maxlength="10"
+              value="${escapeHtml(a?.exit_label || '')}" oninput="updateAnnPreview()" /></div>
+          <div><label>「关闭弹窗进游戏」文案</label>
+            <input id="m-a-close-label" placeholder="留空=我知道了 / 有跳转时「关闭」" maxlength="10"
+              value="${escapeHtml(a?.close_label || '')}" oninput="updateAnnPreview()" /></div>
           <div class="full"><label>预览</label>
             <div class="ann-preview" id="m-a-preview"></div>
-            <p class="muted" style="margin:8px 0 0">填写跳转链接后客户端才显示「立即前往」；留空则仅关闭按钮。</p></div>
+            <p class="muted" style="margin:8px 0 0">按钮顺序：关闭程序 → 跳转 → 关闭进游戏。勾选「关闭程序」才显示退出按钮；填写跳转链接才显示「立即前往」；三者都不配 = 单按钮「我知道了」（有链接时为「关闭」+「立即前往」）。</p></div>
         </div>
         <div class="modal-actions">
           <button class="btn ghost" onclick="closeModal()">取消</button>
@@ -134,10 +145,26 @@
       if (scope !== 'game') setGamePickerValue('m-a-game', '', true);
     }
 
+    /** 列表行按钮概览：退出 → 跳转 → 关闭（与客户端渲染顺序一致） */
+    function annButtonsSummary(a) {
+      const parts = [];
+      if (a.exit_enabled) parts.push('退出「' + (a.exit_label || '退出游戏') + '」');
+      if (a.action_url) parts.push('跳转「' + (a.action_label || '立即前往') + '」');
+      parts.push('关闭「' + (a.close_label || (a.action_url ? '关闭' : '我知道了')) + '」');
+      return escapeHtml(parts.join(' / '));
+    }
+
     async function saveAnn(id) {
       try {
         const urlRaw = document.getElementById('m-a-url').value.trim();
         const labelRaw = document.getElementById('m-a-label').value.trim();
+        const exitEnabled = !!document.getElementById('m-a-exit').checked;
+        const exitLabelRaw = document.getElementById('m-a-exit-label').value.trim();
+        const closeLabelRaw = document.getElementById('m-a-close-label').value.trim();
+        if ([labelRaw, exitLabelRaw, closeLabelRaw].some(v => v.length > 10)) {
+          toast('按钮文案最多 10 个字');
+          return;
+        }
         if (urlRaw && !/^https?:\/\//i.test(urlRaw)) {
           toast('跳转链接需以 http:// 或 https:// 开头');
           return;
@@ -155,6 +182,9 @@
           end_at: tpISOString('m-a-end'),
           action_url: urlRaw || null,
           action_label: labelRaw || null,
+          exit_enabled: exitEnabled,
+          exit_label: exitLabelRaw || null,
+          close_label: closeLabelRaw || null,
         };
         if (!body.title || !body.content) { toast('请填写标题和内容'); return; }
         if (id) await api('/v1/admin/announcements/' + id, { method: 'PATCH', body: JSON.stringify(body) });

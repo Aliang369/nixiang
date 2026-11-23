@@ -831,6 +831,9 @@ def build_bootstrap(db: Session, game_id: str, logged_in: bool = False) -> dict[
                 "popup_mode": getattr(a, "popup_mode", None) or "every_open",
                 "action_url": getattr(a, "action_url", None) or None,
                 "action_label": getattr(a, "action_label", None) or None,
+                "exit_enabled": bool(getattr(a, "exit_enabled", False)),
+                "exit_label": getattr(a, "exit_label", None) or None,
+                "close_label": getattr(a, "close_label", None) or None,
             }
             for a in filtered
         ],

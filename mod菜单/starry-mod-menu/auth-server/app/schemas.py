@@ -152,6 +152,9 @@ class AnnouncementCreate(BaseModel):
     end_at: Optional[datetime] = None
     action_url: Optional[str] = Field(default=None, max_length=512)
     action_label: Optional[str] = Field(default=None, max_length=64)
+    exit_enabled: bool = False
+    exit_label: Optional[str] = Field(default=None, max_length=32)
+    close_label: Optional[str] = Field(default=None, max_length=32)
 
 
 class AnnouncementUpdate(BaseModel):
@@ -167,6 +170,9 @@ class AnnouncementUpdate(BaseModel):
     end_at: Optional[datetime] = None
     action_url: Optional[str] = Field(default=None, max_length=512)
     action_label: Optional[str] = Field(default=None, max_length=64)
+    exit_enabled: Optional[bool] = None
+    exit_label: Optional[str] = Field(default=None, max_length=32)
+    close_label: Optional[str] = Field(default=None, max_length=32)
 
 
 class CardBatchRequest(BaseModel):

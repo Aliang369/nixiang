@@ -131,6 +131,13 @@ class Announcement(Base):
     # 有 URL 才显示「立即前往」；空则菜单只显示关闭
     action_url: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     action_label: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # 2026-11-23 公告卡三按钮（后台可选、文案可自定义）：
+    #   exit_enabled=「关闭程序」按钮开关；exit_label=其文案（空=客户端默认「退出游戏」）
+    #   close_label=「关闭弹窗进游戏」文案（空=沿用旧行为「我知道了 / 关闭」）
+    # 三者全空 + action_url 空 ⇒ 客户端表现与旧版完全一致。
+    exit_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    exit_label: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    close_label: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

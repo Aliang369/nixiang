@@ -237,6 +237,9 @@ def _announcement_dict(a: Announcement) -> dict:
         "end_at": a.end_at.isoformat() if getattr(a, "end_at", None) else None,
         "action_url": getattr(a, "action_url", None) or None,
         "action_label": getattr(a, "action_label", None) or None,
+        "exit_enabled": bool(getattr(a, "exit_enabled", False)),
+        "exit_label": getattr(a, "exit_label", None) or None,
+        "close_label": getattr(a, "close_label", None) or None,
     }
 
 
@@ -1240,7 +1243,7 @@ def create_announcement(
     # 全游戏公告不绑定具体游戏（防前端漏禁用选择器时带入脏数据）
     if data.get("scope") == "global":
         data["game_id"] = None
-    for key in ("action_url", "action_label"):
+    for key in ("action_url", "action_label", "exit_label", "close_label"):
         val = (data.get(key) or "").strip() if isinstance(data.get(key), str) else data.get(key)
         data[key] = val or None
     a = Announcement(**data)
@@ -1277,7 +1280,7 @@ def update_announcement(
     if data.get("scope") == "game" and not data.get("game_id") and not a.game_id:
         raise HTTPException(400, "单游戏公告必须指定 game_id")
     for k, v in data.items():
-        if k in ("action_url", "action_label") and isinstance(v, str):
+        if k in ("action_url", "action_label", "exit_label", "close_label") and isinstance(v, str):
             v = v.strip() or None
         setattr(a, k, v)
     record_admin_audit(

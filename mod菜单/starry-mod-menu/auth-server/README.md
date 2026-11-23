@@ -38,7 +38,7 @@ DATABASE_URL=sqlite:///./starlight.db SECRET_KEY=devtest \
 | 模块 | 说明 |
 |------|------|
 | 卡密 | 时/天/月/年/永久/次数；单游戏/全游戏；单设备；用户自助解绑 1 次；后台改期/封禁/强制解绑 |
-| 公告 | 全游戏 / 单游戏 CRUD；`popup_mode`（每次打开 / 本机一次）；可见性 always / 已登录 / 未登录 |
+| 公告 | 全游戏 / 单游戏 CRUD；`popup_mode`（每次打开 / 本机一次）；可见性 always / 已登录 / 未登录；按钮：关闭程序（`exit_enabled`/`exit_label`）/ 跳转（`action_url`/`action_label`）/ 关闭进游戏（`close_label`），文案与开关全部后台可配，不配=旧行为 |
 | 功能门控 | 按 `game_id` + `feat_num` 开关；菜单模板入库，后台 CRUD 后同步。**掩码只认后台登记位**：未登记/停用一律 0，后台没配功能的游戏功能不可用 |
 | 关卡密默认 | 新建游戏默认 `card_auth_enabled=false`（隐藏账号 Tab，免登录）；未在后台注册的 `game_id` 不发功能、不签票，客户端直接不可用 |
 | Toast | 按 key 远程文案 |
