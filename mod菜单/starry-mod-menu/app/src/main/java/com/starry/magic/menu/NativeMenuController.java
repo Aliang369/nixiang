@@ -939,6 +939,33 @@ public final class NativeMenuController {
         if (featScroll != null) featScroll.invalidate();
     }
 
+    /**
+     * 切页后立刻补一次布局相位（同步执行，不依赖窗口布局相位）。
+     *
+     * <p>selectTab 的三处 setVisibility 只改可见性：GONE 的页立刻不再绘制，但新显示
+     * 的那一页还没有任何 layout 边界（bounds 停在 0,0-0,0）。控件、LayoutParams 都在，
+     * 只是没有可绘制区域，表现为「切到账号/设置页一片空白，功能页正常」。
+     * 这里按父容器当前可用宽度同步 measure + layout 一次，只补布局，
+     * 不改任何测量参数（panelBodyLimit / 探测实参 / 前景图层一律不动）。
+     */
+    private void relayoutPanelContentNow() {
+        if (panelContent == null) return;
+        int w = panelContent.getWidth();
+        if (w <= 0 && panel != null) {
+            w = panel.getWidth() - panel.getPaddingLeft() - panel.getPaddingRight();
+        }
+        if (w <= 0) w = panelContent.getMeasuredWidth();
+        if (w <= 0) return;
+        int left = panelContent.getLeft();
+        int top = panelContent.getTop();
+        panelContent.forceLayout();
+        panelContent.measure(
+                View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        panelContent.layout(left, top, left + w, top + panelContent.getMeasuredHeight());
+        panelContent.invalidate();
+    }
+
     /** 当前分类内容容器；无分类时落到根列表 */
     private LinearLayout featureHost() {
         return currentCategoryBody != null ? currentCategoryBody : featureList;
@@ -1254,6 +1281,8 @@ public final class NativeMenuController {
             setWindowFocusableForIme(false);
             MenuService.notifyOverlayInputFocus(false);
         }
+        // 切页只改了可见性：新显示的页还没有 layout 边界，同步补一次（见 relayoutPanelContentNow）
+        relayoutPanelContentNow();
         if (root != null) root.post(this::requestPanelRelayout);
         else requestPanelRelayout();
     }

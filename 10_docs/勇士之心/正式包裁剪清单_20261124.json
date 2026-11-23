@@ -1,0 +1,100 @@
+{
+  "game_dir": "E:/nixiang/08_output/勇士之心",
+  "keep": "勇士之心_1.0.6_surgical-releaseSigned-fix7-clean.apk",
+  "keep_size": 67899749,
+  "keep_md5": "3e5207b6bce30bf77be8e6e596ecdbbb",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-anchorhit.apk",
+      "size": 67879269,
+      "md5": "7cca2ceae1b6675bc9680645ab4bb5d4"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-diag-empty.apk",
+      "size": 67846501,
+      "md5": "429f40a89e1684f1c25529b3558d650e"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-fix3.apk",
+      "size": 67899749,
+      "md5": "2b25ea5685d64c836c1ad30b0670bc16"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-fix3.apk.idsig",
+      "size": 546331,
+      "md5": "5b39f916a459e571c5cb9f77f5553941"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-fix4.apk",
+      "size": 67899749,
+      "md5": "6e024497b096be64384e6c6bec729c68"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-fix4.apk.idsig",
+      "size": 546331,
+      "md5": "33e106ed49b46f5818e8be1212d78b23"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-fix5.apk",
+      "size": 67920229,
+      "md5": "30636fbd8ff3c65bc073af8f6921e6db"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-fix5.apk.idsig",
+      "size": 546331,
+      "md5": "7708439236a7526a4ee6ebc59c1766ca"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-fix6.apk",
+      "size": 67928421,
+      "md5": "0e45b35c430f2dc3afd8572de68eda8c"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-fix6.apk.idsig",
+      "size": 546331,
+      "md5": "db9821c146a41648650b325f5c61ccf8"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-fix7-clean.apk.idsig",
+      "size": 546331,
+      "md5": "641a3f9e068f0a8aeb38e611fe101fb9"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-killguard.apk",
+      "size": 67879269,
+      "md5": "0c12469fae937ffd9f9954f5965da824"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-revertmenu.apk",
+      "size": 67879269,
+      "md5": "397f806dca6ede80bec289beb9addc32"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-revertmenu.apk.idsig",
+      "size": 525851,
+      "md5": "e702535c0ab0eb1b545ce935f6e193ab"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned-v1.apk",
+      "size": 67850597,
+      "md5": "6bd8e97e39d1b15549867461e3c31d42"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned.apk",
+      "size": 67879269,
+      "md5": "0c12469fae937ffd9f9954f5965da824"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-releaseSigned.apk.idsig",
+      "size": 546331,
+      "md5": "11b08cde5355b8cf75afc8d1f0027e92"
+    },
+    {
+      "name": "勇士之心_1.0.6_surgical-unsigned.apk",
+      "size": 67778401,
+      "md5": "66cc7f85b6777fe65be6b950dfebb4a9"
+    }
+  ],
+  "removed_count": 18
+}

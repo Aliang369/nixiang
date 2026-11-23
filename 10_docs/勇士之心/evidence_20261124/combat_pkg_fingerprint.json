@@ -1,0 +1,28 @@
+{
+  "apk": {
+    "path": "08_output/勇士之心/勇士之心_1.0.6_surgical-releaseSigned.apk",
+    "size": 67879269,
+    "md5": "7cca2ceae1b6675bc9680645ab4bb5d4",
+    "sha256": "49727d43267270a7a10e14fc4a181e3ecb975aaea93d7e6586458e76175e94da"
+  },
+  "so_arm64": {
+    "size": 295368,
+    "sha256": "23f94f297170fd7ce1df44fa3ad2cae84a8a7669c661cc3794eb273da7d88d83",
+    "md5": "48b20010e10fba810b697d4f38912f79"
+  },
+  "so_x86": {
+    "size": 304668,
+    "sha256": "6ce31fe52fe8473cbd1a52cc0b60f7c22ad3b57a0cbe6d49505a48d8523970fa"
+  },
+  "so_v7a": {
+    "size": 244728,
+    "sha256": "2574380c7f384c7fbee52ef110c2f40c1f7c0164473eb1ab09b8cfc2b7ae744c"
+  },
+  "engine_so": {
+    "size": 35844552,
+    "sha256": "bc603df6969db553b5589aaffe8f0396a9a92da59173b8e08bdf95f06dabb3ba"
+  },
+  "signer_sha256": "83c5cc0be218d046b3b7af0d2a9f8236297fe228171af2974b71bac130736f1d",
+  "device": "emulator-5554",
+  "installedAt": "2026-11-23T23:19+08"
+}

@@ -1,0 +1,36 @@
+# fix3 冷启决定性行（三项功能修复）
+# 源：fix3_coldstart80.txt（原始目录已随收尾入隔离区）
+# 提取规则：命中 gold-card hooked | gold: | bag api | state@ | splice | evalString
+
+11-24 00:36:22.313 25643 25720 I Mod_Menu: [Ysxz] evalString probe #1 len=361613 file=jsb-adapter/jsb-builtin.js name=0 atk=0
+11-24 00:36:22.582 25643 25720 I Mod_Menu: [Ysxz] evalString probe #2 len=1684891 file=src/cocos2d-jsb.js name=0 atk=0
+11-24 00:36:22.971 25643 25720 I Mod_Menu: [Ysxz] evalString probe #3 len=228789 file=jsb-adapter/jsb-engine.js name=0 atk=0
+11-24 00:36:23.000 25643 25720 I Mod_Menu: [Ysxz] evalString probe #4 len=420382 file=src/assets/bingo/src/fgui/fairygui.js name=0 atk=0
+11-24 00:36:23.050 25643 25720 I Ysxz    : [MODMOD] native splice active (proof pid ok) -> bootstrap stand-down
+11-24 00:36:23.050 25643 25720 D jswrapper: JS: [MODMOD] native splice active (proof pid ok) -> bootstrap stand-down
+11-24 00:36:23.069 25643 25720 I Mod_Menu: [Ysxz] evalString probe #5 len=1153939 file=assets/main/index.js name=1 atk=0
+11-24 00:36:23.074 25643 25720 I Mod_Menu: [Ysxz] splice gate: session=live inject=103207 B #1 file=assets/main/index.js（不阻断注入）
+11-24 00:36:23.075 25643 25720 I Mod_Menu: [Ysxz] logic splice #1 len 1153939->1257172 file=assets/main/index.js
+11-24 00:36:23.553 25643 25720 I Mod_Menu: [Ysxz] evalString probe #6 len=7148543 file=assets/game/index.js name=1 atk=0
+11-24 00:36:23.579 25643 25720 I Mod_Menu: [Ysxz] splice gate: session=live inject=103207 B #2 file=assets/game/index.js（不阻断注入）
+11-24 00:36:23.588 25643 25720 I Mod_Menu: [Ysxz] logic splice #2 len 7148543->7251776 file=assets/game/index.js
+11-24 00:36:24.741 25643 25720 I Ysxz    : [AUTO] gold-card hooked: $eZ.monCard.gdk.gcZ [发现方式=struct+behaviour] (cardType===gold -> true, 受 feature6 控制)
+11-24 00:36:24.741 25643 25720 D jswrapper: JS: [AUTO] gold-card hooked: $eZ.monCard.gdk.gcZ [发现方式=struct+behaviour] (cardType===gold -> true, 受 feature6 控制)
+11-24 00:36:24.758 25643 25720 I Ysxz    : [AUTO] bag api: 出售=cbW(Bag.sellItem) 分解=cbV(Bag.decompose) [发现=protocol 发送器=ph/pm]
+11-24 00:36:24.759 25643 25720 D jswrapper: JS: [AUTO] bag api: 出售=cbW(Bag.sellItem) 分解=cbV(Bag.decompose) [发现=protocol 发送器=ph/pm]
+11-24 00:36:38.897 25643 25720 I Ysxz    : [AUTO] state@15s {"v":6,"gold":true,"goldKey":"monCard.gdk.gcZ","goldN":0,"repeatFlag":1,"repeatClicks":0,"repeatOn":true,"panels":0,"sell":0,"deco":0,"sellQ":"","decoQ":"","api":{"lm":{"repRead":"cqB","repWrite":"cqC","sellRead":"cqD","decoRead":"cqE","qualWrite":"cqF"},"bag":{"sell":"cbW","deco":"cbV","sellProto":"Bag.sellItem","decoProto":"Bag.decompose","how":"protocol"}},"feat":{"f6":1,"f7":1,"f8":1,"f9":1},"panelHook":1,"goldCalls":0,"tcPatched":0,"tcFlips":0,"tcCode":"","ticks":15,"errs":0,"lastErr":"","warns":0}
+11-24 00:36:38.897 25643 25720 D jswrapper: JS: [AUTO] state@15s {"v":6,"gold":true,"goldKey":"monCard.gdk.gcZ","goldN":0,"repeatFlag":1,"repeatClicks":0,"repeatOn":true,"panels":0,"sell":0,"deco":0,"sellQ":"","decoQ":"","api":{"lm":{"repRead":"cqB","repWrite":"cqC","sellRead":"cqD","decoRead":"cqE","qualWrite":"cqF"},"bag":{"sell":"cbW","deco":"cbV","sellProto":"Bag.sellItem","decoProto":"Bag.decompose","how":"protocol"}},"feat":{"f6":1,"f7":1,"f8":1,"f9":1},"panelHook":1,"goldCalls":0,"tcPatched":0,"tcFlips":0,"tcCode":"","ticks":15,"errs":0,"lastErr":"","warns":0}
+11-24 00:36:48.551 25643 25720 I Ysxz    : [AUTO] gold: 调用 gdk.gcZ(gold) 原值=false
+11-24 00:36:48.551 25643 25720 D jswrapper: JS: [AUTO] gold: 调用 gdk.gcZ(gold) 原值=false
+11-24 00:36:48.551 25643 25720 I Ysxz    : [AUTO] gold: 放行 gold 卡判定 (第 1 次调用)
+11-24 00:36:48.551 25643 25720 D jswrapper: JS: [AUTO] gold: 放行 gold 卡判定 (第 1 次调用)
+11-24 00:36:50.091 25643 25720 I Ysxz    : [AUTO] gold: 调用 gdk.gcZ(gold) 原值=false
+11-24 00:36:50.091 25643 25720 D jswrapper: JS: [AUTO] gold: 调用 gdk.gcZ(gold) 原值=false
+11-24 00:36:50.091 25643 25720 I Ysxz    : [AUTO] gold: 放行 gold 卡判定 (第 2 次调用)
+11-24 00:36:50.092 25643 25720 D jswrapper: JS: [AUTO] gold: 放行 gold 卡判定 (第 2 次调用)
+11-24 00:36:51.813 25643 25720 I Ysxz    : [AUTO] gold: 调用 gdk.gcZ(gold) 原值=false
+11-24 00:36:51.813 25643 25720 D jswrapper: JS: [AUTO] gold: 调用 gdk.gcZ(gold) 原值=false
+11-24 00:36:51.813 25643 25720 I Ysxz    : [AUTO] gold: 放行 gold 卡判定 (第 3 次调用)
+11-24 00:36:51.813 25643 25720 D jswrapper: JS: [AUTO] gold: 放行 gold 卡判定 (第 3 次调用)
+11-24 00:37:24.348 25643 25720 I Ysxz    : [AUTO] state@60s {"v":6,"gold":true,"goldKey":"monCard.gdk.gcZ","goldN":3,"repeatFlag":1,"repeatClicks":0,"repeatOn":true,"panels":0,"sell":0,"deco":0,"sellQ":"","decoQ":"","api":{"lm":{"repRead":"cqB","repWrite":"cqC","sellRead":"cqD","decoRead":"cqE","qualWrite":"cqF"},"bag":{"sell":"cbW","deco":"cbV","sellProto":"Bag.sellItem","decoProto":"Bag.decompose","how":"protocol"}},"feat":{"f6":1,"f7":1,"f8":1,"f9":1},"panelHook":1,"goldCalls":3,"tcPatched":0,"tcFlips":0,"tcCode":"","ticks":60,"errs":0,"lastErr":"","warns":0}
+11-24 00:37:24.348 25643 25720 D jswrapper: JS: [AUTO] state@60s {"v":6,"gold":true,"goldKey":"monCard.gdk.gcZ","goldN":3,"repeatFlag":1,"repeatClicks":0,"repeatOn":true,"panels":0,"sell":0,"deco":0,"sellQ":"","decoQ":"","api":{"lm":{"repRead":"cqB","repWrite":"cqC","sellRead":"cqD","decoRead":"cqE","qualWrite":"cqF"},"bag":{"sell":"cbW","deco":"cbV","sellProto":"Bag.sellItem","decoProto":"Bag.decompose","how":"protocol"}},"feat":{"f6":1,"f7":1,"f8":1,"f9":1},"panelHook":1,"goldCalls":3,"tcPatched":0,"tcFlips":0,"tcCode":"","ticks":60,"errs":0,"lastErr":"","warns":0}

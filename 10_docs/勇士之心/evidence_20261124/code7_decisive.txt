@@ -1,0 +1,12 @@
+# 副本自动战斗 code=7 决定性行
+# 源：fix5_coldstart.txt（原始目录已随收尾入隔离区）
+# 提取规则：命中 auto-req | funcOpen | privilege | code=7
+
+11-24 01:19:23.669 28207 28282 I Ysxz    : [MODMOD] auto-battle privilege hooked = .prototype.gdg
+11-24 01:19:24.112 28207 28282 I Ysxz    : [AUTO] auto-battle unlock: funcOpen 包装 30 个枚举判定
+11-24 01:19:24.114 28207 28282 I Ysxz    : [AUTO] battle auto-req 探针已挂: battleMgr.bHw（在线/副本局自动战斗请求，只记日志不改行为）
+11-24 01:19:38.330 28207 28282 I Ysxz    : [AUTO] auto-battle unlock: funcOpen.ckw(MONTH_CARD_OPEN=26) 放行
+11-24 01:20:03.852 28207 28282 I Ysxz    : [MODMOD] auto-battle privilege granted
+11-24 01:20:05.397 28207 28282 I Ysxz    : [AUTO] battle auto-req 在线局: reqAutoBattle=true code=7 (服务端拒绝 —— 客户端已无判定可放)
+11-24 01:20:06.281 28207 28282 I Ysxz    : [AUTO] battle auto-req 在线局: reqAutoBattle=true code=7 (服务端拒绝 —— 客户端已无判定可放)
+11-24 01:20:07.046 28207 28282 I Ysxz    : [AUTO] battle auto-req 在线局: reqAutoBattle=true code=7 (服务端拒绝 —— 客户端已无判定可放)

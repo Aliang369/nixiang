@@ -1,0 +1,383 @@
+{
+  "root": "E:/nixiang",
+  "quarantine": "E:/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150",
+  "timestamp": "20261124_020150",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "09_test/勇士之心/fix5_check",
+      "type": "dir",
+      "size_kib": 2880,
+      "source": "/e/nixiang/09_test/勇士之心/fix5_check",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/09_test/勇士之心/fix5_check"
+    },
+    {
+      "path": "09_test/勇士之心/combat_20261123",
+      "type": "dir",
+      "size_kib": 21227,
+      "source": "/e/nixiang/09_test/勇士之心/combat_20261123",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/09_test/勇士之心/combat_20261123"
+    },
+    {
+      "path": "09_test/勇士之心/install_20261123",
+      "type": "dir",
+      "size_kib": 78907,
+      "source": "/e/nixiang/09_test/勇士之心/install_20261123",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/09_test/勇士之心/install_20261123"
+    },
+    {
+      "path": "09_test/勇士之心/fix3_coldstart80.txt",
+      "type": "file",
+      "size_kib": 2276,
+      "source": "/e/nixiang/09_test/勇士之心/fix3_coldstart80.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/09_test/勇士之心/fix3_coldstart80.txt"
+    },
+    {
+      "path": "09_test/勇士之心/pre_fix3_coldstart.txt",
+      "type": "file",
+      "size_kib": 2116,
+      "source": "/e/nixiang/09_test/勇士之心/pre_fix3_coldstart.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/09_test/勇士之心/pre_fix3_coldstart.txt"
+    },
+    {
+      "path": "13_scratch/BET.txt",
+      "type": "file",
+      "size_kib": 28,
+      "source": "/e/nixiang/13_scratch/BET.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/BET.txt"
+    },
+    {
+      "path": "13_scratch/BMP.txt",
+      "type": "file",
+      "size_kib": 16,
+      "source": "/e/nixiang/13_scratch/BMP.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/BMP.txt"
+    },
+    {
+      "path": "13_scratch/CGJ.txt",
+      "type": "file",
+      "size_kib": 12,
+      "source": "/e/nixiang/13_scratch/CGJ.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/CGJ.txt"
+    },
+    {
+      "path": "13_scratch/CLA.txt",
+      "type": "file",
+      "size_kib": 12,
+      "source": "/e/nixiang/13_scratch/CLA.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/CLA.txt"
+    },
+    {
+      "path": "13_scratch/RW.txt",
+      "type": "file",
+      "size_kib": 44,
+      "source": "/e/nixiang/13_scratch/RW.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/RW.txt"
+    },
+    {
+      "path": "13_scratch/RX.txt",
+      "type": "file",
+      "size_kib": 8,
+      "source": "/e/nixiang/13_scratch/RX.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/RX.txt"
+    },
+    {
+      "path": "13_scratch/SR.txt",
+      "type": "file",
+      "size_kib": 20,
+      "source": "/e/nixiang/13_scratch/SR.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/SR.txt"
+    },
+    {
+      "path": "13_scratch/SW.txt",
+      "type": "file",
+      "size_kib": 32,
+      "source": "/e/nixiang/13_scratch/SW.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/SW.txt"
+    },
+    {
+      "path": "13_scratch/ZZ.txt",
+      "type": "file",
+      "size_kib": 144,
+      "source": "/e/nixiang/13_scratch/ZZ.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/ZZ.txt"
+    },
+    {
+      "path": "13_scratch/m.txt",
+      "type": "file",
+      "size_kib": 12,
+      "source": "/e/nixiang/13_scratch/m.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/m.txt"
+    },
+    {
+      "path": "13_scratch/menu_diagev_classes2.dex",
+      "type": "file",
+      "size_kib": 632,
+      "source": "/e/nixiang/13_scratch/menu_diagev_classes2.dex",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/menu_diagev_classes2.dex"
+    },
+    {
+      "path": "13_scratch/_chk_final.sh",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/_chk_final.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_chk_final.sh"
+    },
+    {
+      "path": "13_scratch/_cmp.py",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/_cmp.py",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_cmp.py"
+    },
+    {
+      "path": "13_scratch/_cmp.sh",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/_cmp.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_cmp.sh"
+    },
+    {
+      "path": "13_scratch/_code7_cap.sh",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/_code7_cap.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_code7_cap.sh"
+    },
+    {
+      "path": "13_scratch/_code7_cap2.sh",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/_code7_cap2.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_code7_cap2.sh"
+    },
+    {
+      "path": "13_scratch/_drv_fix.sh",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/_drv_fix.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_drv_fix.sh"
+    },
+    {
+      "path": "13_scratch/_fix5_asm.sh",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/_fix5_asm.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_fix5_asm.sh"
+    },
+    {
+      "path": "13_scratch/_fix5_build.sh",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/_fix5_build.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_fix5_build.sh"
+    },
+    {
+      "path": "13_scratch/_fix6.sh",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/_fix6.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_fix6.sh"
+    },
+    {
+      "path": "13_scratch/_fix7.sh",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/_fix7.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_fix7.sh"
+    },
+    {
+      "path": "13_scratch/_fix7_install.sh",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/_fix7_install.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_fix7_install.sh"
+    },
+    {
+      "path": "13_scratch/_pre.sh",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/_pre.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_pre.sh"
+    },
+    {
+      "path": "13_scratch/_pre2.sh",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/_pre2.sh",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/_pre2.sh"
+    },
+    {
+      "path": "13_scratch/autobattle_copy_test.js",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/autobattle_copy_test.js",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/autobattle_copy_test.js"
+    },
+    {
+      "path": "13_scratch/bag_methods.js",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/bag_methods.js",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/bag_methods.js"
+    },
+    {
+      "path": "13_scratch/bag_probe.js",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/bag_probe.js",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/bag_probe.js"
+    },
+    {
+      "path": "13_scratch/bag_real_test.js",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/bag_real_test.js",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/bag_real_test.js"
+    },
+    {
+      "path": "13_scratch/filter_code7.py",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/filter_code7.py",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/filter_code7.py"
+    },
+    {
+      "path": "13_scratch/filter_code7b.py",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/filter_code7b.py",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/filter_code7b.py"
+    },
+    {
+      "path": "13_scratch/filter_live.py",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/filter_live.py",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/filter_live.py"
+    },
+    {
+      "path": "13_scratch/filter_log.py",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/filter_log.py",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/filter_log.py"
+    },
+    {
+      "path": "13_scratch/fp_scan.js",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/fp_scan.js",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/fp_scan.js"
+    },
+    {
+      "path": "13_scratch/gold_scan.js",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/gold_scan.js",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/gold_scan.js"
+    },
+    {
+      "path": "13_scratch/mod_dump.js",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/mod_dump.js",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/mod_dump.js"
+    },
+    {
+      "path": "13_scratch/peek_log.py",
+      "type": "file",
+      "size_kib": 1,
+      "source": "/e/nixiang/13_scratch/peek_log.py",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/peek_log.py"
+    },
+    {
+      "path": "13_scratch/scope_test.js",
+      "type": "file",
+      "size_kib": 4,
+      "source": "/e/nixiang/13_scratch/scope_test.js",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/scope_test.js"
+    },
+    {
+      "path": "13_scratch/menu_diag",
+      "type": "dir",
+      "size_kib": 476179,
+      "source": "/e/nixiang/13_scratch/menu_diag",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/menu_diag"
+    },
+    {
+      "path": "13_scratch/menu_render_diag",
+      "type": "dir",
+      "size_kib": 156004,
+      "source": "/e/nixiang/13_scratch/menu_render_diag",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/menu_render_diag"
+    },
+    {
+      "path": ".ysxz_pristine",
+      "type": "dir",
+      "size_kib": 76,
+      "source": "/e/nixiang/.ysxz_pristine",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/.ysxz_pristine"
+    },
+    {
+      "path": "_blk.txt",
+      "type": "file",
+      "size_kib": 12,
+      "source": "/e/nixiang/_blk.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/_blk.txt"
+    },
+    {
+      "path": "_lc_副本.txt",
+      "type": "file",
+      "size_kib": 3896,
+      "source": "/e/nixiang/_lc_副本.txt",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/_lc_副本.txt"
+    },
+    {
+      "path": "%SystemDrive%",
+      "type": "dir",
+      "size_kib": 936,
+      "source": "/e/nixiang/%SystemDrive%",
+      "quarantine": "/e/nixiang/99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/%SystemDrive%"
+    }
+  ],
+  "note": "09_test / 13_scratch / 仓库根临时物按显式路径（禁通配符）移入 99_archive/_trash；08_output 与设备侧另按 manual_moves 处理（trash_paths 硬拒 08_output）。",
+  "manual_moves": [
+    {
+      "path": "08_output/勇士之心/classes2_relayout_20261124.dex",
+      "type": "file",
+      "size_kib": 632,
+      "reason": "菜单 fix4 重排的 dex 中间产物（同内容已在正式包 classes2.dex 内）",
+      "quarantine": "99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/08_output/勇士之心/classes2_relayout_20261124.dex"
+    },
+    {
+      "path": "08_output/勇士之心/killer",
+      "type": "dir",
+      "size_kib": 14,
+      "reason": "killer dex 构建产物（可用 build_killer_dex_ysxz.sh 重建；成品在正式包 classes3.dex）",
+      "quarantine": "99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/08_output/勇士之心/killer"
+    },
+    {
+      "path": "13_scratch/_run_trash_dry.sh / _run_trash_apply.sh",
+      "type": "file",
+      "reason": "本轮清理脚本自身",
+      "quarantine": "99_archive/_trash/nixiang_ysxz_20261124_20261124_020150/13_scratch/"
+    }
+  ],
+  "device_moves": [
+    {
+      "device": "emulator-5554",
+      "path": "/data/data/com.fightingstars.games.warrior/files/res/main.js.fix4bak",
+      "action": "rm -f（显式路径，无通配符）",
+      "reason": "2026-11-24 01:26 为验证驱动是否被旧补丁覆盖而改名的证据副本；同目录 main.js（38,349 B）保留，自愈会重写",
+      "verified": "删后 ls 只剩 main.js 38,349 B"
+    }
+  ],
+  "evidence_kept": "判据级文本已提取到 10_docs/勇士之心/evidence_20261124/（fix7clean/fix3/code7/driver 决定性行 + combat REPORT 与 install REPORT/RESULT_boot4 原文），原始大日志不必保留。",
+  "kept_on_disk": [
+    "09_test/勇士之心/menu_diag（菜单空白诊断原始取证，2.6 MiB，文档引用中）",
+    "09_test/勇士之心/precheck_20261124_003819（末次装机预检）",
+    "09_test/勇士之心/{base_20261123,hotupdate_20261123_raw,hotupdate_20261123_res}（底包/热更密文，2~4 MiB）",
+    "06_dumped/勇士之心/hotupdate_20261123（明文 bundle，63 MiB，git 只入 summary/复现说明）"
+  ]
+}

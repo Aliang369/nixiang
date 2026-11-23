@@ -4,6 +4,7 @@
  *  Cocos Creator 2.4.15 / libcocos2djs.so。
  *  native 只 hook se::ScriptEngine::evalString，向游戏主 bundle 尾部拼接
  *  自愈式 JS；功能状态由 com.starry.magic.cocos.YsxzHooks 读取。
+ * 2026-11-23：用户要求删除「自动穿戴」=> 菜单 13 项 -> 12 项（末尾 YSXZ_FEAT_WEAR 一并删除）。
  * ================================================================ */
 
 #include "ModEntry.h"
@@ -23,7 +24,6 @@ static const char* kYsxz_Features[] = {
     "Toggle_自动重复挑战",     // 10 YSXZ_FEAT_REPEAT
     "Toggle_自动出售",         // 11 YSXZ_FEAT_SELL
     "Toggle_自动分解",         // 12 YSXZ_FEAT_DECO
-    "Toggle_自动穿戴",         // 13 YSXZ_FEAT_WEAR
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

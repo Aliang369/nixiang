@@ -43,13 +43,14 @@ CXX_DIR = {
     "x86_64": "x86_64-linux-android",
 }
 # so 侧必须带的串（1.0.6 全集菜单 + 新定位 + 自举兜底）
+# 2026-11-23：用户要求删除「自动穿戴」=> 该串已从菜单移除，门禁改为校验 Toggle_自动分解。
 SO_TOKENS = [
     "Slider_伤害倍率:1:50:1",
     "Slider_移动速度:1:10:1",
     "Slider_战斗加速:1:5:1",
     "Toggle_自动战斗",
     "Toggle_解锁金卡",
-    "Toggle_自动穿戴",
+    "Toggle_自动分解",
     "evalString resolved by dynsym",
     "readable-map fallback",
 ]

@@ -6,13 +6,13 @@
  *   autoRepeatFinishTick   L6840-6888  -> (2b) 自动重复挑战(结算面板 efi 按钮，token 三重去重)
  *   autoSellDecomposeNow   L4729-4780  -> (3)(4) 自动出售 / 自动分解 (bag.bYK / bag.bYJ)
  *   _sdQualitiesOf         L4658-4687  -> 出售/分解品质来源
- *   autoWearBestEquip      L4580-4608  -> (5)  自动穿戴        (equip.ftA -> equip.fvH)
+ *   （2026-11-23 用户要求：卡密包的 autoWearBestEquip(5) 不复刻，本层已整段删除）
  *   autoPostCleanupTick    L6800-6820  -> 驱动与错峰节流
  *
  * ------------------------------------------------------------------ 主动偏离 --
  * 1. 不引入他的远程菜单框架（__REMOTE_COMMANDS__ / RemoteUI / __WX_CARD_PERMANENT__）。
- *    我们只搬【功能逻辑】，开关一律读【我们自己的原生菜单】：globalThis.MOD.feature6..10
- *    -> Java com.starry.magic.cocos.YsxzHooks.getRet(8..13)。
+ *    我们只搬【功能逻辑】，开关一律读【我们自己的原生菜单】：globalThis.MOD.feature6..9
+ *    -> Java com.starry.magic.cocos.YsxzHooks.getRet(8..12)。
  * 2. 金卡与自动战斗【拆成两个开关】。他那边是同一个 CFG.autoFight（菜单项叫
  *    「解锁金卡与自动战斗」）；我们分开，避免"只想解锁金卡却被顺手开了自动战斗"。
  * 3. 出售/分解品质【只读游戏内自己的勾选】(localMgr.cnp / localMgr.cnq)，
@@ -31,13 +31,18 @@
  * ---------------------------------------------------------------- 静默失效 --
  * 上一轮过检测层踩过"钩子没挂上却什么都不打印"的坑（那个 bug 靠"一行日志都没有"
  * 才被抓出来）。本层同样给每一步留【有界证据日志】：金卡让一次打一条(≤3)、
- * 重复挑战点一次打一条(≤3)、回城清理每次打一行(≤3)、穿戴提交一次打一条(≤3)。
+ * 重复挑战点一次打一条(≤3)、回城清理每次打一行(≤3)。
  * 另外每 tick 计数，第 15 / 60 tick 各打一张状态快照；`window.__AUTO_STATE__()` 随时可读。
  * ========================================================================== */
 ;(function () {
-  var AUTO_VER = 5;   /* 5 = 2026-10-26：res 1.1.10.0 短名换语义 ⇒ 全部改明文锚点/结构指纹发现，
-                       *     面板时机改吃 baseline 的 window.__starry_fin 事件；出售/分解/穿戴改用
-                       *     游戏自己的「一键」口（bag 按品质批量、equip 一键穿戴）。 */
+  var AUTO_VER = 6;   /* 5 = 2026-10-26：res 1.1.10.0 短名换语义 ⇒ 全部改明文锚点/结构指纹发现，
+                       *     面板时机改吃 baseline 的 window.__starry_fin 事件；出售/分解改用
+                       *     游戏自己的「按品质批量」口（bag）。
+                       * 6 = 2026-11-24：res 1.1.22.0 上 ① 出售口换成协议锚点发现（旧的 ".pg(" 字面量
+                       *     在新版落空 = 自动出售静默不卖）；② 面板钩子缺失告警改为「先读 baseline
+                       *     导出的 __starry_panel_hooked」，不再在「还没进过结算」时误报；
+                       *     ③ 金卡加首次调用轨迹（证明调用点真的走到我们的包装器）；
+                       *     ④ 冷启就做一次 bag 口发现（只发现、不发协议），让"发现命中"可单独验收。 */
   if (typeof window === "undefined") return;
   var _prev = window.__starry_auto;
   if (_prev && (_prev.__v | 0) >= AUTO_VER) return;
@@ -49,7 +54,7 @@
   }
   function msgOf(e) { try { return e && e.message ? e.message : String(e); } catch (x) { return "?"; } }
   /* 【一次性诊断】开关开着、但目标 API 在本版本不存在时，必须留下一条日志。
-   * 理由：本层依赖的 fDc / autoBattleFlag / ftA / fvH / bYK / bYJ / efi 全是
+   * 理由：本层依赖的 fDc / autoBattleFlag / bYK / bYJ / efi 全是
    * 【逐版本重混淆的短名】。官方热更改名后，钩子挂不上、协议发不出去，
    * 而菜单开关照样显示"开"——这正是上一轮过检测层栽过的静默失效。
    * 每个点位只打一次，热路径保持冷。 */
@@ -64,7 +69,7 @@
   var A = {
     __v: AUTO_VER,
     /* (1) 解锁金卡 */
-    goldHooked: false, goldKey: "", goldHow: "", goldAllowN: 0,
+    goldHooked: false, goldKey: "", goldHow: "", goldAllowN: 0, goldCallN: 0, panelHookOk: 0,
     /* (2) 自动重复挑战 */
     repeatFlagSync: 0, repeatClickN: 0,
     repeatToken: 0, repeatScheduled: null, repeatHandled: null,
@@ -73,20 +78,18 @@
     sdDump: "", sdLast: null, sdTotal: 0, sdLocked: 0, sdDecoable: 0,
     sdFinal: 0, sdEmptyLogged: 0,
     protoSent: 0, protoCode: "", pkHooked: false, evProto: 0,
-    /* (5) 穿戴 */
-    wearN: 0, wearOkN: 0, wearEmptyN: 0,
     /* 驱动 / 节流 */
     tickN: 0, inBattleLatch: false, busy: false, lastCleanup: 0, battleN: 0,
-    acTickSeen: 0, evGold: 0, evRepeat: 0, evClean: 0, evWear: 0, sdProbe: 0,
+    acTickSeen: 0, evGold: 0, evRepeat: 0, evClean: 0, sdProbe: 0,
     errN: 0, lastErr: "", note: "", loopStarted: false, warnN: 0
   };
   /* 发现缓存（1.1.10.0）：三个 API 表都是“第一次用的时候在真实对象上按指纹找”，不写死短名 */
-  A.lmApi = null; A.bagApi = null; A.eqApi = null; A.finSeen = 0;
+  A.lmApi = null; A.bagApi = null; A.finSeen = 0;
 
   /* ------------------------------------------------------------------ 基础 -- */
   function MOD() { try { return window.MOD || null; } catch (e) { return null; } }
   /* 菜单开关：feature6=解锁金卡 feature7=自动重复挑战 feature8=自动出售
-   *           feature9=自动分解 feature10=自动穿戴  （序号见 YsxzEntry.cpp） */
+   *           feature9=自动分解  （序号见 YsxzEntry.cpp；feature10 已随功能删除） */
   function FEAT(n) {
     try { var m = MOD(); return !!(m && m["feature" + n]); } catch (e) { return false; }
   }
@@ -104,7 +107,6 @@
    * res 1.1.10.0 把本层依赖的短名整体**换了语义**（不是改名）：
    *   bag.bZw / bag.bZv      -> 变成无参的“背包/红点检查”（不发协议）
    *   localMgr.coe / cof     -> 变成音效/音乐音量；localMgr.cod -> 城镇显示人数
-   *   equip.fFu              -> 变成“宝石镶嵌”（fCV/fCW 同理换了靶子）
    *   fguiMgr.cUU.bdG        -> 整条“按名取面板实例”链消失
    * 所以本层不再写死任何短名，一律用【明文锚点 + 结构指纹】在真实对象上找：
    *   存档字段名 autoBattleFlag / autoSellEquipFlag / autoDecomposeEquipFlag（混淆器不动）；
@@ -150,7 +152,9 @@
 
   /* 战斗信号。两条独立通道取【或】：
    *  ① 游戏自己的战斗管理器 $eZ.battleMgr.bEu.no()  —— 照抄他 hasBattleActive L3669
-   *  ② 过检测层的战斗帧计数在涨            —— 真机已验证这条链是通的(v4 日志 wallMs=32333)
+   *  ② 加速层的引擎帧计数在涨 —— speed_layer.js 的 calculateDeltaTime 包装器每帧自增 tickSeen
+   *     （2026-11-23：过检测层已移除，本通道改读 window.__starry_speed，真机链路不变；
+   *      字段 A.acTickSeen 沿用旧名，只为不牵动 __AUTO_STATE__ 诊断键）
    * 只用①有风险：若 bEu.no 在本版本不存在，信号恒 false => 回城清理永远不触发（静默失效）。 */
   function battleSignal() {
     try {
@@ -158,9 +162,9 @@
       if (JE && typeof JE.no === "function") { if (JE.no()) return true; }
     } catch (e) {}
     try {
-      var ac = window.__starry_ac;
-      if (ac) {
-        var t = ac.tickSeen | 0;
+      var sp = window.__starry_speed;
+      if (sp) {
+        var t = sp.tickSeen | 0;
         var grow = t > (A.acTickSeen | 0);
         A.acTickSeen = t;
         if (grow) return true;
@@ -187,7 +191,7 @@
    *                      （同族的"剩余秒数"返回 number；"商品配置是否存在"含 findByKey 已排除）
    *   都落空时退回历史短名列表（fDf/fDc…）并做同样的 boolean 行为校验。
    *   命中哪一级都写进 goldKey + 一行日志 ⇒ 下一版热更直接看日志就知道走没走对。 */
-  var GOLD_LEGACY = ["fDf", "fDc", "fDe", "fDn"];
+  var GOLD_LEGACY = ["gcZ", "fDf", "fDc", "fDe", "fDn"];
   function goldCandidates(v) {
     var out = [];
     var p;
@@ -202,7 +206,11 @@
       var src = "";
       try { src = Function.prototype.toString.call(f); } catch (e2) { continue; }
       if (src.indexOf('"silver"') < 0 || src.indexOf("Premium") < 0) continue;
-      if (src.indexOf("buffId") < 0 || src.indexOf("$eZ.buff") < 0) continue;
+      /* 持有判定的函数体 = 三元取 buffId 后查 buff；"$eZ.buff" 是公共管理器名，
+       * 若哪天改成先赋给局部变量（var m = $eZ.buff; m.ccl.cce(…)），只认 "$eZ.buff"
+       * 会整条落空 ⇒ 用 ".cce(" 一起兜（cc? 是 buff 查询族的短名，行为甄别在下一级把闸）。 */
+      if (src.indexOf("buffId") < 0) continue;
+      if (src.indexOf("$eZ.buff") < 0 && src.indexOf(".cce(") < 0) continue;
       if (src.indexOf("findByKey") >= 0) continue;     /* 同族里"商品/子buff配置是否存在"那条 */
       out.push({ name: pn[j], fn: f });
     }
@@ -269,6 +277,16 @@
       if (typeof orig !== "function") { miss("gold.orig", "解锁金卡: 定位到 " + key + " 但不是函数"); return false; }
       var w = function (cardType) {
         var owned = orig.apply(this, arguments);
+        try {
+          /* 调用点轨迹（≤5 条）：证明"被包装的方法真的被游戏调到了"。
+           * 2026-11-24 加它的理由：res 1.1.22.0 上钩子已确认挂上
+           * （日志 gold-card hooked: $eZ.monCard.gdk.gcZ），但 goldN 一直是 0 ——
+           * 只有分清"没人调"与"调了但没放行"，才不会把效果问题误判成发现层问题。 */
+          A.goldCallN = (A.goldCallN | 0) + 1;
+          if (A.goldCallN <= 5) {
+            log("gold: 调用 " + hit.dataKey + "." + hit.name + "(" + String(cardType) + ") 原值=" + String(owned));
+          }
+        } catch (e0) {}
         try {
           if (cardType === "gold" && FEAT(6)) {
             A.goldAllowN++;
@@ -693,21 +711,100 @@
    * autoDecomposeEquipFlag 读，游戏内一个都没勾时用默认 [1,2,3]（同卡密包 v33N）。
    * 1.1.9.1 时代的 bZw/bZv 在 1.1.10.0 已经变成无参的背包检查函数，直接调等于空转。 */
   var QUAL_DEF = [1, 2, 3];        /* COMMON / SENIOR / RARE */
+  /* ---- 协议发送器定位（2026-11-24 / res 1.1.22.0 新增）-----------------------------
+   * 明文依据（06_dumped/勇士之心/hotupdate_20261123/assets/game/index.js）：
+   *   发送器在 bag 的基类 $ZZ 上：ph -> SprotocolMap.Bag.sellItem
+   *                              pm -> SprotocolMap.Bag.decompose
+   *                              pg -> SprotocolMap.Bag.useItem
+   *   批量口在 bag 模块 $RW 上：cbW(t) 组 {bagType, list:[{gridId, num: amount}]} -> this.ph(o,…)
+   *                             cbV(t) 组 {bagType, gridList:[…]}              -> this.cak(o) -> this.pm(o,…)
+   * ⇒ "发协议"只认 SprotoMap 明文（Bag.sellItem / Bag.decompose 不参与混淆）。
+   *   旧指纹 s.indexOf(".pg(") 是**发送器短名**：1.1.22.0 出售口从 useItem(pg) 换成了
+   *   sellItem(ph) ⇒ 旧指纹永远落空、自动出售静默不卖（本轮实测根因）。 */
+  var PROTO_RE = /SprotocolMap\.(\w+)\.(\w+)/;
+  function bagSenders(bag) {
+    var out = {};
+    for (var k in bag) {
+      var f;
+      try { f = bag[k]; } catch (e) { continue; }
+      if (typeof f !== "function") continue;
+      var s = srcOf(f);
+      if (!s || s.length > 900) continue;        /* 发送器是薄包装；体积闸防命中大业务方法 */
+      var m = PROTO_RE.exec(s);
+      if (m && !out[k]) out[k] = m[1] + "." + m[2];
+    }
+    return out;
+  }
+  /* 从「发 want 协议的发送器」向上 1~2 跳找批量口，要求方法体带全部 payload 字面量 */
+  function bagBulk(one, senders, want, payload) {
+    var sender = null;
+    for (var k in senders) { if (senders[k] === "Bag." + want) { sender = k; break; } }
+    if (!sender) return null;
+    var frontier = [sender], seen = {}, found = null, hop, i, j, n, q, p2;
+    for (hop = 0; hop < 3 && !found; hop++) {
+      var next = [];
+      for (i = 0; i < one.length; i++) {
+        if (seen[one[i].name]) continue;
+        for (j = 0; j < frontier.length; j++) {
+          if (one[i].src.indexOf("this." + frontier[j] + "(") >= 0) { seen[one[i].name] = 1; next.push(one[i].name); break; }
+        }
+      }
+      for (n = 0; n < next.length && !found; n++) {
+        for (q = 0; q < one.length; q++) {
+          if (one[q].name !== next[n]) continue;
+          var ok = true;
+          for (p2 = 0; p2 < payload.length; p2++) {
+            if (one[q].src.indexOf(payload[p2]) < 0) { ok = false; break; }
+          }
+          if (ok) found = { name: one[q].name, proto: "Bag." + want, viaSender: sender, hop: hop + 1 };
+          break;
+        }
+      }
+      frontier = next;
+    }
+    return found;
+  }
   function BAGAPIS() {
     var z = F(), bag = z && z.bag;
     if (!bag) return null;
     if (!A.bagApi) {
-      var d = {};
-      /* 出售：单参、内部拼 {gridId, num: amount} 并走 pg 协议，还带 quality 过滤 */
-      d.sell = findFnOn(bag, 1, function (s) {
-        return s.indexOf("num:") >= 0 && s.indexOf(".pg(") >= 0 && s.indexOf("quality") >= 0;
-      });
-      /* 分解：单参、内部拼 gridList，自带 isLock + 可分解过滤 */
-      d.deco = findFnOn(bag, 1, function (s) {
-        return s.indexOf("gridList") >= 0 && s.indexOf("quality") >= 0 && s.indexOf("isLock") >= 0;
-      });
+      var d = {}, one = [], senders = {}, k, f, s;
+      for (k in bag) {
+        try { f = bag[k]; } catch (e) { continue; }
+        if (typeof f !== "function" || (f.length | 0) !== 1) continue;
+        s = srcOf(f);
+        if (s) one.push({ name: k, src: s });
+      }
+      try { senders = bagSenders(bag); } catch (e0) { senders = {}; }
+      /* tier1 行为锚点：1 参 + 调用链能走到 Bag.sellItem / Bag.decompose */
+      var hbS = bagBulk(one, senders, "sellItem", ["num:", "isLock"]);
+      var hbD = bagBulk(one, senders, "decompose", ["gridList", "isLock"]);
+      d.sell = hbS ? hbS.name : null;
+      d.deco = hbD ? hbD.name : null;
+      d.sellProto = hbS ? hbS.proto : "";
+      d.decoProto = hbD ? hbD.proto : "";
+      d.how = (hbS || hbD) ? "protocol" : "";
+      /* tier2 结构指纹兜底（发送器或协议名取不到时） */
+      if (!d.sell) {
+        d.sell = findFnOn(bag, 1, function (t) {
+          return t.indexOf("num:") >= 0 && t.indexOf("isLock") >= 0 && t.indexOf("quality") >= 0;
+        });
+        if (d.sell) d.how = "struct";
+      }
+      if (!d.deco) {
+        d.deco = findFnOn(bag, 1, function (t) {
+          return t.indexOf("gridList") >= 0 && t.indexOf("quality") >= 0 && t.indexOf("isLock") >= 0;
+        });
+        if (d.deco) d.how = d.how || "struct";
+      }
+      /* tier3 历史短名（1.1.10.0~1.1.22.0 实测名），逐条校验"是函数 + 1 参" */
+      if (!d.sell) { var l1 = bag["cbW"]; if (typeof l1 === "function" && (l1.length | 0) === 1) { d.sell = "cbW"; d.how = "legacy-name"; } }
+      if (!d.deco) { var l2 = bag["cbV"]; if (typeof l2 === "function" && (l2.length | 0) === 1) { d.deco = "cbV"; d.how = "legacy-name"; } }
       A.bagApi = d;
-      log("bag api: sellByQuality=" + d.sell + " decomposeByQuality=" + d.deco);
+      log("bag api: 出售=" + d.sell + (d.sellProto ? "(" + d.sellProto + ")" : "") +
+          " 分解=" + d.deco + (d.decoProto ? "(" + d.decoProto + ")" : "") +
+          " [发现=" + (d.how || "miss") + " 发送器=" +
+          (hbS ? hbS.viaSender : "-") + "/" + (hbD ? hbD.viaSender : "-") + "]");
     }
     return A.bagApi;
   }
@@ -734,8 +831,11 @@
             sellQ = QUAL_DEF.slice();
             if (!A.sellDef) { A.sellDef = 1; log("[sd] 游戏内未勾选出售品质 -> 用默认 [1,2,3]"); }
           }
-          try { bag[api.sell](sellQ); A.sellN++; A.lastSellQ = sellQ.join(","); did += "出售[" + A.lastSellQ + "] "; }
-          catch (e) { err("sell", e); }
+          try {
+            bag[api.sell](sellQ);
+            A.sellN++; A.lastSellQ = sellQ.join(","); did += "出售[" + A.lastSellQ + "] ";
+            if (A.sellN <= 3) log("[sd] 发协议 " + (api.sellProto || "Bag.sellItem") + " via bag." + api.sell + " 品质[" + A.lastSellQ + "]");
+          } catch (e) { err("sell", e); }
         }
       }
       if (wantDeco) {
@@ -746,8 +846,11 @@
             decoQ = QUAL_DEF.slice();
             if (!A.decoDef) { A.decoDef = 1; log("[sd] 游戏内未勾选分解品质 -> 用默认 [1,2,3]"); }
           }
-          try { bag[api.deco](decoQ); A.decoN++; A.lastDecoQ = decoQ.join(","); did += "分解[" + A.lastDecoQ + "]"; }
-          catch (e) { err("deco", e); }
+          try {
+            bag[api.deco](decoQ);
+            A.decoN++; A.lastDecoQ = decoQ.join(","); did += "分解[" + A.lastDecoQ + "]";
+            if (A.decoN <= 3) log("[sd] 发协议 " + (api.decoProto || "Bag.decompose") + " via bag." + api.deco + " 品质[" + A.lastDecoQ + "]");
+          } catch (e) { err("deco", e); }
         }
       }
       if (A.evClean < 3) {
@@ -759,79 +862,27 @@
     } catch (e) { err("sell/deco", e); return false; }
   }
 
-  /* ==================================================== (5) 自动穿戴 ======
-   * 2026-10-26（res 1.1.10.0 反查）：1.1.9.1 的 equip.fCV/fCW/fFu 在这一版**换了靶子**
-   * （fFu 现在是“宝石镶嵌”，体里是 gemInfoCfg / “当前能量已满”；fCV 是强化材料适用性）
-   * ⇒ 旧实现只会报“不是函数/永远不会成功”。这一版直接用游戏自己的「一键穿戴」两口：
-   *   equip.<候选列表>()   -> [itemUid,...]   更优且可穿的装备（内部按部位比强度、排已穿）
-   *   equip.<批量穿戴>(uids) -> promise<件数>  内部按 10 件一批发协议
-   * 指纹：候选 = 0 参 + 明文 WORE_EQUIP + new Map() 且不含 SOUL（那是魂魄那一路）；
-   *       批量 = 1 参 + 明文 items: + .slice( + “+ 10”（分片）。
-   * 缺失 API 一律留一条 miss 日志，不静默。
-   */
-  function EQAPI() {
-    var z = F(), eq = z && z.equip;
-    if (!eq) return null;
-    if (!A.eqApi) {
-      var d = {};
-      /* itemUid 是协议负载明文；SOUL 那条是“一键穿戴魂魄”，不能算进来 */
-      d.cands = findFnOn(eq, 0, function (s) {
-        return s.indexOf("WORE_EQUIP") >= 0 && s.indexOf("new Map()") >= 0 &&
-               s.indexOf("itemUid") >= 0 && s.indexOf("SOUL") < 0;
-      });
-      d.wear = findFnOn(eq, 1, function (s) {
-        return s.indexOf("items:") >= 0 && s.indexOf(".slice(") >= 0 && s.indexOf("+ 10") >= 0;
-      });
-      A.eqApi = d;
-      log("equip api: candidates=" + d.cands + " wearAll=" + d.wear);
-    }
-    return A.eqApi;
-  }
-  function wearBest() {
-    try {
-      var z = F();
-      if (!z) return false;
-      var eq = z.equip;
-      if (!eq) { miss("wear.eq", "自动穿戴: $eZ.equip 不存在 —— 该功能不会生效"); return false; }
-      var api = EQAPI();
-      if (!api || !api.cands || !api.wear) {
-        miss("wear.api", "自动穿戴: equip 上找不到「一键穿戴」口 —— 该功能不会生效");
-        return false;
-      }
-      var uids = null;
-      try { uids = eq[api.cands]() || []; } catch (eC) { err("wear/cands", eC); return false; }
-      if (!uids.length) {
-        A.wearEmptyN++;
-        if (A.evWear < 3) { A.evWear++; log("穿戴: 当前没有更优装备"); }
-        return false;
-      }
-      if (A.evWear < 3) { A.evWear++; log("穿戴: 待换 " + uids.length + " 件 -> 一键穿戴"); }
-      A.wearN++;
-      var pr = null;
-      try { pr = eq[api.wear](uids); } catch (e) { err("wear/submit", e); return false; }
-      var okN = function (n) {
-        A.wearOkN++;
-        if ((A.evWearOk | 0) < 3) { A.evWearOk = (A.evWearOk | 0) + 1; log("穿戴: 成功 " + (n | 0) + " 件"); }
-      };
-      if (pr && pr.then) pr.then(function (n) { okN(n); }, function () { err("wear/reject", "promise rejected"); });
-      else okN(uids.length);
-      return true;
-    } catch (e) { err("wear", e); return false; }
-  }
-
   /* =============================================== 驱动 / 结算面板时机 =====
    * 2026-10-26（res 1.1.10.0）：旧的 fguiMgr.cUU.bdG(name) 查询链整条消失（cUU 已改作他用），
-   * 实测表现 = panels 恒 0、自动出售/分解/穿戴永不触发。改吃 baseline 的事件：
+   * 实测表现 = panels 恒 0、自动出售/分解永不触发。改吃 baseline 的事件：
    *   baseline 钩住面板自己的打开方法（指纹 btnList/btn_again/btn_toNext），
    *   命中后写 window.__starry_fin = {n, t, inst, again}；本层每秒读一次序号变化。
-   * 时序照卡密包：面板打开 +0.4s 出售/分解 → +1.6s 穿戴 → +6.5s 重复挑战兜底。
+   * 时序照卡密包：面板打开 +0.4s 出售/分解 → +6.5s 重复挑战兜底（+1.6s 穿戴已随功能删除）。
    */
   function panelTick() {
     var fin = null;
     try { fin = window.__starry_fin; } catch (e) {}
     if (!fin || !fin.inst) {
-      if (FEAT(7) || FEAT(8) || FEAT(9) || FEAT(10)) {
-        miss("panel.hook", "结算面板时机: baseline 没钩到面板打开方法（btnList/btn_again/btn_toNext）—— 自动化四项都不会触发");
+      /* 【误报修正 2026-11-24】旧文案在"还没进过结算"时就喊"baseline 没钩到"，
+       * 上一轮冷启日志里因此出现一条与事实相反的告警（baseline 其实已打印
+       * result panel open hook = .prototype.wA，panelHook=yes）。
+       * 现在先读 baseline 导出的 __starry_panel_hooked：已装 ⇒ 只说明"还没触发"，
+       * 保持安静（状态快照里有 panels 计数）；明确没装 ⇒ 才 warn。 */
+      var hooked = 0;
+      try { hooked = window.__starry_panel_hooked | 0; } catch (e1) {}
+      if (hooked) { A.panelHookOk = 1; return; }
+      if (FEAT(7) || FEAT(8) || FEAT(9)) {
+        miss("panel.hook", "结算面板时机: baseline 没钩到面板打开方法（btnList/btn_again/btn_toNext）—— 自动化三项都不会触发");
       }
       return;
     }
@@ -861,18 +912,13 @@
       try { bn = inst && inst.btn_toNext ? !!inst.btn_toNext.visible : "无"; } catch (e) {}
       log("[fin] #" + A.finN + " 结算面板打开 | 自动挑战位=" + c1 + " btn_again=" + ba
           + " btn_toNext=" + bn + " againApi=" + (startKey || "无") + "/" + (againKey || "无")
-          + " | 自动化 重复=" + FEAT(7) + " 出售=" + FEAT(8) + " 分解=" + FEAT(9) + " 穿戴=" + FEAT(10));
+          + " | 自动化 重复=" + FEAT(7) + " 出售=" + FEAT(8) + " 分解=" + FEAT(9));
     }
     setTimeout(function () {
       if (token !== A.finToken) return;
       if (!FEAT(8) && !FEAT(9)) return;
       try { cleanupSellDeco(); } catch (e) { err("clean", e); }
     }, 400);
-    setTimeout(function () {
-      if (token !== A.finToken) return;
-      if (!FEAT(10)) return;
-      try { wearBest(); } catch (e) { err("wear", e); }
-    }, 1600);
     setTimeout(function () {
       if (token !== A.finToken) return;
       if (!FEAT(7)) return;
@@ -928,6 +974,11 @@
   function tick() {
     A.tickN++;
     try { tryGoldCard(); } catch (e) { err("gold/tick", e); }
+    /* 【冷启即可验的发现探针 2026-11-24】出售/分解的 bag 口原来只在结算面板事件里找，
+     * 于是"钩子发现命中"这件事要等真打一局才出现在日志里（机器侧无法单独验收）。
+     * 这里在开关开着时先做一次【纯发现】（只 toString 扫描，不发任何协议），
+     * 让冷启日志里直接有 bag api 一行；失败也只 throw 到 err()，不改任何游戏状态。 */
+    if (!A.bagApi && (FEAT(8) || FEAT(9))) { try { BAGAPIS(); } catch (e1) { err("bag/pre", e1); } }
     /* 自动战斗（解锁游戏内按钮）：挂在 $eZ.buff.bZL.bZF(AUTO_BATTLE) 与
        monCard.fNc.fMY()/funcOpen.chW(MONTH_CARD_OPEN) 上。
        【事故复盘 2026-10-25】这个调用点原来藏在旧的 repeatTick() 里，我把 repeat 段
@@ -951,14 +1002,17 @@
       repeatFlag: A.repeatFlagSync, repeatClicks: A.repeatClickN, repeatOn: A.repeatLast,
       panels: A.finN | 0,
       sell: A.sellN, deco: A.decoN, sellQ: A.lastSellQ, decoQ: A.lastDecoQ,
-      api: { lm: A.lmApi || 0, bag: A.bagApi || 0, eq: A.eqApi || 0 },
-      wear: A.wearN, wearOk: A.wearOkN, wearEmpty: A.wearEmptyN, wearCode: A.wearLastCode,
+      api: { lm: A.lmApi || 0, bag: A.bagApi || 0 },
+      /* 2026-11-24：把「菜单开关真值」和「baseline 面板钩子是否装上」一起写进快照。
+       * 上一轮只能靠人肉推断 feature6..9 的状态，分不清「开关关着」与「发现层没找到」。 */
+      feat: { f6: FEAT(6) ? 1 : 0, f7: FEAT(7) ? 1 : 0, f8: FEAT(8) ? 1 : 0, f9: FEAT(9) ? 1 : 0 },
+      panelHook: A.panelHookOk | 0, goldCalls: A.goldCallN | 0,
       tcPatched: TC.patched, tcFlips: TC.flipN, tcCode: TC.flipCode,
       ticks: A.tickN, errs: A.errN, lastErr: A.lastErr, warns: A.warnN
     };
   };
 
-  /* 自重排 setTimeout（不用 setInterval：主补丁也只信 setTimeout，见 ac_layer.js:424 同理由）。
+  /* 自重排 setTimeout（不用 setInterval：主补丁也只信 setTimeout，见 speed_layer.js 同理由）。
    * 本层需要【常驻】驱动，不像过检测层挂完钩子就能停。 */
   if (!A.loopStarted) {
     A.loopStarted = true;
@@ -970,5 +1024,5 @@
   }
 
   window.__starry_auto = A;
-  log("auto layer v" + AUTO_VER + " loaded (gold / repeat(autoBattleFlag 位) / sell+decompose(bag 按品质批量口) / wear(equip 一键穿戴) / 面板时机=window.__starry_fin; 开关读 MOD.feature6..10)");
+  log("auto layer v" + AUTO_VER + " loaded (gold / repeat(autoBattleFlag 位) / sell+decompose(bag 按品质批量口) / 面板时机=window.__starry_fin; 开关读 MOD.feature6..9)");
 })();

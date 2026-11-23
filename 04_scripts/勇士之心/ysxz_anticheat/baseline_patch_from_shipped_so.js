@@ -601,6 +601,10 @@ function MOD_boot(REG) {
         try { pStart = findPanelStart(Cls.prototype, pTick); } catch (e1b) {}
         try { Cls.__starryPanelHooked = 1; } catch (e0) {}
         PANEL_HOOKED = 1;
+        /* 2026-11-24：把"钩子已装"这个事实导出给 auto_layer。
+         * 之前 auto 层只能用 window.__starry_fin 判，而它在首次结算前必然为空
+         * ⇒ 冷启日志里出现与事实相反的告警（baseline 明明已挂 wA）。 */
+        try { window.__starry_panel_hooked = 1; } catch (e0c) {}
         var wrapper = function () {
             var r = orig.apply(this, arguments);
             try {

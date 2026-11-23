@@ -70,8 +70,32 @@ extern "C" int StarrySessionLive(void);
 
 static const char* kTargetLib() { return sec_lib_cocosjs(); }
 
-static constexpr uintptr_t kEvalRva = 0x3138e4;
-static constexpr uint32_t kEvalInsn = 0xD10543FFu;
+/* ===== 2026-11-23 锚点全量重定位（用户指令：偏移全部重新找，旧值作废）=====
+ * 1.0.6 明文引擎 so：/data/data/com.fightingstars.games.warrior/no_backup/mlib/arm64-v8a/
+ *   libcocos2djs.so  35,844,552 B  sha256 bc603df6969db553b5589aaffe8f0396a9a92da59173b8e08bdf95f06dabb3ba
+ *   （mtime 2026-11-23 23:10，运行期由 libsecret 解密落盘）
+ * se::ScriptEngine::evalString 入口 = 0x31418C，三条独立证据：
+ *   ① JNI 桥 Java_org_cocos2dx_lib_Cocos2dxJavascriptJavaBridge_evalString（dynsym 0x2C1264）
+ *      在 +0x8C 处 `bl 0x31418C`，实参 (script,-1,0,0) 正是 evalString(const char*,long,Value*,const char*)；
+ *   ② 0x31418C 序言 = 0xD10543FF（sub sp,sp,#0x150）+ stp x28,x27/[sp,#0xf0]… 与 1.0.3 同一套帧；
+ *   ③ 函数体 0x314584 / 0x3145C4 引用 rodata 0x196FEE0 "ScriptEngine::evalString catch exception:"
+ *      与 0x196FF0B "ScriptEngine::evalString script %s, failed!"。函数区间 [0x31418C,0x3149C0)。
+ * 旧值 0x3138E4 在 1.0.6 上落在别的函数中间（实测首字 0x97FFE631 = bl）⇒ 作废。
+ * 取证命令：
+ *   llvm-readelf --dyn-syms -W libcocos2djs.so | grep evalString
+ *   llvm-objdump -d --start-address=0x2c1264 --stop-address=0x2c12f4 libcocos2djs.so   # 见 bl 0x31418c
+ *   llvm-objdump -d --start-address=0x31418c --stop-address=0x3141b0 libcocos2djs.so   # 序言
+ *   llvm-strings -a -t x libcocos2djs.so | grep "ScriptEngine::evalString"               # rodata 偏移 */
+struct EvalCandidate {
+    uintptr_t rva;
+    uint32_t insn;
+    const char *ver;
+};
+static constexpr EvalCandidate kEvalCandidates[] = {
+    {0x31418c, 0xD10543FFu, "1.0.6"},   /* 加密壳代 / res 1.1.22.0 / so sha256 bc603df6… */
+    {0x3138e4, 0xD10543FFu, "1.0.3"},   /* 1.0.3 明文包（历史兜底，序言相同） */
+};
+static constexpr uintptr_t kEvalRva = 0x31418c;   /* 仅用于日志展示当前版本锚点 */
 static constexpr long kBundleMinLen = 200L * 1024L;
 static constexpr long kBundleMaxLen = 64L * 1024L * 1024L;
 
@@ -139,7 +163,13 @@ static void* FileOffToVa(const char* lib, uintptr_t fileOff, bool* viaReadable) 
         fclose(fp);
         if (found) {
             if (!wantExec) {
-                LOGI("%s readable-map fallback engaged lib=%s", YSXZ_LOG, lib);
+                /* 2026-11-23：探测循环每次 ~24ms 一条，实测 40 行/秒把 logcat 环形缓冲冲掉、
+                   连自己上一轮的 [YsxzSec]/[YsxzExit] 证据都留不住 ⇒ 限速。 */
+                static std::atomic<int> s_fbLog{0};
+                const int fbN = ++s_fbLog;
+                if (fbN <= 3 || (fbN % 1000) == 0) {
+                    LOGI("%s readable-map fallback engaged lib=%s (#%d)", YSXZ_LOG, lib, fbN);
+                }
                 if (viaReadable) *viaReadable = true;
             }
             return found;
@@ -306,11 +336,39 @@ static const char* kEvalSyms[] = {
     "_ZN2se12ScriptEngine10evalStringEPKclPNS_5ValueES2_b",  // 尾参 bool 变体
 };
 static const char* kEvalSymJni =
-    "Java_org_cocos2dx_lib_Cocos2dxJavascriptJavaBridge_evalString";  // 仅佐证，不作 splice 点
+    "Java_org_cocos2dx_lib_Cocos2dxJavascriptJavaBridge_evalString";  // 1.0.6 dynsym 0x2C1264（导出，跨版本稳）
+
+/* 签名扫描兜底（不依赖任何 RVA/符号名）：
+ *   JNI 桥是导出符号 ⇒ 先按名字拿到桥函数，再在它的前 64 条指令里找 BL，
+ *   凡是跳转目标序言 == evalString 的帧形态（sub sp,sp,#0x150 = 0xD10543FF）即命中。
+ *   1.0.6 实测：命中 0x31418C；桥内另有 3 个 BL 目标（0x31091C/0x314184/0x297E94）序言都不是该形态。
+ *   这条路径在「符号被 strip + RVA 又漂移」时仍然可用，是最后的自动锚点。 */
+static void* ResolveEvalViaBridgeBl(const char* lib, const char** via) {
+    void* bridge = getSymAddress(lib, kEvalSymJni, false);
+    if (!bridge) return nullptr;
+    const uint32_t* p = reinterpret_cast<const uint32_t*>(bridge);
+    for (int i = 0; i < 64; i++) {
+        uint32_t w = 0;
+        memcpy(&w, p + i, sizeof(w));
+        if ((w & 0xFC000000u) != 0x94000000u) continue;   /* BL imm26 */
+        int64_t off = static_cast<int64_t>(w & 0x03FFFFFFu);
+        if (off & 0x02000000) off -= 0x04000000;          /* sign extend 26 -> 28 */
+        uintptr_t tgt = reinterpret_cast<uintptr_t>(p + i) + (off << 2);
+        uint32_t pro = 0;
+        memcpy(&pro, reinterpret_cast<const void*>(tgt), sizeof(pro));
+        if (pro != 0xD10543FFu) continue;
+        if (via) *via = "bridge-bl";
+        LOGI("%s evalString resolved by bridge BL scan: bridge=%p +0x%X -> %p", YSXZ_LOG,
+             bridge, i * 4, reinterpret_cast<void*>(tgt));
+        return reinterpret_cast<void*>(tgt);
+    }
+    return nullptr;
+}
 
 static void* ResolveEvalString(const char* lib, const char** via, bool* viaReadable) {
     if (via) *via = "rva";
     if (viaReadable) *viaReadable = false;
+    /* ① 动态符号：跨版本最稳（1.0.3 明文包导出；1.0.6 被 strip ⇒ 自然落到 ②） */
     for (const char* sym : kEvalSyms) {
         void* p = getSymAddress(lib, sym, false);
         if (!p) continue;
@@ -318,26 +376,37 @@ static void* ResolveEvalString(const char* lib, const char** via, bool* viaReada
         LOGI("%s evalString resolved by dynsym: %s", YSXZ_LOG, sym);
         return p;
     }
-    if (getSymAddress(lib, kEvalSymJni, false)) {
-        LOGI("%s note: JNI evalString bridge present (不用作 splice 点)", YSXZ_LOG);
-    }
-    void* va = FileOffToVa(lib, kEvalRva, viaReadable);
-    if (!va) return nullptr;
-    uint32_t got = 0;
-    memcpy(&got, va, sizeof(got));
-    if (got != kEvalInsn) {
-        // 重编后 se::evalString 已不在 kEvalRva 上 ⇒ 原生 splice 不挂，改由 JS 自举路线
-        // （files/res/main.js 尾部补丁）生效。重试循环每秒走很多次，日志必须限速。
-        static std::atomic<int> s_drift{0};
-        const int n = ++s_drift;
-        if (n <= 3 || (n % 200) == 0) {
-            LOGW("%s evalString prologue drift got=0x%08X want=0x%08X (#%d, 本版走 JS 自举路线)",
-                 YSXZ_LOG, got, kEvalInsn, n);
+    /* ② 版本候选表（带序言校验，逐条试） */
+    for (const EvalCandidate& c : kEvalCandidates) {
+        void* va = FileOffToVa(lib, c.rva, viaReadable);
+        if (!va) continue;
+        uint32_t got = 0;
+        memcpy(&got, va, sizeof(got));
+        if (got != c.insn) {
+            static std::atomic<int> s_drift{0};
+            const int n = ++s_drift;
+            if (n <= 6 || (n % 500) == 0) {
+                LOGW("%s evalString candidate %s rva=0x%lX prologue drift got=0x%08X want=0x%08X (#%d)",
+                     YSXZ_LOG, c.ver, (unsigned long)c.rva, got, c.insn, n);
+            }
+            continue;
         }
-        return nullptr;
+        if (via) *via = (viaReadable && *viaReadable) ? "readable" : "rx";
+        LOGI("%s evalString candidate hit ver=%s rva=0x%lX", YSXZ_LOG, c.ver, (unsigned long)c.rva);
+        return va;
     }
-    if (via) *via = (viaReadable && *viaReadable) ? "readable" : "rx";
-    return va;
+    /* ③ 签名扫描：JNI 桥 + BL 目标序言 */
+    {
+        void* p = ResolveEvalViaBridgeBl(lib, via);
+        if (p) return p;
+    }
+    if (getSymAddress(lib, kEvalSymJni, false)) {
+        static std::atomic<int> s_bridge{0};
+        if (++s_bridge <= 3) {
+            LOGI("%s note: JNI evalString bridge present (bridge+BL scan 也未命中)", YSXZ_LOG);
+        }
+    }
+    return nullptr;
 }
 
 static bool HookEvalString() {
@@ -379,9 +448,18 @@ static bool PatchRegistryCall(std::string* src) {
 
 /* 2026-11-04（用户指令：加固/载 sha/v3 全部下线）：功能载荷改回**明文常量**随 so 进包。
    不再有载荷加密、诱饵层、也不再有 v3 票送 kx 密钥。 */
+/* 2026-11-23 诊断开关（默认关闭）：打开后 splice 机制**照旧装 hook、照旧改写注册表调用**，
+   但注入的 JS 为空 ⇒ HookedEvalString 走 "patch js empty -> passthrough"。
+   用途：二分「壳 kill 是注入的 JS 内容触发」还是「Dobby 改引擎代码页触发」。
+   （见 10_docs/勇士之心/_work_20261123_壳kill二分.md） */
 static const std::string& GetPatchJs() {
+#ifdef YSXZ_DIAG_EMPTY_PATCH
+    static const std::string s;           /* 空 ⇒ passthrough，但不阻止 hook/splice 流程 */
+    return s;
+#else
     static const std::string s(kYsxzPatchJs, strlen(kYsxzPatchJs));
     return s;
+#endif
 }
 
 static bool HookedEvalString(void* thiz, const char* script, long length, void* ret,

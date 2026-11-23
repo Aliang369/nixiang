@@ -27,7 +27,15 @@ ORIG_MD5="${ORIG_MD5:-c06a1c1e3cc4f57e4d9ab29ecd9becfa}"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
-NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
+# 2026-11-23 win：NDK 根按平台探测（mac 老路径 → ANDROID_HOME/ANDROID_SDK_ROOT/01_tools）
+_ndk_pick() {
+  for c in "${ANDROID_NDK_HOME:-}" "${ANDROID_HOME:-}/ndk/27.0.12077973" "${ANDROID_SDK_ROOT:-}/ndk/27.0.12077973" \
+           "$HOME/Library/Android/sdk/ndk/27.0.12077973" "$NIXIANG/01_tools/android-sdk/ndk/android-ndk-r27c"; do
+    [ -n "$c" ] && [ -d "$c" ] && { printf '%s\n' "$c"; return 0; }
+  done
+  return 1
+}
+NDK="$( _ndk_pick || true )"
 # 2026-10-25 win：NDK prebuilt 主机 tag 随平台变（darwin-x86_64 / windows-x86_64），
 # 写死 darwin 会在 Git Bash 下找不到 libc++_shared.so 而静默少一个依赖库。
 case "$(uname -s 2>/dev/null || echo unknown)" in
@@ -37,10 +45,18 @@ case "$(uname -s 2>/dev/null || echo unknown)" in
 esac
 NDK_CXX="$NDK/toolchains/llvm/prebuilt/$NDK_TAG/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
 NEW_DEX="classes2.dex"
+# 2026-11-23：B 轨 killer（签名运行时替换）单独占 classes3.dex（官方只有 classes.dex、星光占 classes2）
+KILLER_DEX="${YSXZ_KILLER_DEX:-$NIXIANG/08_output/$GAME/killer/ysxz_signature_killer.dex}"
+KILLER_DEX_SLOT="${YSXZ_KILLER_SLOT:-classes3.dex}"
+# 多 ABI：arm64 必须；x86 / armeabi-v7a 有 so 就一起带（设备 primaryCpuAbi=arm64-v8a 时不影响选择）
+EXTRA_ABIS="${YSXZ_EXTRA_ABIS:-x86 armeabi-v7a}"
 
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
+if ! command -v apktool >/dev/null 2>&1; then
+  [ -x "$NIXIANG/01_tools/apktool/apktool" ] && PATH="$NIXIANG/01_tools/apktool:$PATH"
+fi
 command -v apktool >/dev/null 2>&1 || { echo "ERROR: apktool 不在 PATH（win 上把 01_tools/apktool 前置进 PATH）" >&2; exit 1; }
 command -v java >/dev/null 2>&1 || { echo "ERROR: java 不在 PATH" >&2; exit 1; }
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK" >&2; exit 1; }
@@ -91,7 +107,8 @@ for d in "$WORK/starry_dec"/smali "$WORK/starry_dec"/smali_classes*; do
   rsync -a "$d/com/starry" "$SMALI_ROOT/com/"
 done
 shopt -u nullglob
-for cls in StarryInitProvider MenuService ModBridge SignSpoofAppComponentFactory YsxzAppComponentFactory; do
+# 2026-11-23：SignSpoofAppComponentFactory 于 2026-10-28 从源码删除，改查现行的 StarryAppComponentFactory
+for cls in StarryInitProvider MenuService ModBridge StarryAppComponentFactory YsxzAppComponentFactory; do
   find "$SMALI_ROOT/com" -type f -name "$cls.smali" -print -quit | grep -q . || {
     echo "ERROR: starry class missing: $cls" >&2; exit 1;
   }
@@ -99,9 +116,52 @@ done
 "$SMALI_BIN" assemble -o "$WORK/$NEW_DEX" "$SMALI_ROOT"
 ls -la "$WORK/$NEW_DEX"
 
+# 2026-11-23：B 轨 killer dex（烘焙官方证书 DER）——缺失就现构，之后逐项断言
+if [[ ! -f "$KILLER_DEX" ]]; then
+  echo "  killer dex 缺失，调用 04_scripts/勇士之心/build_killer_dex_ysxz.sh 生成"
+  bash "$NIXIANG/04_scripts/勇士之心/build_killer_dex_ysxz.sh"
+fi
+[[ -f "$KILLER_DEX" ]] || { echo "ERROR: killer dex 缺失 $KILLER_DEX" >&2; exit 1; }
+python3 - "$KILLER_DEX" <<'PY'
+import sys
+from pathlib import Path
+b = Path(sys.argv[1]).read_bytes()
+assert b'bin/mt/signature/KillerApplication193' in b, 'killer dex 不含目标类'
+assert b'com.fightingstars.games.warrior' in b, 'killer dex 未烘焙目标包名'
+assert b'MIID' in b, 'killer dex 未烘焙证书 DER（base64 头 MIID 缺失）'
+print('  killer dex ok: %d B' % len(b))
+PY
+
+# 2026-11-23：arm64 必须；x86 / armeabi-v7a 的 starry so 存在就一起带（各自带 libc++_shared）
+_libcxx_for() {
+  case "$1" in
+    arm64-v8a)   echo "$NDK/toolchains/llvm/prebuilt/$NDK_TAG/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" ;;
+    x86)         echo "$NDK/toolchains/llvm/prebuilt/$NDK_TAG/sysroot/usr/lib/i686-linux-android/libc++_shared.so" ;;
+    armeabi-v7a) echo "$NDK/toolchains/llvm/prebuilt/$NDK_TAG/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so" ;;
+  esac
+}
 mkdir -p "$WORK/lib/arm64-v8a"
 cp "$SO_PREBUILT" "$WORK/lib/arm64-v8a/"
-[[ -f "$NDK_CXX" ]] && cp "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so"
+# 2026-11-24：**硬失败**。旧写法 `[[ -f … ]] && cp` 在取不到路径时静默跳过，
+# 结果是「包看着正常、装上必崩」：缺 libc++_shared.so ⇒ libstarry_magic.so 无法 dlopen
+# ⇒ 壳自检失败置 dirty ⇒ Application.onCreate 被跳过 ⇒ bingo SDK 未初始化 ⇒
+# AppActivity 启动时 PluginHelper.getMetaValue NPE（2026-11-23 实测踩过两次）。
+[ -f "$NDK_CXX" ] || { echo "ERROR: 缺 libc++_shared.so: ${NDK_CXX} (NDK=${NDK} TAG=${NDK_TAG}) —— 拒绝出包" >&2; exit 1; }
+cp "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so"
+for abi in $EXTRA_ABIS; do
+  extra_so="$STARRY_SRC/libs_ysxz/$abi/libstarry_magic.so"
+  if [[ -f "$extra_so" ]]; then
+    mkdir -p "$WORK/lib/$abi"
+    cp "$extra_so" "$WORK/lib/$abi/"
+    cxx="$(_libcxx_for "$abi")"
+    # 2026-11-24：同上，硬失败（缺一个 ABI 的该库 = 该 ABI 装上必崩）
+    [ -f "$cxx" ] || { echo "ERROR: 缺 $abi 的 libc++_shared.so: $cxx —— 拒绝出包" >&2; exit 1; }
+    cp "$cxx" "$WORK/lib/$abi/libc++_shared.so"
+    echo "  +lib/$abi/libstarry_magic.so ($(python3 -c 'import os,sys;print(os.path.getsize(sys.argv[1]))' "$extra_so") B)"
+  else
+    echo "  (skip $abi: 无 $extra_so)"
+  fi
+done
 if [[ -d "$WORK/starry_dec/assets/certs" ]]; then
   mkdir -p "$WORK/assets/certs"
   cp -R "$WORK/starry_dec/assets/certs/." "$WORK/assets/certs/"
@@ -176,8 +236,17 @@ PY
 apktool b -f "$WORK/orig_dec" -o "$WORK/mf_only.apk" >/dev/null
 unzip -p "$WORK/mf_only.apk" AndroidManifest.xml > "$WORK/AndroidManifest.xml"
 
-AAPT2="${AAPT2:-$HOME/Library/Android/sdk/build-tools/36.0.0/aapt2}"
-if [[ -x "$AAPT2" ]]; then
+# 2026-11-23 win：aapt2 路径按平台探测（mac 老路径 → ANDROID_HOME build-tools 最高版本）
+if [[ -z "${AAPT2:-}" ]]; then
+  for v in 36.1.0 36.0.0 35.0.0 34.0.0; do
+    for sdk in "${ANDROID_HOME:-}" "${ANDROID_SDK_ROOT:-}" "$HOME/Library/Android/sdk"; do
+      for exe in aapt2.exe aapt2; do
+        [ -n "$sdk" ] && [ -f "$sdk/build-tools/$v/$exe" ] && { AAPT2="$sdk/build-tools/$v/$exe"; break 3; }
+      done
+    done
+  done
+fi
+if [[ -n "${AAPT2:-}" && -f "$AAPT2" ]]; then
   "$AAPT2" dump xmltree "$ORIG_APK" --file AndroidManifest.xml > "$WORK/tree_orig.txt"
   python3 - "$WORK/AndroidManifest.xml" "$WORK/mf_check.apk" <<'PY'
 import sys, zipfile
@@ -202,11 +271,13 @@ PY
 fi
 
 echo "[4/5] zip surgical merge -> $UNSIGNED"
-python3 - "$ORIG_APK" "$WORK" "$UNSIGNED" "$NEW_DEX" "$BOOT_ENC" <<'PY'
+python3 - "$ORIG_APK" "$WORK" "$UNSIGNED" "$NEW_DEX" "$BOOT_ENC" "$KILLER_DEX" "$KILLER_DEX_SLOT" <<'PY'
 import sys, zipfile, hashlib
 from pathlib import Path
 src, work, dst, new_dex = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4]
 boot_enc = Path(sys.argv[5]).read_bytes()   # 已打补丁的加密 main.js（首启即生效，不再等自愈）
+killer = Path(sys.argv[6]).read_bytes()     # B 轨 killer dex（烘焙官方证书 DER）
+killer_slot = sys.argv[7]                   # 默认 classes3.dex
 mf = (work / "AndroidManifest.xml").read_bytes()
 cnew = (work / new_dex).read_bytes()
 extras = {}
@@ -235,6 +306,12 @@ zin = zipfile.ZipFile(src, "r")
 names = set(zin.namelist())
 assert "AndroidManifest.xml" in names
 assert new_dex not in names
+assert killer_slot != new_dex, f"killer 槽位与星光 dex 冲突: {killer_slot}"
+assert killer_slot not in names, f"原包已占用 {killer_slot}"
+# 两侧类锚点（装配前先在内存里验，失败不用等签名阶段）
+assert b'com/starry/magic/ysxz/YsxzAppComponentFactory' in cnew, 'classes2 不含 YsxzAppComponentFactory'
+assert b'com/starry/magic/sign/StarryAppComponentFactory' in cnew, 'classes2 不含 StarryAppComponentFactory'
+assert b'bin/mt/signature/KillerApplication193' in killer, 'classes3 不是 killer dex'
 for n in untouched:
     assert n in names, f"orig apk missing {n}"
 def is_sig(name):
@@ -257,6 +334,8 @@ for item in zin.infolist():
     n += 1
 info = zipfile.ZipInfo(new_dex); info.compress_type = zipfile.ZIP_DEFLATED; info.create_system = 3
 zout.writestr(info, cnew); n += 1
+info = zipfile.ZipInfo(killer_slot); info.compress_type = zipfile.ZIP_DEFLATED; info.create_system = 3
+zout.writestr(info, killer); n += 1
 for name, data in sorted(extras.items()):
     info = zipfile.ZipInfo(name); info.compress_type = zipfile.ZIP_DEFLATED; info.create_system = 3
     zout.writestr(info, data); n += 1
@@ -271,6 +350,10 @@ print(f"  assets/main.js <- patched ({len(boot_enc)} B, md5 {hashlib.md5(boot_en
 out_names = set(zout2.namelist())
 for name in kept_meta: assert name in out_names, f"lost {name}"
 assert new_dex in out_names
+assert killer_slot in out_names
+assert zout2.read(killer_slot) == killer, "classes3 内容不是 killer dex"
+assert b'com/starry/magic/ysxz/YsxzAppComponentFactory' in zout2.read(new_dex)
+assert b'bin/mt/signature/KillerApplication193' in zout2.read(killer_slot)
 assert "lib/arm64-v8a/libstarry_magic.so" in out_names
 assert not any(x.upper().endswith((".SF", ".RSA", ".DSA", ".EC")) for x in out_names)
 assert "META-INF/MANIFEST.MF" not in out_names
@@ -281,7 +364,15 @@ PY
 echo "[5/5] 校验产物"
 unzip -Z1 "$UNSIGNED" > "$WORK/entries.txt"
 grep -q "^$NEW_DEX$" "$WORK/entries.txt" || { echo "ERROR: $NEW_DEX missing" >&2; exit 1; }
+grep -q "^$KILLER_DEX_SLOT$" "$WORK/entries.txt" || { echo "ERROR: $KILLER_DEX_SLOT missing" >&2; exit 1; }
 grep -q '^lib/arm64-v8a/libstarry_magic.so$' "$WORK/entries.txt" || { echo "ERROR: starry so missing" >&2; exit 1; }
 echo "unsigned=$UNSIGNED"
-md5 -q "$UNSIGNED" | sed 's/^/md5=/'
-shasum -a 256 "$UNSIGNED" | awk '{print "sha256="$1}'
+# 2026-11-23 win：md5 -q / shasum / stat -f 是 mac 语法，统一走 python
+python3 - "$UNSIGNED" <<'PY'
+import hashlib, os, sys
+p = sys.argv[1]
+b = open(p, 'rb').read()
+print('size=%d' % os.path.getsize(p))
+print('md5=%s' % hashlib.md5(b).hexdigest())
+print('sha256=%s' % hashlib.sha256(b).hexdigest())
+PY

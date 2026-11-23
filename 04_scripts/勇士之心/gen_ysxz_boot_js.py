@@ -45,6 +45,14 @@ SCAN_DEF = "    function scan(exp) {"
 TARGETS_HEAD = "    var targets = [];"
 TARGETS_TAIL = '    log("wrapped " + targets.length + " target modules: " + targets.join(","));'
 TAIL_HEAD = "window.__starry_capture = function (reg) {"
+# 2026-11-23 P0 修复：SEC7_HEAD 到 function scan(exp) 之间【既有】原生 REG 启动段，
+# 也有 2026-10-26 才加进来的「6c 结算面板打开时机」整块（PANEL_N/PANEL_HOOKED/
+# AGAIN_TAG/findPanelAgain/findPanelStart/tryPanel）。旧实现把那一段整体替换掉 ⇒
+#   * tryPanel 未定义（被 NEW_SCAN 的 try/catch 吃掉，只留一行 tryPanel ERR）
+#   * REPORT 的 3s 定时器里 PANEL_HOOKED 未定义 ⇒ 未捕获 ReferenceError，主循环被打爆（用户实测卡死）
+# ⇒ 现在只替换「原生 REG 启动段」，面板块原样保留。
+PANEL_HEAD = "    /* ---------- 6c. 结算面板打开时机"
+NATIVE_HEAD = "    var srcs = {}, id, nmod = 0;\n    for (id in REG) {"
 N_DECL = "function MOD_boot(REG) {\n    var N = {};"
 
 SCAN_BLOCK = '''    function scan(exp) {
@@ -304,9 +312,19 @@ def build(src: str, ids: list) -> str:
         if n != 1:
             raise SystemExit("ERROR: 锚点不唯一/缺失: %r (%d 次)" % (m[:48], n))
 
+    for m in (PANEL_HEAD, NATIVE_HEAD):
+        n = src.count(m)
+        if n != 1:
+            raise SystemExit("ERROR: 锚点不唯一/缺失: %r (%d 次)" % (m[:48], n))
     i0 = src.index(SEC7_HEAD)
     i1 = src.index(SCAN_DEF)
-    src = src[:i0] + NEW_SEC7_HEAD + "\n" + src[i1:]
+    p0 = src.index(PANEL_HEAD)
+    p1 = src.index(NATIVE_HEAD)
+    if not (i0 < p0 < p1 < i1):
+        raise SystemExit("ERROR: 切段顺序异常 i0=%d p0=%d p1=%d i1=%d（基线结构变了，先核对）"
+                         % (i0, p0, p1, i1))
+    # 保留「6c 结算面板打开时机」整块（p0..p1），只把原生 REG 启动段换成 exports 反推版
+    src = src[:i0] + src[p0:p1] + NEW_SEC7_HEAD + "\n" + src[i1:]
 
     s0 = src.index(SCAN_BLOCK)
     src = src[:s0] + NEW_SCAN + src[s0 + len(SCAN_BLOCK):]
@@ -348,10 +366,14 @@ def main() -> int:
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     text = build(src, ids)
-    out.write_text(text, encoding="utf-8")
+    # newline="\n"：与 mac 端产物保持一致（Windows 默认会写成 CRLF）
+    out.write_text(text, encoding="utf-8", newline="\n")
 
     probes = ("require trap installed", "native proof pid=", "bootstrap stand-down",
-              "srcOfExports", "MOD_boot({", "boot(exports)")
+              "srcOfExports", "MOD_boot({", "boot(exports)",
+              # 2026-11-23 P0：面板块被误删过（PANEL_HOOKED 未定义 ⇒ 卡死），必须在产物里
+              "var PANEL_N = 0;", "var PANEL_HOOKED = 0;", "function tryPanel(Cls)",
+              "function findPanelAgain(", "function findPanelStart(")
     if not a.quiet:
         print("ids=%d" % len(ids))
         print("out=%s size=%d" % (out, out.stat().st_size))
@@ -361,6 +383,13 @@ def main() -> int:
         if p not in text:
             print("ERROR: 产物缺少标记 %r" % p, file=sys.stderr)
             return 1
+    # 声明位置必须早于使用位置（2026-11-23 P0：曾因切段把声明删掉、使用留在 REPORT 里
+    # ⇒ 3s 定时器抛未捕获 ReferenceError ⇒ 主循环卡死）
+    _decl = text.find("var PANEL_HOOKED = 0;")
+    _use = text.find('panelHook=" + (PANEL_HOOKED')
+    if _decl < 0 or _use < 0 or _decl > _use:
+        print("ERROR: PANEL_HOOKED 声明/使用顺序异常（decl=%d use=%d）" % (_decl, _use), file=sys.stderr)
+        return 1
     return 0
 
 

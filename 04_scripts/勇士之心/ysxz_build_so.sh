@@ -117,7 +117,7 @@ fi
 mkdir -p "$OBJ" && echo "$CFG_HASH" > "$STAMP"
 
 for token in "ysxz" "yszzx" "starry_ysxz_v1" "Slider_伤害倍率" "Toggle_秒杀" "Toggle_无敌" "Toggle_无限技能" "Slider_移动速度" "Toggle_自动战斗" \
-             "Toggle_解锁金卡" "Category_自动化" "Toggle_自动重复挑战" "Toggle_自动出售" "Toggle_自动分解" "Toggle_自动穿戴" \
+             "Toggle_解锁金卡" "Category_自动化" "Toggle_自动重复挑战" "Toggle_自动出售" "Toggle_自动分解" \
              "Slider_战斗加速"; do
   HITS=$(LC_ALL=C grep -ac "$token" "$SO" || true)
   [[ "$HITS" -ge 1 ]] || { echo "ERROR: $SO 不含 $token" >&2; exit 1; }

@@ -94,12 +94,20 @@ for e in classes.dex classes2.dex \
   grep -q " $e\$" "$WORK/entries.txt" || { echo "ERROR: $e missing in signed apk" >&2; exit 1; }
 done
 
-SO_MD5="$(md5 -q "$NIXIANG/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so")"
-IN_SO_MD5="$(unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so | md5 -q)"
+# 2026-11-23 win：md5 -q 是 mac 语法，改用 python 计算（mac/linux/win 一致）
+_md5() { python3 -c 'import hashlib,sys;print(hashlib.md5(open(sys.argv[1],"rb").read()).hexdigest())' "$1"; }
+unzip -p "$SIGNED" lib/arm64-v8a/libstarry_magic.so > "$WORK/inso.bin"
+SO_MD5="$(_md5 "$NIXIANG/mod菜单/starry-mod-menu/libs_ysxz/arm64-v8a/libstarry_magic.so")"
+IN_SO_MD5="$(_md5 "$WORK/inso.bin")"
 [[ "$SO_MD5" == "$IN_SO_MD5" ]] || { echo "ERROR: signed so mismatch" >&2; exit 1; }
 
 echo "[sign] done -> $SIGNED"
-echo "[sign] size=$(stat -f '%z' "$SIGNED")"
-echo "[sign] md5=$(md5 -q "$SIGNED")"
-echo "[sign] sha256=$(shasum -a 256 "$SIGNED" | awk '{print $1}')"
+python3 - "$SIGNED" <<'PY'
+import hashlib, os, sys
+p = sys.argv[1]
+b = open(p, 'rb').read()
+print('[sign] size=%d' % os.path.getsize(p))
+print('[sign] md5=%s' % hashlib.md5(b).hexdigest())
+print('[sign] sha256=%s' % hashlib.sha256(b).hexdigest())
+PY
 echo "[sign] so_md5=$IN_SO_MD5"

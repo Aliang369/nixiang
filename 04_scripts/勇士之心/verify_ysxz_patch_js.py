@@ -1,9 +1,11 @@
 #!/usr/bin/env python3.11
 """Static regression checks for generated YsxzPatchJs.h.
 
-用法: python3.11 verify_ysxz_patch_js.py [YsxzPatchJs.h 路径]
+用法: python3.11 verify_ysxz_patch_js.py [YsxzPatchJs.h 路径] [--entry YsxzEntry.cpp 路径]
 默认校验 1.0.4 主线那份(mod菜单/.../jni/Games/YsxzPatchJs.h)。
 1.0.3 专用那份要显式传: 04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzPatchJs.h
+--entry 指定菜单表来源（默认 mod菜单/.../jni/Games/YsxzEntry.cpp；校验 1.0.3 线时
+请显式传 04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzEntry.cpp，否则读的是另一条线的副本）。
 """
 from __future__ import annotations
 
@@ -16,7 +18,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_HEADER = ROOT / "mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzPatchJs.h"
-HEADER = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else DEFAULT_HEADER
+_argv = [a for a in sys.argv[1:]]
+_ENTRY = None
+if "--entry" in _argv:
+    _i = _argv.index("--entry")
+    _ENTRY = Path(_argv[_i + 1]).resolve()
+    del _argv[_i:_i + 2]
+HEADER = Path(_argv[0]).resolve() if _argv else DEFAULT_HEADER
 START = 'R"YSXZJS('
 END = ')YSXZJS";'
 
@@ -57,7 +65,7 @@ def main() -> int:
         raise SystemExit("MOD.feature1 occurrences changed (hook + report expected)")
     # 菜单下标一致性（2026-09-30 换位后新增）：SHIM 里的数字序号 = 菜单 featureList 下标，
     # 序号与控件类型任一错位都会让功能串号（JS 按序号取值），必须在生成期机器拦。
-    entry = ROOT / "mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzEntry.cpp"
+    entry = _ENTRY or (ROOT / "mod菜单/starry-mod-menu/app/src/main/jni/Games/YsxzEntry.cpp")
     cpp = entry.read_text(encoding="utf-8")
     m = re.search(r"kYsxz_Features\[\]\s*=\s*\{(.*?)\};", cpp, re.S)
     if not m:
@@ -73,7 +81,9 @@ def main() -> int:
     shim = {
         name: (fn, int(num))
         for name, fn, num in re.findall(
-            r'Object\.defineProperty\(M, "([A-Za-z0-9_]+)", \{ get: function \(\) \{ return ([RV])\((\d+)\); \} \}\)',
+            # 2026-11-23：原来是单空格硬匹配，而 feature6..10 那几行是双空格对齐
+            # （`"feature6",  { get`）⇒ 旧版对这些行【一条都没校验过】，是既有缺口。改 \s+。
+            r'Object\.defineProperty\(M, "([A-Za-z0-9_]+)",\s*\{ get: function \(\) \{ return ([RV])\((\d+)\); \} \}\)',
             js,
         )
     }
@@ -84,6 +94,12 @@ def main() -> int:
         "feature5": ("R", menu_index("自动战斗")),
         "speed": ("V", menu_index("移动速度")),
         "damage": ("V", menu_index("伤害倍率")),
+        # 2026-11-23 补齐：这几条以前因为上面的正则漏检，从未真正校验过
+        "feature6": ("R", menu_index("解锁金卡")),
+        "feature7": ("R", menu_index("自动重复挑战")),
+        "feature8": ("R", menu_index("自动出售")),
+        "feature9": ("R", menu_index("自动分解")),
+        "bspeed": ("V", menu_index("战斗加速")),
     }
     for prop, want in expected.items():
         got = shim.get(prop)
@@ -91,6 +107,12 @@ def main() -> int:
             raise SystemExit(f"shim {prop} -> {got}, menu index/type {want} (换位后序号未同步)")
     if shim.get("feature4") != ("R", 0):
         raise SystemExit("feature4 placeholder (R(0)) changed")
+    # 2026-11-23：菜单 14 槽 -> 13 槽（删「自动穿戴」），JS shim 必须恰好 12 条
+    # = feature1..5 + speed + damage + bspeed + feature6..9（feature4 是占位，无对应控件）。
+    if len(shim) != 12:
+        raise SystemExit("shim 条目数 %d != 12（菜单删项后 JS 侧没同步）" % len(shim))
+    if "feature10" in shim or "自动穿戴" in js:
+        raise SystemExit("「自动穿戴」已按要求删除，但 JS 里仍有 feature10/自动穿戴")
     for prop, (fn, _num) in shim.items():
         if prop in ("speed", "damage") and fn != "V":
             raise SystemExit(f"{prop} 是滑块却用 {fn} 读取（滑块必须 getVal）")

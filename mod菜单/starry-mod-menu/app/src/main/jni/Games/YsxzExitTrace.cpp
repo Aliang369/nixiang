@@ -39,6 +39,14 @@
 
 #define YEXIT_LOG "[YsxzExit] "
 
+// 2026-11-23（三 ABI 同源构建）：本探针整体依赖 AArch64 的 ucontext 布局
+// （uc_mcontext.pc / regs[30] / regs[8]）与 AUDIT_ARCH_AARCH64 seccomp 过滤器，
+// 在 x86 / armeabi-v7a 上编译期即失败。三 ABI 都要能编过 ⇒ 非 AArch64 只留同签名
+// no-op（模拟器/真机 primaryCpuAbi 都是 arm64-v8a，实际跑的是 arm64 那份）。
+#if !defined(__aarch64__)
+void YsxzExitTrace_Start(JavaVM*) {}
+#else
+
 namespace {
 
 JavaVM* g_vm = nullptr;
@@ -50,6 +58,7 @@ void (*o_uexit)(int) = nullptr;
 void (*o_Exit)(int) = nullptr;
 void (*o_abort)(void) = nullptr;
 int (*o_kill)(int, int) = nullptr;
+int (*o_tgkill)(int, int, int) = nullptr;
 void (*o_pthread_exit)(void*) = nullptr;
 void (*o_jniSystemExit)(JNIEnv*, jclass, jint) = nullptr;
 void (*o_jniRuntimeExit)(JNIEnv*, jobject, jint) = nullptr;
@@ -312,13 +321,49 @@ void H_abort(void) {
     if (o_abort) o_abort();
 }
 
+// ============================ A 方案：拦「自杀式 SIGKILL」 ============================
+// 2026-11-23：壳自检失败后先 libsecret+0x4551c 调 _exit(0)（已被 BlockShellExit 拦下，只结束该线程），
+// 随后 Java 侧 dev.mars.secure.ProxyApplication.f() 调 android.os.Process.killProcess(pid)
+// ⇒ bionic 里就是 kill(getpid(), SIGKILL) / tgkill(...)，进程当场 SIG:9，ExitTrace 之前完全没拦。
+// 这里只针对「目标是自己 + 信号是 SIGKILL」这一个组合：丢弃并打一条限速日志，其余一律透传
+// （正常退出、杀子进程、SIGTERM 等行为不变）。
+std::atomic<uint32_t> g_selfKillSwallowed{0};
+
+static bool IsSelfTarget(int pid) {
+    return pid == getpid() || pid == gettid() || pid == 0 || pid == -1;
+}
+
+static bool SwallowSelfKill(const char* via, int pid, int tid, int sig) {
+    if (sig != SIGKILL) return false;
+    const bool self = (tid > 0) ? (pid == getpid()) : IsSelfTarget(pid);
+    if (!self) return false;
+    const uint32_t n = ++g_selfKillSwallowed;
+    if (n <= 5 || (n % 100) == 0) {
+        char name[32];
+        ThreadName(name, sizeof(name));
+        LOGW(YEXIT_LOG "自杀式 SIGKILL 被拦 #%u via=%s pid=%d tid=%d 线程=%s（进程继续）",
+             n, via, pid, tid, name);
+        if (n <= 3) LogNativeBt("self-SIGKILL");
+    }
+    return true;
+}
+
 int H_kill(int pid, int sig) {
     if (sig == 9 || sig == 6 || sig == 15) Report("kill", sig);
     if (pid == getpid() || pid == gettid()) {
         LOGW(YEXIT_LOG "自杀式 kill(pid=%d, sig=%d)", pid, sig);
         LogNativeBt("kill");
     }
+    if (SwallowSelfKill("kill", pid, -1, sig)) return 0;
     return o_kill ? o_kill(pid, sig) : -1;
+}
+
+int H_tgkill(int tgid, int tid, int sig) {
+    if (tgid == getpid() && (sig == 9 || sig == 6 || sig == 15)) {
+        LOGW(YEXIT_LOG "自杀式 tgkill(tgid=%d, tid=%d, sig=%d)", tgid, tid, sig);
+    }
+    if (SwallowSelfKill("tgkill", tgid, tid, sig)) return 0;
+    return o_tgkill ? o_tgkill(tgid, tid, sig) : -1;
 }
 
 // bionic 的 syscall() 包装：保护组件常用 syscall(SYS_exit_group,0) 绕过 libc 导出。
@@ -333,6 +378,16 @@ long H_syscall(long nr, ...) {
         const uint32_t n = ++g_hits;
         LOGW(YEXIT_LOG "syscall(nr=%ld code=%ld) 直调退出 (#%u)", nr, a1, n);
         if (n <= 3) LogNativeBt("syscall-exit");
+    }
+    /* A 方案补充：壳可能绕过 libc 导出直接 syscall(__NR_kill/__NR_tgkill)。
+       arm64: __NR_kill=129(t pid,int sig)、__NR_tgkill=131(int tgid,int tid,int sig)。 */
+    if (nr == __NR_kill) {
+        if (SwallowSelfKill("syscall:kill", static_cast<int>(a1), -1, static_cast<int>(a2))) return 0;
+    } else if (nr == __NR_tgkill) {
+        if (SwallowSelfKill("syscall:tgkill", static_cast<int>(a1), static_cast<int>(a2),
+                            static_cast<int>(a3))) {
+            return 0;
+        }
     }
     return o_syscall ? o_syscall(nr, a1, a2, a3, a4, a5, a6) : -1;
 }
@@ -436,6 +491,7 @@ void InstallHooks() {
     Hook("libc.so", "_Exit", reinterpret_cast<void*>(H_Exit), &o_Exit, "libc._Exit");
     Hook("libc.so", "abort", reinterpret_cast<void*>(H_abort), &o_abort, "libc.abort");
     Hook("libc.so", "kill", reinterpret_cast<void*>(H_kill), &o_kill, "libc.kill");
+    Hook("libc.so", "tgkill", reinterpret_cast<void*>(H_tgkill), &o_tgkill, "libc.tgkill");
     Hook("libc.so", "pthread_exit", reinterpret_cast<void*>(H_pthread_exit), &o_pthread_exit,
          "libc.pthread_exit");
     Hook("libc.so", "syscall", reinterpret_cast<void*>(H_syscall), &o_syscall, "libc.syscall");
@@ -460,3 +516,5 @@ void YsxzExitTrace_Start(JavaVM* vm) {
     InstallSyscallTrap();
     LOGI(YEXIT_LOG "退出探针已安装");
 }
+
+#endif  // __aarch64__（三 ABI 构建守卫）

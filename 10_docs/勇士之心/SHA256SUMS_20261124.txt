@@ -1,0 +1,5 @@
+# 勇士之心 1.0.6 星光复刻 · 交付件 sha256（2026-11-24 收官）
+# 口径：唯一正式包 + 原图 icon + 菜单模板；08_output/ 不入 git，指纹以本文件与 10_docs/勇士之心/正式包裁剪清单_20261124.json 互证。
+959f20703ce0a35ace252c1860a9b2b36ef792e49d9d27e93a0ccaea6ac6862a  08_output/勇士之心/勇士之心_1.0.6_surgical-releaseSigned-fix7-clean.apk
+f7ba3e8c6596174a5c10c3e05d6911f20adc43079a43a8ffff48a64197918bbd  08_output/勇士之心/icon_勇士之心_192.png
+adcaca13d216b0e57a7a4a465c9f683ebfb27d734dca8b2e1f029d418def80c4  10_docs/勇士之心/yszzx_menu_template.json

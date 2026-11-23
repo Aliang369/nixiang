@@ -184,6 +184,7 @@ def main() -> int:
         % (a.sym, MARK, c_array("k" + a.sym + "Pristine", raw),
            c_array("k" + a.sym + "Patched", patched)),
         encoding="utf-8",
+        newline="\n",
     )
 
     def md5(b):

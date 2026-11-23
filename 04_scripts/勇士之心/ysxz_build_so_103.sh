@@ -119,6 +119,8 @@ if [[ "$FW_OVERLAY" == "1" ]]; then
   # SgPayload.h / SgPayloadJs.h / sg_payload_enc.h / YsxzDecoyJs.h（加固下线，不再进包）
   for f in MainModern.cpp Main.cpp Includes/SgAuth.h Includes/sg_rsa_verify.h Includes/sg_pubkey.h \
            Games/SignalQuarantine.h Games/NoAceStubs.cpp \
+           Games/YsxzSecShell.cpp Games/YsxzSecShell.h \
+           Games/YsxzExitTrace.cpp Games/YsxzExitTrace.h \
            Includes/Utils.cpp Includes/Utils.hpp Includes/StarryStamp.h \
            Includes/obfuscate.h; do
     src="$STARRY_SRC/app/src/main/jni/$f"
@@ -135,20 +137,29 @@ import io, re, sys
 p = sys.argv[1]
 s = io.open(p, encoding="utf-8").read()
 
-# (a) 补源文件
-if "Games/NoAceStubs.cpp" in s:
-    print("[103] mk 已含 NoAceStubs.cpp")
-else:
+# (a) 补源文件（幂等：已在 mk 里就跳过）
+#     2026-11-23 追加 Games/YsxzSecShell.cpp：1.0.3 基线树里没有它，而现行的
+#     Games/YsxzMod.cpp 用 __has_include("Games/YsxzSecShell.h") 条件包含 ⇒ 头不在
+#     ⇒ YsxzSecShell_Start 调用整段被编译掉 ⇒ so 里没有
+#     Java_com_starry_magic_ysxz_YsxzAppComponentFactory_nativePrepareSecureShell 导出
+#     ⇒ YsxzAppComponentFactory 启动即 UnsatisfiedLinkError（壳看门狗没起）⇒ 壳自检
+#     dirty=1 ⇒ 跳过 Application.onCreate ⇒ bingo SDK 未初始化 ⇒ AppInfo.parameters
+#     NPE 闪退。证据：09_test/勇士之心/install_20261123/logcat_boot1.txt:169/2251。
+for extra_src in ("Games/NoAceStubs.cpp", "Games/YsxzSecShell.cpp",
+                 "Games/YsxzExitTrace.cpp"):
+    if extra_src in s:
+        print("[103] mk 已含 " + extra_src)
+        continue
     out, done = [], False
     for line in s.splitlines(True):
         if not done and line.strip().startswith("include $(BUILD_SHARED_LIBRARY)"):
-            out.append("LOCAL_SRC_FILES += Games/NoAceStubs.cpp\n")
+            out.append("LOCAL_SRC_FILES += %s\n" % extra_src)
             done = True
         out.append(line)
     if not done:
         raise SystemExit("ERROR: Android_ysxz.mk 里找不到 include $(BUILD_SHARED_LIBRARY)")
     s = "".join(out)
-    print("[103] mk += Games/NoAceStubs.cpp")
+    print("[103] mk += " + extra_src)
 
 # (b) 2026-11-04 加固下线：只注入 SG_AUTH_V2_ONLY（纯 v2 票），
 #     不再注入 SG_HAVE_ZLIB / SG_REQUIRE_INTEGRITY / SG_PAYLOAD_ENC，也不再链 -lz。

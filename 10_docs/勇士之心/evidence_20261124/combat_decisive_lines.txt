@@ -1,0 +1,36 @@
+11-23 23:19:54.256 20374 20374 I Mod_Menu: [YsxzExit] hook ok libc.exit (libc.so:exit @0x4000206aaffc)
+11-23 23:19:54.256 20374 20374 I Mod_Menu: [YsxzExit] hook ok libc._exit (libc.so:_exit @0x4000206aaff0)
+11-23 23:19:54.257 20374 20374 I Mod_Menu: [YsxzExit] hook ok libc.abort (libc.so:abort @0x4000206a5c20)
+11-23 23:19:54.257 20374 20374 I Mod_Menu: [YsxzExit] hook ok libc.kill (libc.so:kill @0x400020705cd0)
+11-23 23:19:54.257 20374 20374 I Mod_Menu: [YsxzExit] hook ok libc.pthread_exit (libc.so:pthread_exit @0x4000206b6094)
+11-23 23:19:54.257 20374 20374 I Mod_Menu: [YsxzExit] hook ok libc.syscall (libc.so:syscall @0x4000206caf70)
+11-23 23:19:54.257 20374 20374 W Mod_Menu: [YsxzExit] 符号未找到(dlsym) libandroid_runtime.so!Java_java_lang_System_exit__I
+11-23 23:19:54.258 20374 20374 W Mod_Menu: [YsxzExit] 符号未找到(dlsym) libandroid_runtime.so!Java_java_lang_Runtime_exit__I
+11-23 23:19:54.258 20374 20374 W Mod_Menu: [YsxzExit] 符号未找到(dlsym) libandroid_runtime.so!Java_java_lang_Runtime_exitInternal__I
+11-23 23:19:54.258 20374 20374 W Mod_Menu: [YsxzExit] 符号未找到(dlsym) libandroid_runtime.so!Java_android_os_Process_killProcess__I
+11-23 23:19:54.305 20374 20392 I Mod_Menu: [YsxzSec] libsecret.so base=0x4000208c0000 (candidates=1)
+11-23 23:19:54.306 20374 20392 I Mod_Menu: [YsxzSec] state words dirty=0x4000209310cc(tag=1.0.6) failed=0x4000209310d8(tag=1.0.6) checked=0x400020924ea0
+11-23 23:19:55.111 20374 20393 I Mod_Menu: [Ysxz] readable-map fallback engaged lib=libcocos2djs.so (#1)
+11-23 23:19:55.112 20374 20393 I Mod_Menu: [Ysxz] evalString candidate hit ver=1.0.6 rva=0x31418C
+11-23 23:19:55.130 20374 20393 I Mod_Menu: [Ysxz] SELFCHECK evalString va=0x400020f1418c via=readable rd=1 hook=1
+11-23 23:19:55.131 20374 20393 I Mod_Menu: [Ysxz] hooked se::evalString @0x400020f1418c via=readable
+11-23 23:20:01.155 20374 20451 D jswrapper: JS: [SPEED] battle-speed: apply loop started (load-time)
+11-23 23:20:01.156 20374 20451 D jswrapper: JS: [SPEED] speed layer v1 loaded (global dt scaling; no anti-cheat / no damage code)
+11-23 23:20:01.157 20374 20451 I Ysxz    : [MODMOD] native splice active (proof pid ok) -> bootstrap stand-down
+11-23 23:20:01.157 20374 20451 D jswrapper: JS: [MODMOD] native splice active (proof pid ok) -> bootstrap stand-down
+11-23 23:20:01.180 20374 20451 I Mod_Menu: [Ysxz] logic splice #1 len 1153939->1249195 file=assets/main/index.js
+11-23 23:20:01.211 20374 20451 I Ysxz    : [MODMOD] capture installed
+11-23 23:20:01.220 20374 20451 I Ysxz    : [MODMOD] boot: 118 modules, toString OK
+11-23 23:20:01.220 20374 20451 D jswrapper: JS: [MODMOD] boot: 118 modules, toString OK
+11-23 23:20:01.285 20374 20451 I Ysxz    : [MODMOD] wrapped 1 target modules: TblEnum
+11-23 23:20:01.285 20374 20451 D jswrapper: JS: [MODMOD] wrapped 1 target modules: TblEnum
+11-23 23:20:01.631 20374 20451 I Mod_Menu: [Ysxz] logic splice #2 len 7148543->7243799 file=assets/game/index.js
+11-23 23:20:01.854 20374 20451 I Ysxz    : [MODMOD] capture installed
+11-23 23:20:01.860 20374 20451 I Ysxz    : [MODMOD] boot: 1236 modules, toString OK
+11-23 23:20:02.156 20374 20451 I Ysxz    : [MODMOD] wrapped 4 target modules: $BMP,$BMX,$CGJ,$QO
+11-23 23:20:02.813 20374 20392 I Mod_Menu: [YsxzSec] first 6s done; switch to 20ms interval
+11-23 23:20:02.869 20374 20451 I Ysxz    : [SPEED] battle-speed: engine dt scaling armed (calculateDeltaTime x k)
+11-23 23:20:02.869 20374 20451 D jswrapper: JS: [SPEED] battle-speed: engine dt scaling armed (calculateDeltaTime x k)
+11-23 23:20:14.796 20374 20374 W System.err: java.lang.Exception: call killProcess callstack! pid=20374
+11-23 23:20:14.796 20374 20374 W System.err: 	at android.os.Process.killProcess(Process.java:1318)
+11-23 23:20:14.834   362  2840 I ActivityManager: Process com.fightingstars.games.warrior (pid 20374) has died: fg  TOP 

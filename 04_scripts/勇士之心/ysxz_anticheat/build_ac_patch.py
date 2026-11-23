@@ -1,12 +1,20 @@
 #!/usr/bin/env python3.11
 """
-把「星空过检测层」(ac_layer.js) 外科式并入出货基线 patch JS，并重新生成
-YsxzPatchJs.h。四层复刻的"外科点"全部用精确字符串锚定，任一锚点未命中
+把「战斗加速层」(speed_layer.js) + 「自动化层」(auto_layer.js) 外科式并入出货基线
+patch JS，并重新生成 YsxzPatchJs.h。外科点全部用精确字符串锚定，任一锚点未命中
 或命中多次即中止(不产出任何文件)。
+
+2026-11-23 变更：**过检测层(ac_layer.js)已从合成链移除**（用户本轮指令）。
+  * ac_layer.js 里的第 7 节「战斗加速」是菜单功能层第 6 项的实现体，已抽出为
+    speed_layer.js 并继续参与合成；其余闸门/出口挂钩/结算补偿/伤害还原全部不再进包。
+  * 原 E1..E8 八个锚点随之删除，基线回归出厂原样；只保留 E9(功能开关 getter) 与
+    E10(自动战斗序号右移)。
+  * 反向断言：生成物里 __starry_ac / ANTI_CHEAT_ENABLED 等 AC 标记计数必须为 0。
 
 输入
   04_scripts/勇士之心/ysxz_anticheat/baseline_patch_from_shipped_so.js  (从出货 so 抽出的权威基线)
-  04_scripts/勇士之心/ysxz_anticheat/ac_layer.js                        (卡密包四层复刻)
+  04_scripts/勇士之心/ysxz_anticheat/speed_layer.js                     (战斗加速，从 ac_layer 抽出)
+  04_scripts/勇士之心/ysxz_anticheat/auto_layer.js                      (自动化层)
 输出
   04_scripts/勇士之心/ysxz_anticheat/patch_v2_ac.js                     (合成后的 patch JS)
   04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzPatchJs.h                     (构建用头文件, 原文件先备份 .bak)
@@ -25,7 +33,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 BASE = HERE / "baseline_patch_from_shipped_so.js"
-ACL = HERE / "ac_layer.js"
+SPL = HERE / "speed_layer.js"      # 战斗加速(从 ac_layer.js 第 7 节抽出, 2026-11-23)
 AUT = HERE / "auto_layer.js"
 OUT_JS = HERE / "patch_v2_ac.js"
 HEADER = ROOT / "04_scripts/勇士之心/ysxz_1.0.3_menu/YsxzPatchJs.h"
@@ -35,123 +43,20 @@ END = ')YSXZJS";'
 
 # ---------------------------------------------------------------- 外科锚点 --
 # 每项 = (名称, 旧串, 新串)。旧串必须恰好出现 1 次。
+#
+# 2026-11-23 移除过检测层：原 E1/E6(伤害记账/配对纪律) / E2(AC 扫描) / E3(闸门目标判定) /
+# E4(update 墙钟) / E5(capture 接入) / E7(gate-only 识别) / E8(adoptHit) 八个锚点全部删除。
+# 它们只服务于 ac_layer.js；删掉后基线 body 回到出货原样，功能层菜单绑定一项不动
+# (伤害倍率/秒杀 走 baseline 伤害公式咽喉, 无敌/无限技能/移速 走 baseline tryLogic/tryEntity/
+#  trySystem, 自动战斗 走 baseline tryAuto + feature5=R(7))。
 EDITS: list[tuple[str, str, str]] = [
-    (
-        "E1 伤害公式钩子: 记录未放大值并通知 AC 层",
-        """                var _f1 = false, _dm = 1;
-                try { _f1 = !!MOD.feature1; _dm = MOD.damage; } catch (readErr) {}
-                if (_dm > 1) d = d * _dm;            /* 1 伤害倍率滑块 1..50, 1=原倍率 */
-                if (_f1) d = Math.ceil(d * 100);     /* 2 秒杀: 玩家 x100 伤害 */
-                if (d > 1e9) d = 1e9;                /* 上限, 防数值溢出 */
-""",
-        """                var _f1 = false, _dm = 1, _d0 = d;   /* _d0 = 未放大值(过检测还原用) */
-                try { _f1 = !!MOD.feature1; _dm = MOD.damage; } catch (readErr) {}
-                if (_dm > 1) d = d * _dm;            /* 1 伤害倍率滑块 1..50, 1=原倍率 */
-                if (_f1) d = Math.ceil(d * 100);     /* 2 秒杀: 玩家 x100 伤害 */
-                if (d > 1e9) d = 1e9;                /* 上限, 防数值溢出 */
-                /* 过检测(卡密包 L2578 的等价物): 把这一笔"本该上报的伤害"记下来,
-                   hY 扣血口用把 hw.finalDamage / hw.finalHurtValue 还原成原值。 */
-                try { if (window.__starry_ac) window.__starry_ac.noteDamage(_d0, d); } catch (acErr) {}
-""",
-    ),
-    (
-        "E6 伤害公式钩子入口: 每笔伤害先清空配对记录(防跨次误配)",
-        """        var oFV = K[fv];
-        K[fv] = function (ctx, hit, ratio, canCrit) {
-            var d = oFV.apply(this, arguments);""",
-        """        var oFV = K[fv];
-        K[fv] = function (ctx, hit, ratio, canCrit) {
-            /* 过检测配对纪律: 先清空, 只有本笔伤害被我们放大过才在下面重新置位 */
-            try { if (window.__starry_ac) window.__starry_ac.clearPending(); } catch (acErr) {}
-            var d = oFV.apply(this, arguments);""",
-    ),
-    (
-        "E2 目标模块包装: 把 exports 同时交给 AC 层(main 包只走闸门, 不跑功能扫描)",
-        """            entry[0] = function (req, mod, exp) {
-                orig.apply(this, arguments);
-                try { scan(mod && mod.exports ? mod.exports : exp); } catch (e) { log("scan ERR: " + e); }
-            };""",
-        """            entry[0] = function (req, mod, exp) {
-                orig.apply(this, arguments);
-                var _ex = mod && mod.exports ? mod.exports : exp;
-                /* main 包(gate-only): 只把 exports 交给闸门层, 不跑 tryLogic/tryEntity/trySystem/tryAuto,
-                   否则 main 里的 $VN(maxApDefRate + 18 处 AUTO_BATTLE) 会被误钩。 */
-                if (!_gateOnly) { try { scan(_ex); } catch (e) { log("scan ERR: " + e); } }
-                try { if (window.__starry_ac) window.__starry_ac.scan(_ex, mid); } catch (e) { log("ac.scan ERR: " + e); }
-            };""",
-    ),
-    (
-        "E3 目标模块判定: 追加 ANTI_CHEAT_ENABLED(闸门层要拿到那个模块); main 包只认闸门相关模块",
-        """        if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 &&
-            s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0 &&
-            s.indexOf("btn_toNext") < 0) continue;""",
-        """        if (_gateOnly) {
-            /* main 包: 只包装含闸门明文(sealMethods 是 main 独有标记)的模块 */
-            if (s.indexOf("sealMethods") < 0 && s.indexOf("ANTI_CHEAT_ENABLED") < 0) continue;
-        } else if (s.indexOf("maxApDefRate") < 0 && s.indexOf("lockMinHP") < 0 &&
-            s.indexOf("hitPauseTimeScale") < 0 && s.indexOf("AUTO_BATTLE") < 0 &&
-            s.indexOf("btn_toNext") < 0 &&
-            s.indexOf("ANTI_CHEAT_ENABLED") < 0 && s.indexOf("finalHurtValue") < 0) continue;""",
-    ),
-    (
-        "E4 移动系统 update 钩子: 累计未缩放墙钟(供结算一致性观测)",
-        """        var oUp = up;
-        Cls.prototype.update = function (list) {
-            try {""",
-        """        var oUp = up;
-        Cls.prototype.update = function (list) {
-            try { if (window.__starry_ac) window.__starry_ac.tick(this.dt); } catch (acErr) {}
-            try {""",
-    ),
-    (
-        "E5 capture 入口: 把模块注册表交给 AC 层做兜底安装",
-        """window.__starry_capture = function (reg) {
-  try { MOD_boot(reg); } catch (e) {
-    try { if (window.__starry_nlog) window.__starry_nlog("[MODMOD] boot ERR: " + e); } catch (ignored) {}
-  }
-  return reg;
-};""",
-        """window.__starry_capture = function (reg) {
-  try { MOD_boot(reg); } catch (e) {
-    try { if (window.__starry_nlog) window.__starry_nlog("[MODMOD] boot ERR: " + e); } catch (ignored) {}
-  }
-  try { if (window.__starry_ac) window.__starry_ac.capture(reg); } catch (e) {
-    try { if (window.__starry_nlog) window.__starry_nlog("[AC] capture ERR: " + e); } catch (ignored) {}
-  }
-  return reg;
-};""",
-    ),
-    (
-        "E7 main 包识别: sealMethods 只出现在 main bundle, 命中则切 gate-only",
-        """    var targets = [];""",
-        """    /* 过检测: main bundle 独有明文 sealMethods(实测仅 main/index.js 命中, 宿主模块 $LZ),
-       用它判断"入口表是 main" —— 此时只跑闸门层(见 E2/E3), 不跑伤害/移速/自动战斗功能扫描。
-       原生 IsTargetBundle 已放行 assets/main/index.(2026-10-07), 否则这段永远进不来。 */
-    var _gateOnly = false;
-    for (id in srcs) { if (srcs[id] && srcs[id].indexOf("sealMethods") >= 0) { _gateOnly = true; break; } }
-    if (_gateOnly) log("bundle=MAIN (sealMethods) -> gate-only scan");
-    var targets = [];""",
-    ),
-    (
-        "E8 伤害还原层接入: baseline 仲裁出 hY 后把它交给 AC 层包装",
-        """        N.entDone = 1;
-        N.hX = hx;""",
-        """        N.entDone = 1;
-        N.hX = hx;
-        /* 过检测(E8): baseline 用 RE_APPLY 仲裁出的 hY 才是真扣血口, 把它交给 AC 层。
-        AC 必须包在最内层(此处早于下面 var oHX = Cls.prototype[hx];):
-          feature2 关: baseline wrapper -> AC wrapper -> 原 hY  ⇒ AC 正常记账/还原
-          feature2 开: baseline 提前 return ⇒ AC 不执行 ⇒ 不会凭空写累加器
-        (若反序, feature2 开时 AC 先加 pd.orig 再被 baseline 清零, 累加器会被污染。) */
-        try { if (window.__starry_ac) window.__starry_ac.adoptHit(Cls, hx); } catch (acErr) {}""",
-    ),
     (
         "E10 菜单重排: 自动战斗 6 -> 7（战斗加速占第 6 位，基础功能内）",
         '''  Object.defineProperty(M, "feature5", { get: function () { return R(6); } });   /* 自动战斗 */''',
         '''  Object.defineProperty(M, "feature5", { get: function () { return R(7); } });   /* 自动战斗 */''',
     ),
     (
-        "E9 新增功能开关: 追加 feature6..10 的菜单 getter (自动化层读这些)",
+        "E9 新增功能开关: 追加 feature6..9 的菜单 getter (自动化层读这些)",
         """  Object.defineProperty(M, "speed", { get: function () { return V(5); } });      /* 移动速度 1..10 */
   Object.defineProperty(M, "damage", { get: function () { return V(1); } });     /* 伤害倍率 1..50 */
 """,
@@ -159,21 +64,19 @@ EDITS: list[tuple[str, str, str]] = [
   Object.defineProperty(M, "damage", { get: function () { return V(1); } });     /* 伤害倍率 1..50 */
   /* 2026-10-07 新增功能(卡密包同名功能复刻)。序号=菜单位置, 必须与 kYsxz_Features 严格一致:
        8  解锁金卡(已并入「基础功能」分类)  /  9  Category_自动化(分组占位)
-       10 自动重复挑战 / 11 自动出售 / 12 自动分解 / 13 自动穿戴
-     全部由 automation 层(auto_layer.js)消费, 过检测层不读这些。 */
+       10 自动重复挑战 / 11 自动出售 / 12 自动分解
+     （2026-11-23 用户要求删除原 13 号功能 => 菜单槽位 14 -> 13, feature10/R(13) 一并删除）
+     全部由 automation 层(auto_layer.js)消费, 加速层(speed_layer.js)不读这些。 */
   Object.defineProperty(M, "feature6",  { get: function () { return R(8); } });  /* 解锁金卡 */
   Object.defineProperty(M, "feature7",  { get: function () { return R(10); } }); /* 自动重复挑战 */
   Object.defineProperty(M, "feature8",  { get: function () { return R(11); } }); /* 自动出售 */
   Object.defineProperty(M, "feature9",  { get: function () { return R(12); } }); /* 自动分解 */
-  Object.defineProperty(M, "feature10", { get: function () { return R(13); } }); /* 自动穿戴 */
   /* 2026-10-24 新增：战斗加速（1=关，2..5=倍率），放在「基础功能」里、紧跟移动速度（序号 6）。
-     消费方是 ac 层：引擎 calculateDeltaTime 的 _deltaTime ×k（真·全局变速），
-     结算 useTime 按同一倍率折回。 */
+     消费方是 speed 层(speed_layer.js)：引擎 calculateDeltaTime 的 _deltaTime ×k（真·全局变速）。 */
   Object.defineProperty(M, "bspeed",    { get: function () { return V(6); } }); /* 战斗加速 */
 """,
     ),
 ]
-
 
 def sha(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
@@ -182,19 +85,24 @@ def sha(s: str) -> str:
 def main() -> int:
     dry = "--dry" in sys.argv
     base = BASE.read_text(encoding="utf-8")
-    acl = ACL.read_text(encoding="utf-8")
+    spl = SPL.read_text(encoding="utf-8")
     aut = AUT.read_text(encoding="utf-8")
 
     # ---- 前置断言: 基线与两层 ---------------------------------------------
     if base.count(MARKER) != 1:
         raise SystemExit(f"baseline 里 {MARKER} 出现 {base.count(MARKER)} 次, 期望 1 次")
-    if base.count(")YSXZJS\"") or acl.count(")YSXZJS\"") or aut.count(")YSXZJS\""):
+    if base.count(")YSXZJS\"") or spl.count(")YSXZJS\"") or aut.count(")YSXZJS\""):
         raise SystemExit("源码里出现了 raw string 结束符 )YSXZJS\", 会截断头文件")
-    for nm, txt in (("baseline", base), ("ac_layer", acl), ("auto_layer", aut)):
+    for nm, txt in (("baseline", base), ("speed_layer", spl), ("auto_layer", aut)):
         if "\x00" in txt:
             raise SystemExit(f"{nm} 含 NUL 字节 (ysxz 用 strlen 注入, 会被截断)")
-    if "window.__starry_ac" not in acl:
-        raise SystemExit("ac_layer.js 未定义 window.__starry_ac")
+    if "window.__starry_speed" not in spl:
+        raise SystemExit("speed_layer.js 未定义 window.__starry_speed")
+    # 反向断言: 加速层自己不得夹带任何过检测痕迹(本轮用户点名的移除目标)
+    for bad in ("__starry_ac", "ANTI_CHEAT_ENABLED", "noteDamage", "clearPending",
+                "adoptHit", "_gateOnly", "finalHurtValue"):
+        if bad in spl:
+            raise SystemExit(f"speed_layer.js 里出现了过检测残留 {bad!r} —— 拒绝合成")
     if "window.__starry_auto" not in aut or "window.__AUTO_STATE__" not in aut:
         raise SystemExit("auto_layer.js 未导出 window.__starry_auto / __AUTO_STATE__")
 
@@ -219,28 +127,29 @@ def main() -> int:
         body = body.replace(old, new, 1)
         report.append(f"  ok  {name}")
 
-    # 顺序: 标记行 -> 过检测层(ac) -> 自动化层(auto) -> 基线 IIFE。
-    # ac 在前是为了保持过检测层已验证的日志顺序与 diff 稳定; auto 里引用
-    # window.__starry_ac / window.MOD 都发生在【运行时】(1s 后的定时器), 不依赖加载顺序。
-    combined = head + acl.rstrip("\n") + "\n" + aut.rstrip("\n") + "\n" + body
+    # 顺序: 标记行 -> 战斗加速层(speed) -> 自动化层(auto) -> 基线 IIFE。
+    # 过检测层(ac_layer.js)自 2026-11-23 起不再参与合成。
+    # speed 在前保持「加速先于自动化」的加载顺序; auto 引用 window.__starry_speed / window.MOD
+    # 都发生在【运行时】(1s 后的定时器), 本身不依赖加载顺序。
+    combined = head + spl.rstrip("\n") + "\n" + aut.rstrip("\n") + "\n" + body
 
     # ---- 合成后自检 --------------------------------------------------------
     checks = [
         (combined.count(MARKER) == 1, f"{MARKER} 恰好 1 次"),
-        (combined.count("window.__starry_ac") >= 6, "AC 层引用点齐全"),
-        ("noteDamage(_d0, d)" in combined, "E1 生效"),
-        ("__starry_ac.scan(_ex, mid)" in combined, "E2 生效"),
-        ("(function (mid, entry) {" in combined, "E2 的 mid 在作用域内(IIFE 形参)"),
-        ("__starry_ac.clearPending()" in combined, "E6 生效"),
-        ('s.indexOf("ANTI_CHEAT_ENABLED") < 0' in combined, "E3 生效"),
-        ('s.indexOf("finalHurtValue") < 0' in combined, "E3 生效(finalHurtValue)"),
-        ("__starry_ac.tick(this.dt)" in combined, "E4 生效"),
-        ("__starry_ac.capture(reg)" in combined, "E5 生效"),
-        ("__starry_ac.adoptHit(Cls, hx)" in combined, "E8 生效(伤害还原层接入)"),
-        ("var _gateOnly = false;" in combined, "E7 生效(_gateOnly 声明)"),
-        ('srcs[id].indexOf("sealMethods") >= 0' in combined, "E7 生效(main 包识别)"),
-        ("if (_gateOnly) {" in combined, "E3 生效(gate-only 目标判定)"),
-        ("if (!_gateOnly) {" in combined, "E2 生效(gate-only 跳过功能扫描)"),
+        (combined.count("window.__starry_speed") >= 2, "speed 层引用点齐全(定义 + 自动化层次通道)"),
+        ("var sp = window.__starry_speed;" in combined, "自动化层 battleSignal 次通道改读 window.__starry_speed"),
+        ("sp.tickSeen" in combined, "自动化层次通道读 sp.tickSeen(帧计数)"),
+        # ---- 反向断言: 过检测层必须彻底不在生成物里 ----
+        (combined.count("__starry_ac") == 0, "反向断言: __starry_ac 计数 = 0"),
+        (combined.count("ANTI_CHEAT_ENABLED") == 0, "反向断言: ANTI_CHEAT_ENABLED 计数 = 0"),
+        (combined.count("noteDamage") == 0, "反向断言: noteDamage 计数 = 0"),
+        (combined.count("clearPending") == 0, "反向断言: clearPending 计数 = 0"),
+        (combined.count("adoptHit") == 0, "反向断言: adoptHit 计数 = 0"),
+        (combined.count("_gateOnly") == 0, "反向断言: _gateOnly 计数 = 0"),
+        # finalHurtValue 不能断言 0：baseline 功能层(无敌/唯一扣血口)本来就拿它当明文指纹，
+        # 共 5 处(实测)。这里断言"只剩基线原值"，即 E3 追加的闸门判据确实没了。
+        (combined.count("finalHurtValue") == base.count("finalHurtValue"),
+         "反向断言: finalHurtValue 只剩基线原值(功能层指纹 5 处)"),
         (combined.count("MOD.feature4") == 1, "feature4 出现次数未变(1)"),
         (combined.count("MOD.feature1") == 2, "feature1 出现次数未变(2)"),
         ("if (MOD.speed > 1) {" in combined, "移速滑条判定保留"),
@@ -249,34 +158,26 @@ def main() -> int:
         ("if (_dm > 1) d = d * _dm;" in combined, "伤害倍率咽喉保留"),
         ("if (_f1) d = Math.ceil(d * 100);" in combined, "秒杀咽喉保留"),
         ('Object.defineProperty(M, "damage"' in combined, "damage 滑块绑定保留"),
-        ("dmg boosted #" in combined, "AC 证据链⓪(伤害被放大)保留"),
-        ("dmg hit #" in combined, "AC 证据链①(hY 被调用)保留"),
-        ("dmg fix #" in combined, "AC 证据链②(累加器还原写回)保留"),
-        ("AC.evHit < 3" in combined, "AC 证据链①有上限(3 条,不刷屏)"),
-        ("AC.evFix < 3" in combined, "AC 证据链②有上限(3 条,不刷屏)"),
-        ("dmgEvNote" in combined and "dmgEvFix" in combined, "AC 证据计数已进 __AC_STATE__"),
-        ("report #" in combined and "AC.evReport < 3" in combined, "AC 证据链③(结算出口)保留且封顶"),
-        ("repEv" in combined, "AC 结算证据计数已进 __AC_STATE__"),
+        # 2026-11-23: 原 AC 证据链⓪①②③(dmg boosted/hit/fix/report #)断言随过检测层一并删除。
         # ---- 自动化层(auto_layer.js) 与 E9 新开关 ----
         (combined.count("window.__starry_auto") >= 2, "automation 层已接入且定义 window.__starry_auto"),
         ("window.__AUTO_STATE__" in combined, "automation 可观测口 __AUTO_STATE__ 存在"),
         ('Object.defineProperty(M, "feature6"' in combined, "E9 生效(feature6 解锁金卡)"),
-        ('Object.defineProperty(M, "feature10"' in combined, "E9 生效(feature10 自动穿戴)"),
         ("return R(7); } });" in combined, "E10 序号: feature5(自动战斗) -> R(7)"),
         ("return R(8); } });" in combined, "E9 序号: feature6(金卡) -> R(8)"),
         ("return R(10); } });" in combined, "E9 序号: feature7(重复挑战) -> R(10)"),
         ("return R(11); } });" in combined, "E9 序号: feature8(出售) -> R(11)"),
         ("return R(12); } });" in combined, "E9 序号: feature9(分解) -> R(12)"),
-        ("return R(13); } });" in combined, "E9 序号: feature10(穿戴) -> R(13)"),
         ('Object.defineProperty(M, "bspeed"' in combined, "战斗加速: 滑块绑定存在"),
         ("return V(6); } });" in combined, "战斗加速: 序号 6 -> V(6)"),
-        ("AC.installDeltaScale" in combined, "战斗加速: 引擎 dt 放大安装器存在(真·全局)"),
+        ("SPEED.installDeltaScale" in combined, "战斗加速: 引擎 dt 放大安装器存在(真·全局)"),
         ("this._deltaTime = dt * k;" in combined, "战斗加速: 每帧 _deltaTime ×k"),
-        ("AC.dtScaled" in combined, "战斗加速: dt 路线标志(与兜底互斥)"),
-        ("AC.applySpeed = function ()" in combined, "战斗加速: applySpeed 实现存在"),
+        ("SPEED.dtScaled" in combined, "战斗加速: dt 路线标志(与兜底互斥)"),
+        ("SPEED.applySpeed = function ()" in combined, "战斗加速: applySpeed 实现存在"),
         ("worldTimeScale" in combined, "战斗加速: 走 worldTimeScale(明文名, 不写死短名)"),
-        ("AC.speedMul", "战斗加速: useTime 按自己倍率补偿（speedMul 记账）"),
-        ("speedLoop" in combined, "战斗加速: 战斗外低频施加链存在"),
+        ("SPEED.speedMul" in combined, "战斗加速: 倍率记账 speedMul（只记账，不碰上报字段）"),
+        ("speedLoop" in combined, "战斗加速: 载入即启动的低频施加链存在"),
+        ("SPEED.tickSeen" in combined, "战斗加速: 帧计数 tickSeen 由 calculateDeltaTime 包装器维护"),
         ("proto[hit.name] = w;" in combined, "解锁金卡: 按发现结果包装原型方法(不写死短名)"),
         ("goldCandidates" in combined and 'src.indexOf("$eZ.buff")' in combined,
          "解锁金卡: 结构锚点(silver/Premium/buffId/$eZ.buff)仍在"),
@@ -299,13 +200,17 @@ def main() -> int:
         ("bag[api.sell](sellQ)" in combined, "自动出售: bag 按品质批量出售口(指纹发现)"),
         ("bag[api.deco](decoQ)" in combined, "自动分解: bag 按品质批量分解口(指纹发现)"),
         ("autoSellEquipFlag" in combined and "autoDecomposeEquipFlag" in combined, "出售/分解品质取自存档字段 autoSellEquipFlag/autoDecomposeEquipFlag"),
-        ("eq[api.wear](uids)" in combined, "自动穿戴: equip 一键穿戴提交口(指纹发现)"),
-        ("d.cands = findFnOn(eq, 0" in combined and "WORE_EQUIP" in combined, "自动穿戴: 候选列表口(0 参 + WORE_EQUIP + itemUid)"),
-        ("}, 400);" in combined and "}, 1600);" in combined and "}, 6500);" in combined,
-         "错峰 400ms 出售分解 / 1600ms 穿戴 / 6500ms 重复兜底"),
+        # 2026-11-23：自动穿戴整项删除 ⇒ 反向断言（12 项菜单口径）
+        ('Object.defineProperty(M, "feature10"' not in combined, "反向断言: feature10 getter 已删除"),
+        ("自动穿戴" not in combined, "反向断言: 菜单/日志里再无「自动穿戴」"),
+        ("WORE_EQUIP" not in combined and "wearAll" not in combined and "wearBest" not in combined,
+         "反向断言: 穿戴实现(wearAll/wearBest/WORE_EQUIP)全清"),
+        ("}, 400);" in combined and "}, 6500);" in combined and "}, 1600);" not in combined,
+         "错峰只剩 400ms 出售分解 / 6500ms 重复兜底"),
         ("try { autoBattleTick(); }" in combined, "自动战斗解锁: 驱动里显式调用 autoBattleTick()(防再漏)"),
-        ("AUTO_VER = 5" in combined, "automation 版本仲裁 AUTO_VER = 5"),
-        ("FEAT(6)" in combined and "FEAT(10)" in combined, "automation 开关走 FEAT(6)..FEAT(10)"),
+        ("AUTO_VER = 6" in combined, "automation 版本仲裁 AUTO_VER = 6"),
+        ("FEAT(6)" in combined and "FEAT(9)" in combined and "FEAT(10)" not in combined,
+         "automation 开关走 FEAT(6)..FEAT(9)（FEAT(10) 已随穿戴删除）"),
         ("btn_toNext" in combined and "tryPanel" in combined, "结算面板模块已纳入扫描(tryPanel + btn_toNext 过滤)"),
         ("findFnOn(bag, 1" in combined and "findFnOn(lm, 1" in combined, "自动化发现层: 明文锚点 + 结构指纹(不写死短名)"),
     ]
@@ -318,7 +223,9 @@ def main() -> int:
         print(f"[dry] 未写文件。合成后 {len(combined)} B / {combined.count(chr(10))+1} 行")
         return 0
 
-    OUT_JS.write_text(combined, encoding="utf-8")
+    # newline="\n"：产物必须与 mac 端旧 header 同为 LF（2026-11-23 统一，防 Windows 写成 CRLF），
+    # 也让下面 f-string 里打印的 sha256 就是文件的 sha256。
+    OUT_JS.write_text(combined, encoding="utf-8", newline="\n")
     proc = subprocess.run(["node", "--check", str(OUT_JS)], capture_output=True, text=True)
     if proc.returncode != 0:
         raise SystemExit("node --check 失败:\n" + proc.stderr)
@@ -326,7 +233,8 @@ def main() -> int:
     header = (
         "/* Auto-generated by 04_scripts/勇士之心/ysxz_anticheat/build_ac_patch.py\n"
         " * 来源: baseline_patch_from_shipped_so.js (从出货 so 抽出的权威基线)\n"
-        " *     + ac_layer.js (卡密包 v66 过检测四层复刻)\n"
+        " *     + speed_layer.js (战斗加速，2026-11-23 从 ac_layer.js 抽出；过检测层已移除)\n"
+        " *     + auto_layer.js (自动化层)\n"
         f" * patch js sha256 = {sha(combined)}\n"
         " */\n"
         "#pragma once\n\n"
@@ -338,7 +246,7 @@ def main() -> int:
     )
     if HEADER.exists():
         shutil.copy2(HEADER, HEADER.with_suffix(".h.bak"))
-    HEADER.write_text(header, encoding="utf-8")
+    HEADER.write_text(header, encoding="utf-8", newline="\n")
 
     # 头文件回读校验: 从 raw string 里取回的 JS 必须与 patch js 完全一致
     ht = HEADER.read_text(encoding="utf-8")

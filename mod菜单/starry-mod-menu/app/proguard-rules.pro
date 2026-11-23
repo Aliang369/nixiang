@@ -24,6 +24,13 @@
 # ---- ① 本项目 Manifest 组件 ----
 -keep class com.starry.magic.app.MainActivity { *; }
 -keep class com.starry.magic.menu.MenuService { *; }
+# 2026-11-23（勇士之心 P0/P1 实测）：JS 注入体用 jsb.reflection.callStaticMethod 按
+# **全名** "com.starry.magic.cocos.YsxzHooks" 读写开关（getRet/getVal/logStatus）。
+# 该类原本只被下面那条 `-keep,allowobfuscation class com.starry.magic.**` 兜住 ⇒ 被 R8
+# 改名成 com.starry.magic.o.U0 ⇒ 运行时每帧 5000+ 次
+# "Classloader failed to find class of com.starry.magic.cocos.YsxzHooks"，所有开关静默读 false。
+# 必须按全名 keep（不带 allowobfuscation）。
+-keep class com.starry.magic.cocos.YsxzHooks { *; }
 -keep class com.starry.magic.StarryInitProvider { *; }
 -keep class com.starry.magic.boot.StarryInitProvider { *; }
 -keep class com.starry.magic.StarryApp { *; }

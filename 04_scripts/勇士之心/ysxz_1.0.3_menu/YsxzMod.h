@@ -17,8 +17,8 @@ enum YsxzFeat : int {
     YSXZ_FEAT_REPEAT = 10,  // Toggle_自动重复挑战   JS: MOD.feature7
     YSXZ_FEAT_SELL = 11,   // Toggle_自动出售       JS: MOD.feature8
     YSXZ_FEAT_DECO = 12,   // Toggle_自动分解       JS: MOD.feature9
-    YSXZ_FEAT_WEAR = 13,   // Toggle_自动穿戴       JS: MOD.feature10
-    YSXZ_FEAT_COUNT = 14,
+    // 13 原 YSXZ_FEAT_WEAR（自动穿戴）2026-11-23 用户要求删除，菜单 13 项 -> 12 项
+    YSXZ_FEAT_COUNT = 13,
 };
 
 bool Ysxz_TryInit(JavaVM* vm);
