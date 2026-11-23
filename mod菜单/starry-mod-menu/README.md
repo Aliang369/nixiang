@@ -164,6 +164,6 @@ NativeMenuController  →  ModBridge.java  →  Main.cpp (JNI)
 3. **`Android_<tag>.mk`** — 私有构建（差异区只填源文件组合，构建传独立 `NDK_OUT=../../obj_<tag>`）  
 4. **注入脚本** — 参考 `scripts/inject_dwct_12.37.sh` / `inject_zhmr.sh`；Cocos 若需改 jsc，另用 patch 脚本  
 
-`MainModern.cpp` / `Main.cpp` / `GameConfig.h` / 公共 `Android.mk` **零接触**。HTML 外观一般不用动。详见 [ARCHITECTURE.md](ARCHITECTURE.md#七适配新游戏)。
+`MainModern.cpp` / `Main.cpp` / `GameConfig.h` / 公共 `Android.mk` **零接触**。菜单外观改 `menu/NativeMenuController` + `menu/MagicRes`。详见 [ARCHITECTURE.md](ARCHITECTURE.md#七适配新游戏)。
 
 （legacy 存量三处接线 `GameConfig.h` / `Main.cpp g_featureList` / 公共 `Android.mk` 仅为旧游戏保留，重新出包时顺手迁移注册表。）

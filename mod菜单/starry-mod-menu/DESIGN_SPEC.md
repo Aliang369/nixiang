@@ -44,6 +44,7 @@
 
 ## 技术
 
-- 菜单：单文件 HTML，中文 `lang="zh-CN"`  
-- 图标：Lucide / 内联 SVG，不用 emoji 当图标  
+- 菜单：**全原生 View**（`NativeMenuController` + `MagicRes`），无 HTML/CSS 层（2026-08-13 起）
+- 后台：单页 `index.html`，中文 `lang="zh-CN"`
+- 图标：菜单用 `MagicRes` Path；后台用 Lucide / 内联 SVG；不用 emoji 当图标
 - 品牌文案：一律「星光」

@@ -77,7 +77,7 @@ public class Preferences {
     private static final String KEY_CARD_AUTH_REQUIRED = "auth_card_required";
     /** 后台游戏「启用」：false 时功能全关（设置 Tab 仍可用） */
     private static final String KEY_MENU_ENABLED = "auth_menu_enabled";
-    /** 远程公告 once_device 已读 id 集合（对齐 HTML starry_ann_seen_v1） */
+    /** 远程公告 once_device 已读 id 集合（key 沿用历史名 starry_ann_seen_v1，勿改以免丢已读状态） */
     private static final String KEY_ANN_SEEN = "starry_ann_seen_v1";
     /** 上次见到的功能列表指纹（只有它变了才清功能偏好，见 clearFeaturePrefsIfListChanged） */
     private static final String KEY_FEATURE_SIG = "feature_list_sig";
@@ -255,7 +255,7 @@ public class Preferences {
     }
 
     /**
-     * 导出全部偏好为 JSON，供 HTML 启动时恢复 UI。
+     * 导出全部偏好为 JSON（调试/迁移用；原「HTML 页面启动恢复」的用途已随 HTML 菜单废弃）。
      * 布尔/数字/字符串原样输出；另含 persist_features。
      */
     public static String exportJSON() {
@@ -675,7 +675,7 @@ public class Preferences {
 
     /**
      * 后台单项功能门控（bootstrap.features[].enabled）。
-     * 列表为空或不含该 feat_num → 放行（与 HTML AuthState.featureEnabled 一致）。
+     * 列表为空或不含该 feat_num → 放行（语义沿用旧 HTML 版 AuthState.featureEnabled）。
      */
     public static boolean isServerFeatureEnabled(int featNum) {
         if (featNum >= UI_FEAT_MIN) return true;

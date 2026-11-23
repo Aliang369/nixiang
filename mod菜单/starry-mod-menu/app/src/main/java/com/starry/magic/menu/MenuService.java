@@ -1129,71 +1129,13 @@ public class MenuService extends Service {
         }
     }
 
-    // ===== Legacy HTML overlay stubs (ModBridge / 旧注入兼容) =====
-
-    public void setOverlayDragActive(boolean active) {
-        // legacy HTML overlay drag; no-op in native UI
-    }
-
-    public void setOverlayPopupFullscreen(boolean full) {
-        // legacy HTML overlay fullscreen; no-op in native UI
-    }
-
-    public void exitPopupFullscreenToFrame(int x, int y, int w, int h) {
-        // legacy HTML overlay frame; no-op in native UI
-    }
-
-    public boolean isOverlayPopupFullscreen() {
-        return true;
-    }
-
-    public void queueOverlayFrame(int x, int y, int w, int h) {
-        // legacy HTML overlay frame; no-op in native UI
-    }
-
-    public void setOverlayFrame(int x, int y, int w, int h) {
-        // legacy HTML overlay frame; no-op in native UI
-    }
-
-    public void beginOverlayLocalDrag(int x, int y, int w, int h) {
-        // legacy HTML overlay drag; no-op in native UI
-    }
-
-    public void endOverlayLocalDrag() {
-        // legacy HTML overlay drag; no-op in native UI
-    }
-
-    public String getOverlayTouchRawJSON() {
-        DisplayMetrics dm = getResources().getDisplayMetrics();
-        int sw = Math.max(dm.widthPixels, 1);
-        int sh = Math.max(dm.heightPixels, 1);
-        int cw = Math.max(1, Math.round(sw / dm.density));
-        int ch = Math.max(1, Math.round(sh / dm.density));
-        return "{\"x\":0,\"y\":0,\"sw\":" + sw + ",\"sh\":" + sh
-                + ",\"cw\":" + cw + ",\"ch\":" + ch + ",\"t\":0}";
-    }
-
-    public float getTouchRawX() { return 0f; }
-    public float getTouchRawY() { return 0f; }
-
-    public int getScreenW() {
-        return getResources().getDisplayMetrics().widthPixels;
-    }
-
-    public int getScreenH() {
-        return getResources().getDisplayMetrics().heightPixels;
-    }
-
-    public void setFocusable(boolean focusable) {
-        overlayInputFocus = focusable;
-    }
-
-    public void setMenuPanelExpanded(boolean expanded) {
-        // legacy HTML overlay alpha; native panel handles its own layout
-    }
+    // ===== 旧 JNI 兼容层（HTML 菜单 2026-08-13 移除后的最小残留）=====
+    // 与上面的 showAnnouncement/hideAnnouncement 同类：so 侧旧调用面的空壳，
+    // 只为「新 dex + 8 月前旧 so」混装时不抛 NoSuchMethodError；正常出包整套 dex+so 同版，
+    // 不会走到这里。**勿在此加逻辑**，原生 UI 请改 NativeMenuController。
 
     public void evaluateJs(final String script) {
-        // legacy HTML bridge; no-op in native UI
+        // 遗留：HTML 菜单时代的 JS 注入入口；原生 UI 无脚本层。
     }
 
     @Override

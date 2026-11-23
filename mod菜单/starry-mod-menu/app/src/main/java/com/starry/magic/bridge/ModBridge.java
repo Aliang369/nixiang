@@ -1,8 +1,6 @@
 package com.starry.magic.bridge;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -15,17 +13,18 @@ import com.starry.magic.menu.Preferences;
 import com.starry.magic.menu.StateMirror;
 
 import java.io.File;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
- * JS ↔ Java 桥接层
+ * 菜单 ↔ Java 桥接层（原生 UI 直接调用）。
  *
- * HTML 通过 window.ModBridge.xxx() 调用。
- * featNum &gt;= 50 预留为纯 UI 项：只写 SharedPreferences，不进入 C 层 g_features/g_values。
- * 当前设置页为静态 HTML（声明/定制MOD/关闭菜单），不再使用 50+ 控件。
+ * <p>历史：2026-08-13 前菜单 UI 是 WebView + HTML，Java 侧方法靠 {@code @JavascriptInterface}
+ * 暴露给页面脚本；HTML 方案废弃后 WebView 与页面脚本全部删除，这里只保留原生
+ * {@code NativeMenuController} 实际调用的入口。{@code @JavascriptInterface} 注解保留，
+ * 仅为不触发 R8 keep 规则的差异（规则见 app/proguard-rules.pro）。
+ *
+ * <p>featNum &gt;= 50 预留为纯 UI 项：只写 SharedPreferences，不进入 C 层 g_features/g_values。
  */
 public class ModBridge {
 
@@ -389,19 +388,6 @@ public class ModBridge {
         return true;
     }
 
-    @JavascriptInterface
-    public String getFeatureListJSON() {
-        String[] features = nativeGetFeatureList();
-        if (features == null) return "[]";
-        StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < features.length; i++) {
-            if (i > 0) sb.append(",");
-            sb.append("\"").append(features[i].replace("\"", "\\\"")).append("\"");
-        }
-        sb.append("]");
-        return sb.toString();
-    }
-
     /** 原生菜单：直接取功能表 */
     public String[] getFeatureListRaw() {
         try {
@@ -461,6 +447,8 @@ public class ModBridge {
             if (isUiFeature(i)) continue;
             String spec = features[i];
             if (spec == null) continue;
+            // RichTextView_/RichWebView_ 是旧 HTML 菜单的富文本控件类型；C 层若仍下发就跳过，
+            // 否则会被 FeatureListParser 的默认分支当成 Toggle 渲染进原生列表。
             if (spec.startsWith("Category_") || spec.startsWith("RichTextView_")
                     || spec.startsWith("RichWebView_") || spec.startsWith("Collapse_")) {
                 continue;
@@ -495,172 +483,6 @@ public class ModBridge {
         Log.i(TAG, "reapplied saved features to native");
     }
 
-    /** 启动时恢复 UI：SharedPreferences 全量 JSON */
-    @JavascriptInterface
-    public String getAllPrefsJSON() {
-        return Preferences.exportJSON();
-    }
-
-    @JavascriptInterface
-    public boolean isGameLibLoaded() {
-        return nativeIsGameLibLoaded();
-    }
-
-    /** legacy HTML touch region; unused in native UI */
-    @JavascriptInterface
-    public void updateTouchTargets(String json) {
-        // no-op: native UI does not use WebView touch-target passthrough
-    }
-
-    @JavascriptInterface
-    public void setOverlayDragActive(boolean active) {
-        // 同步写标记，避免 MOVE 已到但 post 未执行
-        MenuService service = MenuService.getInstance();
-        if (service != null) {
-            service.setOverlayDragActive(active);
-        }
-    }
-
-    /** 在主线程执行并短暂等待，避免 JS 改坐标与 WM 改窗抢帧 */
-    private void runOverlaySync(Runnable action) {
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            action.run();
-            return;
-        }
-        CountDownLatch latch = new CountDownLatch(1);
-        mainHandler.post(() -> {
-            try {
-                action.run();
-            } finally {
-                latch.countDown();
-            }
-        });
-        try {
-            latch.await(400, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    @JavascriptInterface
-    public void setOverlayPopupFullscreen(boolean full) {
-        runOverlaySync(() -> {
-            MenuService service = MenuService.getInstance();
-            if (service != null) {
-                service.setOverlayPopupFullscreen(full);
-            }
-        });
-    }
-
-    /**
-     * 关公告/Toast：同一主线程消息里退出全屏并落到球/面板小窗，避免跳位裁切。
-     */
-    @JavascriptInterface
-    public void exitOverlayPopupToFrame(int x, int y, int w, int h) {
-        runOverlaySync(() -> {
-            MenuService service = MenuService.getInstance();
-            if (service != null) {
-                service.exitPopupFullscreenToFrame(x, y, w, h);
-            }
-        });
-    }
-
-    @JavascriptInterface
-    public void overlayLog(String msg) {
-        Log.i("StarryOverlay", msg != null ? msg : "");
-    }
-
-    /** 复制文本到系统剪贴板（供菜单「复制 QQ」等） */
-    @JavascriptInterface
-    public boolean copyText(String text) {
-        try {
-            android.content.ClipboardManager cm =
-                    (android.content.ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-            if (cm == null) return false;
-            cm.setPrimaryClip(android.content.ClipData.newPlainText("starry", text != null ? text : ""));
-            return true;
-        } catch (Exception e) {
-            Log.w(TAG, "copyText failed: " + e.getMessage());
-            return false;
-        }
-    }
-
-    @JavascriptInterface
-    public void beginOverlayLocalDrag(int x, int y, int w, int h) {
-        MenuService service = MenuService.getInstance();
-        if (service != null) {
-            service.beginOverlayLocalDrag(x, y, w, h);
-        }
-    }
-
-    @JavascriptInterface
-    public void setOverlayFrame(int x, int y, int w, int h) {
-        MenuService service = MenuService.getInstance();
-        if (service != null) {
-            service.queueOverlayFrame(x, y, w, h);
-        }
-    }
-
-    @JavascriptInterface
-    public void endOverlayLocalDrag() {
-        MenuService service = MenuService.getInstance();
-        if (service != null) {
-            service.endOverlayLocalDrag();
-        }
-    }
-
-    /** 同步读取最近触摸 raw 屏幕坐标（勿 post，拖动跟手要当前帧） */
-    @JavascriptInterface
-    public String getOverlayTouchRawJSON() {
-        MenuService service = MenuService.getInstance();
-        if (service != null) {
-            return service.getOverlayTouchRawJSON();
-        }
-        return "{\"x\":0,\"y\":0,\"sw\":1,\"sh\":1,\"cw\":1,\"ch\":1,\"t\":0}";
-    }
-
-    @JavascriptInterface
-    public float getTouchRawX() {
-        MenuService service = MenuService.getInstance();
-        return service != null ? service.getTouchRawX() : 0f;
-    }
-
-    @JavascriptInterface
-    public float getTouchRawY() {
-        MenuService service = MenuService.getInstance();
-        return service != null ? service.getTouchRawY() : 0f;
-    }
-
-    @JavascriptInterface
-    public int getScreenW() {
-        MenuService service = MenuService.getInstance();
-        return service != null ? service.getScreenW() : 1;
-    }
-
-    @JavascriptInterface
-    public int getScreenH() {
-        MenuService service = MenuService.getInstance();
-        return service != null ? service.getScreenH() : 1;
-    }
-
-    @JavascriptInterface
-    public void setFocusable(boolean focusable) {
-        Runnable r = () -> {
-            MenuService service = MenuService.getInstance();
-            if (service != null) {
-                service.setFocusable(focusable);
-            }
-        };
-        // 插队：touchstart 后尽快开窗焦点，赶在 input focus / IME 判定前
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            r.run();
-        } else if (focusable) {
-            mainHandler.postAtFrontOfQueue(r);
-        } else {
-            mainHandler.post(r);
-        }
-    }
-
     @JavascriptInterface
     public void closeMenu() {
         Log.i(TAG, "closeMenu called from JS");
@@ -675,70 +497,7 @@ public class ModBridge {
         });
     }
 
-    @JavascriptInterface
-    public void collapseMenu() {
-        Log.i(TAG, "collapseMenu called from JS");
-        mainHandler.post(() -> {
-            MenuService service = MenuService.getInstance();
-            if (service != null) {
-                service.collapseToBall();
-            }
-        });
-    }
-
-    @JavascriptInterface
-    public void expandMenu() {
-        Log.i(TAG, "expandMenu called from JS");
-        mainHandler.post(() -> {
-            MenuService service = MenuService.getInstance();
-            if (service != null) {
-                service.expandFromBall();
-            }
-        });
-    }
-
-    /**
-     * 面板展开/收起均用安全 alpha 0.79（ColorOS 对更高 alpha 常压成看不见）。
-     * 由 HTML collapsePanel/expandPanel 调用，勿与 collapseMenu 递归混用。
-     */
-    @JavascriptInterface
-    public void setMenuPanelExpanded(boolean expanded) {
-        mainHandler.post(() -> {
-            MenuService service = MenuService.getInstance();
-            if (service != null) {
-                service.setMenuPanelExpanded(expanded);
-            }
-        });
-    }
-
-    /** 打开外部链接（公告「立即前往」）；需 http/https */
-    @JavascriptInterface
-    public void openExternalUrl(String url) {
-        if (url == null) return;
-        String u = url.trim();
-        if (u.isEmpty()) return;
-        if (!u.startsWith("http://") && !u.startsWith("https://")) {
-            Log.w(TAG, "openExternalUrl rejected: " + u);
-            return;
-        }
-        Log.i(TAG, "openExternalUrl: " + u);
-        mainHandler.post(() -> {
-            try {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(u));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
-            } catch (Exception e) {
-                Log.e(TAG, "openExternalUrl failed", e);
-            }
-        });
-    }
-
     // ===== 网络验证 =====
-
-    @JavascriptInterface
-    public String getAuthSessionJSON() {
-        return Preferences.exportAuthJSON();
-    }
 
     @JavascriptInterface
     public void setAuthGameId(String gameId) {
@@ -748,17 +507,6 @@ public class ModBridge {
                 && !gameId.equals(Preferences.getAuthGameId())) {
             Log.w(TAG, "ignore setAuthGameId(" + gameId + "), baked="
                     + Preferences.getAuthGameId());
-        }
-    }
-
-    /** HTML/调试：当前 APK 烘焙的 auth game_id */
-    @JavascriptInterface
-    public String getBakedAuthGameId() {
-        try {
-            String id = nativeGetAuthGameId();
-            return id == null ? "" : id;
-        } catch (UnsatisfiedLinkError e) {
-            return Preferences.getAuthGameId();
         }
     }
 
@@ -773,23 +521,6 @@ public class ModBridge {
         try { nativeClearGrant(); } catch (UnsatisfiedLinkError ignored) {}
         syncNativeAuthorized();
         lockAllFeatures();
-    }
-
-    /**
-     * 异步 HTTP 请求；完成后回调 JS：window.__onAuthResponse(requestId, jsonString)
-     */
-    @JavascriptInterface
-    public void authRequest(String requestId, String method, String path, String bodyJson) {
-        authExecutor.execute(() -> {
-            String result = AuthClient.request(
-                    Preferences.getAuthBaseUrl(),
-                    method,
-                    path,
-                    bodyJson,
-                    null
-            );
-            deliverAuthResponse(requestId, result);
-        });
     }
 
     @JavascriptInterface
@@ -831,18 +562,6 @@ public class ModBridge {
         }
     }
 
-    @JavascriptInterface
-    public void setAuthorized(boolean authorized) {
-        if (!authorized) {
-            Preferences.clearAuthSession();
-            try { nativeClearGrant(); } catch (UnsatisfiedLinkError ignored) {}
-            lockAllFeatures();
-            return;
-        }
-        // true 不能单独放行：必须走 grant 验签
-        syncNativeAuthorized();
-    }
-
     /** 关闭全部非 UI 功能（验证失败 / 游戏停用 / 锁菜单） */
     @JavascriptInterface
     public void lockAllFeatures() {
@@ -857,6 +576,7 @@ public class ModBridge {
             if (isUiFeature(i)) continue;
             String spec = features[i];
             if (spec == null) continue;
+            // 同上：旧 HTML 富文本控件类型，跳过不推送 native。
             if (spec.startsWith("Category_") || spec.startsWith("RichTextView_")
                     || spec.startsWith("RichWebView_") || spec.startsWith("Collapse_")) {
                 continue;
@@ -934,32 +654,6 @@ public class ModBridge {
             return FeatureListParser.seekResetValue(spec);
         }
         return 0;
-    }
-
-    private void deliverAuthResponse(String requestId, String json) {
-        mainHandler.post(() -> {
-            MenuService service = MenuService.getInstance();
-            if (service == null) return;
-            service.evaluateJs(
-                    "if (typeof window.__onAuthResponse === 'function') {"
-                            + " window.__onAuthResponse("
-                            + jsonStringLiteral(requestId) + ", "
-                            + jsonStringLiteral(json)
-                            + "); }"
-            );
-        });
-    }
-
-    private static String jsonStringLiteral(String s) {
-        if (s == null) return "\"\"";
-        String escaped = s
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\u2028", "\\u2028")
-                .replace("\u2029", "\\u2029");
-        return "\"" + escaped + "\"";
     }
 
     /* ========================================================

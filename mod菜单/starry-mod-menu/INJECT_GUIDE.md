@@ -293,7 +293,7 @@ adb install game_mod_signed.apk
 
 - 检查 smali 插入位置是否正确
 - 检查 `libstarry_magic.so` 是否在 `lib/arm64-v8a/` 下
-- 检查 HTML 资源是否在 `assets/web/` 下
+- 检查 dex 是否含 `StarryInitProvider` / `MenuService` / `bridge.ModBridge`（缺一个就是菜单 dex 没进去）
 - 查看 logcat：`adb logcat -s StarryMagic:*`
 
 ### 4.3 悬浮窗不显示
@@ -346,11 +346,9 @@ echo "=== 2. 复制 .so ==="
 mkdir -p "$GAME_SRC/lib/arm64-v8a/"
 cp app/src/main/jni/libs/arm64-v8a/libstarry_magic.so "$GAME_SRC/lib/arm64-v8a/"
 
-echo "=== 3. 复制 HTML 资源 ==="
-mkdir -p "$GAME_SRC/assets/web/pages/"
-mkdir -p "$GAME_SRC/assets/web/images/"
-cp app/src/main/assets/web/pages/*.html "$GAME_SRC/assets/web/pages/"
-cp app/src/main/assets/web/images/*.jpg "$GAME_SRC/assets/web/images/"
+echo "=== 3. 清掉旧包的 HTML 菜单资源 ==="
+# 菜单已全原生（2026-08-13）：工程里没有 assets/web，旧包若残留整目录删除即可
+rm -rf "$GAME_SRC/assets/web"
 
 echo "=== 4. 复制 smali ==="
 # 先编译自己的 APK 获取 smali
