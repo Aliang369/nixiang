@@ -1,30 +1,51 @@
 #!/usr/bin/env bash
-# 部署后冒烟：不写 presence、不需要管理员凭证；唯一副作用是非法 device 的 bootstrap 会写一条脱敏 bootstrap_reject 事件
-# 用法：REMOTE=starlight ./smoke_api.sh
-set -euo pipefail
-REMOTE="${REMOTE:-starlight}"
-ssh -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE" bash -s <<'EOF'
+# 部署后冒烟（宝塔 + systemd 实例，2026-11-24 重写）
+#
+# 旧版打 docker exec + psql + 8443 自签证书 + /v1/portal/games（该路由已随 portal.py 删除），
+# 现在全部不成立；旧版归档在 ../_legacy_docker/ops/smoke_api.sh，仅供追溯。
+#
+# 只读：不写 presence、不建票、不带 token。唯一网络副作用是几条 GET。
+# 用法：./smoke_api.sh        （REMOTE / PORT / BASE 可覆盖）
+#       BASE=https://auth.xgmfyx.cn REMOTE=root@1.2.3.4 ./smoke_api.sh
 set -uo pipefail
+
+REMOTE="${REMOTE:-starlight}"
+PORT="${PORT:-8010}"
+BASE="${BASE:-https://auth.xgmfyx.cn}"
+SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=10"
 fails=0
+
 chk() { # name expected actual
-  if [ "$2" = "$3" ]; then echo "[ok]   $1 = $3"; else echo "[FAIL] $1 expected=$2 actual=$3"; fails=$((fails+1)); fi
+  if [ "$2" = "$3" ]; then
+    echo "[ok]   $1 = $3"
+  else
+    echo "[FAIL] $1 expected=$2 actual=$3"
+    fails=$((fails + 1))
+  fi
 }
-H=$(docker exec auth-server-api-1 python -c "import urllib.request as u;print(u.urlopen('http://127.0.0.1:8000/health',timeout=3).status)" 2>/dev/null || echo 000)
-chk health 200 "$H"
-P=$(curl -sk --fail -o /dev/null -w '%{http_code}' https://127.0.0.1:8443/v1/portal/games || echo 000)
-chk portal_games 200 "$P"
-# 未带 token 访问管理接口必须 401（不写库）
-A=$(curl -sk -o /dev/null -w '%{http_code}' https://127.0.0.1:8443/v1/admin/events || echo 000)
-chk admin_events_no_token 401 "$A"
-# 非法 device_id 的 bootstrap 仍须 200（软处理），且不得新增 presence 行
-B=$(curl -sk -o /dev/null -w '%{http_code}' "https://127.0.0.1:8443/v1/bootstrap?game_id=bhzf&device_id=sqli_probe_smoke" || echo 000)
-chk bootstrap_bad_device_still_200 200 "$B"
-ROW=$(docker exec auth-server-db-1 psql -U starlight -d starlight -tAc "SELECT count(*) FROM online_presence WHERE device_id='sqli_probe_smoke'" | tr -d '[:space:]')
-# 说明：该非法请求只会留下一条 bootstrap_reject 事件（device 指纹化），不写 presence
-chk bad_device_not_persisted 0 "$ROW"
-# 迁移后列数（部署前为 0，部署后应为 10）
-COLS=$(docker exec auth-server-db-1 psql -U starlight -d starlight -tAc "SELECT count(*) FROM information_schema.columns WHERE (table_name='online_presence' AND column_name IN ('created_at','card_verified_at')) OR (table_name='auth_events' AND column_name IN ('result','reason','ip','ip_forwarded','ua','request_id','suppressed','last_occurred_at'))" | tr -d '[:space:]')
-echo "[info] new_columns=$COLS"
-echo "[smoke] fails=$fails"
-[ "$fails" = "0" ]
-EOF
+local_code() { # path
+  ssh $SSH_OPTS "$REMOTE" "curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:$PORT$1 || echo 000" | tr -d '[:space:]'
+}
+pub_code() { # path
+  curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$BASE$1" || echo 000
+}
+
+echo "== 本机回环 127.0.0.1:${PORT}（经 ssh ${REMOTE}）=="
+chk health 200 "$(local_code /health)"
+chk root_404 404 "$(local_code /)"
+chk docs_off 404 "$(local_code /docs)"
+
+echo "== 公网 $BASE =="
+chk public_health 200 "$(pub_code /health)"
+chk admin_ui 200 "$(pub_code /admin/)"
+chk admin_api_no_token 401 "$(pub_code /v1/admin/events)"
+chk ota_removed 404 "$(pub_code /v1/ota/build)"
+chk portal_removed 404 "$(pub_code /v1/portal/games)"
+
+echo "== 结果 =="
+if [ "$fails" -eq 0 ]; then
+  echo "[smoke] 全过"
+  exit 0
+fi
+echo "[smoke] $fails 项不符，先看 systemctl status 与 /www/wwwlogs/starlight-mod-auth.*.log" >&2
+exit 1

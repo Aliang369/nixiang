@@ -147,6 +147,17 @@ curl -s https://auth.xgmfyx.cn/health                    # 健康检查
 
 ## 9. 升级流程
 
+推荐用脚本（远端自动快照 → 同步 → 重启 → /health 轮询；见 `scripts/ops/README.md`）：
+
+```bash
+cd auth-server/scripts/ops
+./deploy_api.sh --dry-run                                   # 先看计划，零写操作
+REMOTE=root@154.94.232.231 ./deploy_api.sh                  # 发布
+./smoke_api.sh                                              # 冒烟
+```
+
+手工等价步骤：
+
 ```bash
 # 本地改动后上传 app/ 与 static/（不要覆盖 .env / data/）
 scp -r app static <user>@<host>:/www/wwwroot/starlight-mod-auth/
@@ -183,8 +194,9 @@ CREATE INDEX ix_auth_events_result ON auth_events (result);
 
 同时 `.env` 必须补 `TRUSTED_PROXY_IPS=127.0.0.1`，否则设备日志记不到真实来源 IP。
 
-> `scripts/ops/sql/*.sql` 是 **PostgreSQL 语法**（`CONCURRENTLY`、`TIMESTAMPTZ` 等），
+> `_legacy_docker/ops/sql/*.sql` 是 **PostgreSQL 语法**（`CONCURRENTLY`、`TIMESTAMPTZ` 等），
 > MySQL 环境**不能直接执行**，只作口径参考；MySQL 侧的清理/回填需另行改写。
+> 这批 SQL 与 Docker 时期的运维脚本一起归档在 `_legacy_docker/ops/`（2026-11-24）。
 
 ### 升级到 2026-11-22 版本（载荷 sha / v3 残留整体删除）
 

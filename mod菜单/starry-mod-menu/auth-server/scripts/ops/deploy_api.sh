@@ -1,114 +1,111 @@
 #!/usr/bin/env bash
-# 精确发布 auth-server（api / nginx conf / compose）
+# 精确发布 auth-server 到 **宝塔 + systemd + MySQL** 实例（2026-11-24 重写）
+#
+# 为什么重写：原版是 Docker 方案（同步 nginx/starlight.conf + docker-compose.yml + Dockerfile、
+# 靠 docker 镜像 tag 回滚、健康检查打 8443）。Docker 整套已归档到 ../_legacy_docker/，
+# 那些路径在仓库里已不存在，旧脚本第一行 rsync 就会失败。现行部署口径见 docs/DEPLOY.md。
+#
 # 用法：
-#   REMOTE=starlight ./deploy_api.sh --dry-run      # 只打印 plan，**零写操作**（不备份不传文件）
-#   REMOTE=starlight ./deploy_api.sh                # 快照 → 同步 → nginx -t → build → recreate api → health 重试
-#   REMOTE=starlight ./deploy_api.sh --with-nginx    # 额外 recreate nginx（先归档旧容器日志）
+#   ./deploy_api.sh --dry-run                 # 只打印要执行的命令，不连远端、零写操作
+#   ./deploy_api.sh                           # 远端快照 → 同步 app/ static/ → 重启 → /health
+#   ./deploy_api.sh --with-reqs               # 额外同步 requirements.txt 并在远端 .venv 里 pip install
+#   REMOTE=root@154.94.232.231 ./deploy_api.sh
+#   ROOT=/www/wwwroot/starlight-mod-auth SVC=starlight-mod-auth PORT=8010 OWNER=www:www ./deploy_api.sh
+#
+# 不做的事（刻意的）：不碰 .env / certs / data / keys / backups / *.db / .venv；
+# 不建数据库表（应用 ensure_schema 幂等补列，改列仍须手工 ALTER TABLE）；不动 nginx vhost。
 set -euo pipefail
 umask 077
+
 REMOTE="${REMOTE:-starlight}"
-ROOT="/www/wwwroot/starlight-auth/auth-server"
+ROOT="${ROOT:-/www/wwwroot/starlight-mod-auth}"
+SVC="${SVC:-starlight-mod-auth}"
+PORT="${PORT:-8010}"
+OWNER="${OWNER:-www:www}"
+PUBLIC_HEALTH="${PUBLIC_HEALTH:-https://auth.xgmfyx.cn/health}"
 TS="$(date +%Y%m%d_%H%M%S)"
-MODE="deploy"; WITH_NGINX=0
-SLICE_RE="${SLICE_RE:-2026-11-15T11:[45][0-9]}"
+MODE="deploy"
+WITH_REQS=0
+SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=10"
+
 for a in "$@"; do
   case "$a" in
     --dry-run) MODE="dry-run" ;;
-    --with-nginx) WITH_NGINX=1 ;;
+    --with-reqs) WITH_REQS=1 ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
     *) echo "未知参数: $a" >&2; exit 2 ;;
   esac
 done
-SYNC="app/ static/ nginx/starlight.conf docker-compose.yml Dockerfile requirements.txt"
-NEVER=".env env.example certs/ data/ keys/ backups/ starlight.db _tmp_mask_test.db"
+
+SYNC="app static"
+[ "$WITH_REQS" = "1" ] && SYNC="$SYNC requirements.txt"
+
+# 禁同步清单：生产密钥/数据/备份/虚拟环境一律不上传、不覆盖
+NEVER=".env env.example certs data keys backups starlight.db _tmp_mask_test.db .venv"
 for s in $SYNC; do
   for n in $NEVER; do
     case "$s" in "$n"*) echo "[deploy] 拒绝：$s 命中禁同步 $n" >&2; exit 3 ;; esac
   done
 done
-plan() {
-  for s in $SYNC; do
-    rsync -n -az --exclude='__pycache__' --exclude='.venv' --itemize-changes -e 'ssh -o BatchMode=yes -o ConnectTimeout=10' "$s" "$REMOTE:$ROOT/$s" | sed 's/^/[plan] /'
-  done
-}
+
+SNAP_CMD="cd '$ROOT' && mkdir -p backups/pre_$TS && tar czf backups/pre_$TS/code.tar.gz $SYNC && find backups/pre_$TS -type f -exec chmod 600 {} + && echo '[deploy] snapshot=backups/pre_$TS'"
+
 if [ "$MODE" = "dry-run" ]; then
-  plan
-  echo '[deploy] dry-run 结束：未做任何写操作（无备份、无同步、无重启）'
+  echo "[deploy] dry-run（不连远端、零写操作）"
+  echo "  remote = $REMOTE"
+  echo "  root   = $ROOT"
+  echo "  svc    = $SVC   port = $PORT   owner = $OWNER"
+  echo "  1) ssh $REMOTE \"$SNAP_CMD\""
+  for s in $SYNC; do
+    echo "  2) rsync -az --exclude=__pycache__ --exclude=.venv -e 'ssh $SSH_OPTS' $s $REMOTE:$ROOT/$s"
+  done
+  echo "  3) ssh $REMOTE \"chown -R $OWNER '$ROOT/app' '$ROOT/static'\""
+  [ "$WITH_REQS" = "1" ] && echo "  4) ssh $REMOTE \"cd '$ROOT' && .venv/bin/pip install -q -r requirements.txt\""
+  echo "  5) ssh $REMOTE \"systemctl restart $SVC\" → 轮询 http://127.0.0.1:$PORT/health 至 200"
+  echo "  6) curl -s $PUBLIC_HEALTH"
   exit 0
 fi
-echo "[deploy] remote=$REMOTE ts=$TS with_nginx=$WITH_NGINX"
-# SUBNET_CHECK：TRUSTED_PROXY_IPS 必须与实际 docker 子网一致，否则应用 fail-closed 到 nginx IP（全站共享限流桶）
-SUBNET=$(ssh -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE" "docker network inspect auth-server_default -f '{{range .IPAM.Config}}{{.Subnet}}{{end}}'")
-TRUSTED=$(grep -E 'TRUSTED_PROXY_IPS' docker-compose.yml | sed 's/.*:-//;s/}.*//')
-echo "[deploy] subnet=$SUBNET trusted_configured=$TRUSTED"
-[ "$SUBNET" = "$TRUSTED" ] || { echo "[deploy] 中止：TRUSTED_PROXY_IPS($TRUSTED) 与实际子网($SUBNET) 不一致" >&2; exit 4; }
-ssh -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE" bash -s <<EOF
-set -euo pipefail
-umask 077
-cd $ROOT
-D=backups/pre_$TS
-mkdir -p "\$D"
-tar czf "\$D/code.tar.gz" app static nginx docker-compose.yml Dockerfile requirements.txt
-docker tag auth-server-api auth-server-api:rollback_$TS
-docker exec auth-server-db-1 pg_dump -U starlight -Fc -d starlight > "\$D/starlight.dump"
-find "\$D" -type f -exec chmod 600 {} +
-echo "[deploy] snapshot=\$D"
-EOF
-# dump 可用性校验（独立执行，避免 heredoc 变量展开冲突；只输出条目数）
-ssh -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE" "ENT=\$(docker run --rm -v $ROOT/backups/pre_$TS:/b:ro postgres:16-alpine pg_restore -l /b/starlight.dump 2>/dev/null | grep -c '^[0-9]' || true); ENT=\${ENT:-0}; echo \"[deploy] dump_entries=\$ENT\"; if [ \"\$ENT\" -le 0 ]; then echo '[deploy] dump 不可读，暂停数据写' >&2; exit 5; fi"
-plan
+
+echo "[deploy] remote=$REMOTE root=$ROOT svc=$SVC ts=$TS with_reqs=$WITH_REQS"
+
+# 0) 前置校验：目录、入口、systemd 单元
+ssh $SSH_OPTS "$REMOTE" "set -e
+  test -d '$ROOT' || { echo '[deploy] 远端目录不存在: $ROOT' >&2; exit 3; }
+  test -f '$ROOT/app/main.py' || { echo '[deploy] 远端缺 app/main.py，拒绝继续' >&2; exit 3; }
+  if systemctl list-unit-files '$SVC.service' | grep -q '$SVC.service'; then echo '[deploy] unit=ok'; else echo '[deploy] 中止：$SVC.service 不存在' >&2; exit 3; fi"
+
+# 1) 远端快照（代码回滚靠它：tar 解回 app/ static/ 再 restart）
+ssh $SSH_OPTS "$REMOTE" "$SNAP_CMD"
+
+# 2) 同步（逐项，保留远端其余文件；不带 --delete，避免误删远端运行期产物）
 for s in $SYNC; do
-  rsync -az --exclude='__pycache__' --exclude='.venv' -e 'ssh -o BatchMode=yes -o ConnectTimeout=10' "$s" "$REMOTE:$ROOT/$s"
+  rsync -az --exclude='__pycache__' --exclude='.venv' -e "ssh $SSH_OPTS" "$s" "$REMOTE:$ROOT/$s"
 done
-ssh -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE" 'docker exec auth-server-nginx-1 nginx -t'
-ssh -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE" "cd $ROOT && docker compose build api && docker compose up -d --no-deps --force-recreate api"
-if [ "$WITH_NGINX" = "1" ]; then
-  ssh -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE" bash -s -- "$TS" "$SLICE_RE" <<'EOF'
-set -euo pipefail
-umask 077
-TS="$1"; SLICE_RE="$2"
-cd /www/wwwroot/starlight-auth/auth-server
-CID=$(docker inspect -f '{{.Id}}' auth-server-nginx-1)
-SRC=/var/lib/docker/containers/$CID/$CID-json.log
-D=backups/pre_$TS
-# 零停机归档：先对活跃 json log 建硬链接（同 FS 瞬时完成，不复制、不停服）
-STAMP=$(date +%H%M%S)
-ARCH="$D/nginx-full-$STAMP.jsonl"
-if [ -f "$SRC" ]; then
-  if ln "$SRC" "$ARCH" 2>/dev/null; then
-    chmod 600 "$ARCH"
-    if [ "$(stat -c %i "$SRC")" = "$(stat -c %i "$ARCH")" ]; then
-      echo "[deploy] hardlink OK inode=$(stat -c %i "$ARCH") size=$(stat -c %s "$ARCH")"
-    else
-      echo '[deploy] 硬链接 inode 校验失败，中止' >&2; exit 1
-    fi
-  else
-    echo '[deploy] 跨文件系统，硬链接不可用：改为停容器小窗口归档（记录停机时长）' >&2
-    T0=$(date +%s); docker stop auth-server-nginx-1 >/dev/null
-    cp "$SRC" "$ARCH"; chmod 600 "$ARCH"
-    echo "[deploy] 停机归档耗时 $(( $(date +%s) - T0 ))s"
-  fi
+
+# 3) 权限
+ssh $SSH_OPTS "$REMOTE" "chown -R $OWNER '$ROOT/app' '$ROOT/static'"
+
+# 4) 依赖（仅 --with-reqs）
+if [ "$WITH_REQS" = "1" ]; then
+  ssh $SSH_OPTS "$REMOTE" "set -e; cd '$ROOT'; test -x .venv/bin/pip || { echo '[deploy] 远端 .venv/bin/pip 不存在' >&2; exit 4; }; .venv/bin/pip install -q -r requirements.txt && echo '[deploy] deps=ok'"
 fi
-docker compose up -d --no-deps --force-recreate nginx
-# recreate 后再从归档副本切关键时段（副本不再增长，受限超时，不整读原文件）
-if [ -f "$ARCH" ]; then
-  timeout 120 grep -E "$SLICE_RE" "$ARCH" > "$D/nginx-slice-$STAMP.jsonl" || true
-  chmod 600 "$D/nginx-slice-$STAMP.jsonl" 2>/dev/null || true
-  echo "[deploy] slice_lines=$(wc -l < "$D/nginx-slice-$STAMP.jsonl" 2>/dev/null || echo 0)"
-fi
-EOF
-fi
-ssh -o BatchMode=yes -o ConnectTimeout=10 "$REMOTE" bash -s <<'EOF'
-set -uo pipefail
-ok=0
-for i in 1 2 3 4 5 6 7 8 9 10; do
-  code=$(docker exec auth-server-api-1 python -c "import urllib.request as u;print(u.urlopen('http://127.0.0.1:8000/health',timeout=3).status)" 2>/dev/null || echo 000)
-  echo "[health] try $i -> $code"
-  if [ "$code" = "200" ]; then ok=1; break; fi
+
+# 5) 重启 + 健康轮询（回环 8010，避免 DNS/TLS 干扰）
+ssh $SSH_OPTS "$REMOTE" "systemctl restart $SVC"
+code="000"
+i=1
+while [ "$i" -le 15 ]; do
+  code="$(ssh $SSH_OPTS "$REMOTE" "curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:$PORT/health || true" | tr -d '[:space:]')"
+  [ "$code" = "200" ] && break
   sleep 2
+  i=$((i + 1))
 done
-if [ "$ok" = "0" ]; then echo '[health] FAIL 10 次重试未通过' >&2; exit 1; fi
-pc=$(curl -sk --fail -o /dev/null -w '%{http_code}' https://127.0.0.1:8443/v1/portal/games || echo 000)
-echo "[health] portal_games -> $pc"
-[ "$pc" = "200" ] || { echo '[health] portal 冒烟失败' >&2; exit 1; }
-EOF
-echo "[deploy] 完成。回滚：REMOTE=$REMOTE ./rollback_api.sh rollback_$TS"
+if [ "$code" != "200" ]; then
+  echo "[deploy] 失败：/health 未返回 200（last=${code}）。回滚：ssh $REMOTE \"cd $ROOT && tar xzf backups/pre_$TS/code.tar.gz && systemctl restart $SVC\"" >&2
+  exit 5
+fi
+echo "[deploy] health=200"
+
+# 6) 公网自检（只读）
+echo "[deploy] public: $(curl -s -m 10 -o /dev/null -w '%{http_code}' "$PUBLIC_HEALTH" || echo 000)  $PUBLIC_HEALTH"
+echo "[deploy] done ts=$TS"
