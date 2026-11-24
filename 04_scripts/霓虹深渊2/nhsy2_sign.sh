@@ -10,11 +10,24 @@ set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
 GAME="霓虹深渊2"
-VERSION="2026.10.5"
+PRINT_CONFIG=0
+VER_SHORT="${NHSY2_VERSION:-2026.10.5}"
+if [[ "${1:-}" == "--print-config" ]]; then PRINT_CONFIG=1; shift; fi
+if [[ -n "${1:-}" ]]; then VER_SHORT="$1"; fi
+VERSION="$VER_SHORT"
 PKG="com.veewo.neonabyss2"
 OUT="$NIXIANG/08_output/$GAME"
 UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
 SIGNED="$OUT/${GAME}_${VERSION}_surgical-releaseSigned.apk"
+
+if [[ "$PRINT_CONFIG" == "1" ]]; then
+  echo "ver_short=$VER_SHORT"
+  echo "unsigned=$UNSIGNED exists=$( [[ -f "$UNSIGNED" ]] && echo yes || echo no )"
+  echo "signed=$SIGNED"
+  echo "keystore=$NIXIANG/01_tools/starry_release.jks exists=$( [[ -f "$NIXIANG/01_tools/starry_release.jks" ]] && echo yes || echo no )"
+  echo "signer=$NIXIANG/01_tools/uber-apk-signer.jar"
+  exit 0
+fi
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 KS="$NIXIANG/01_tools/starry_release.jks"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"

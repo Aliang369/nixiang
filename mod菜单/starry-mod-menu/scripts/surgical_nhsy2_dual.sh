@@ -54,11 +54,12 @@ PRINT_CONFIG=0
 case "${1:-}" in
   --print-config|--dry-run) PRINT_CONFIG=1; shift ;;
 esac
-VER_SHORT="${1:-${NHSY2_VERSION:-2026.10.30}}"
+VER_SHORT="${1:-${NHSY2_VERSION:-2026.11.19}}"
 case "$VER_SHORT" in
   2026.10.26) VERSION="2026-10-26.76e6f5af89c"; ORIG_MD5="54347472319d6fc120d2d7d0faa13a4a" ;;
   2026.10.30) VERSION="2026-10-30.c00d058f3fd"; ORIG_MD5="9bc927e33d78fecb41e0ec555ec70fc7" ;;
-  *) echo "ERROR: 未知版本 ${VER_SHORT}；B 轨/双轨只登记 2026.10.26（r31 手工路线，见 04_scripts/霓虹深渊2/nhsy2_surgical_dual_20261029.sh）与 2026.10.30（r33 本入口默认值）；其余版本走 A 轨：surgical_nhsy2.sh <VER_SHORT>" >&2; exit 2 ;;
+  2026.11.19) VERSION="2026-11-19.ad4a3246d7c"; ORIG_MD5="2741c9c3f56b4c88d2e226aceb617ca9" ;;
+  *) echo "ERROR: 未知版本 ${VER_SHORT}；B 轨/双轨已登记 2026.10.26（r31）/ 2026.10.30（r33）/ 2026.11.19（r34 默认）；其余版本走 A 轨：surgical_nhsy2.sh <VER_SHORT>" >&2; exit 2 ;;
 esac
 PKG="com.veewo.neonabyss2"
 KILLER_APP="bin.mt.signature.SgKillerApp"

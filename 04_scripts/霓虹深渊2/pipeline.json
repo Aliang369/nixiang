@@ -1,14 +1,14 @@
 {
   "game": "霓虹深渊2",
-  "version": "2026.10.26 / com.veewo.neonabyss2 (TapTap 渠道)",
-  "notes": "2026-10-12 由「霓虹深渊2 会话效率复盘」P0-1 补齐：本游戏此前**没有 pipeline.json**，导致 P4 轮次门禁不可用、install_guard.sh 判「装机策略未知」形同虚设（会话里出现 7 次 uninstall 且招致用户质问「同签名游戏你为什么还要卸载重装？」）。装机包走 native 外科注入链（不是 apktool 重建）：surgical_nhsy2_2026.10.5.sh 内部构建 libstarry_magic.so + 注入 dex/so → nhsy2_sign.sh 用 starry_release.jks 签名 → NHSY2_INSTALL=1 才装机。r17 包已交付结项（md5 4c27f8da1886c8844f4724cb4a243716 / 1,338,643,610 B，L3 通过 用户 m06941），收官时按裁剪清单清理了约 2.9 GB 中间产物（02_apks/霓虹深渊2、06_dumped/霓虹深渊2、libs_nhsy2 已不在工作区）⇒ 重新开工必须先补回官包再跑 build_surgical，不要以为缺产物＝脚本坏了。\n[2026-10-14] 真机底包更新为官方 taptap 2026.10.12.3c8f88d4990（vc578，base.apk 1,346,094,567 B，md5 8d47959d27c696e9404770fc95e286b0，cert MD5 bbe1da8584fb2fb1017a512b2e99ff21 与 10.10 同证书）；libil2cpp.so md5 43018559d0c7a28fe53a47b2f606e421、global-metadata.dat md5 4432669382c8da1d473007f3fdccb97d 均已变 ⇒ 在新底包上重做移植；底包由真机只读拉取（02_apks/ 已清空、APK 不留本地）。\n[2026-10-14 夜] 真机底包再次更新为官方 taptap 2026-10-14.f5a3317af6d（vc590，base.apk 1,346,280,534 B，md5 60ef776bb109f18ba661bceb48b12ef6，cert MD5 bbe1da8584fb2fb1017a512b2e99ff21 仍为官方 Veewo）；libil2cpp.so md5 92d0367a1f0675984a0418ed8564c09d、global-metadata.dat md5 722f58a723025158a86038a04de04589 均已变 ⇒ r19 在新底包上重做移植（脚本 surgical_nhsy2_2026.10.14.sh / nhsy2_sign_2026.10.14.sh，只改 VERSION/VER_SHORT/ORIG_MD5）。\n[2026-10-19] 真机底包更新为官方 taptap 2026.10.17.b3c82c04357（vc617，base.apk 1,349,940,096 B，md5 dc067ec3b95205bfd49bbfe14eb37b71，cert MD5 bbe1da8584fb2fb1017a512b2e99ff21 仍为官方 Veewo）⇒ r22 在新底包上重做移植（surgical_nhsy2_2026.10.17b.sh / nhsy2_sign_2026.10.17b.sh，只改 VERSION/VER_SHORT/ORIG_MD5）。\\n[2026-10-21] 真机底包更新为官方 taptap 2026-10-26.76e6f5af89c（vc630，base.apk 1,346,773,784 B，md5 dbe9cff62d7f0c5fea48ceedaf6b3015，cert MD5 bbe1da8584fb2fb1017a512b2e99ff21 仍为官方 Veewo）⇒ r23 在新底包上重做移植（surgical_nhsy2_2026.10.26.sh / nhsy2_sign_2026.10.26.sh，只改 VERSION/VER_SHORT/ORIG_MD5）。判据：libil2cpp.so 140,003,168 B md5 a2c527be9eb0600c83f81b1c4c111421（r22 141,886,704/1df2e581 ⇒ 变）；global-metadata.dat 挪到 assets/bin/Data/Managed/Metadata/（23,774,364 B md5 9067e8bdc876e8f7cc8d39d6c9543d4e，头部魔数 HTPX=加密，旧 decoy+System.ctor.dll-resources.dat 结构消失）；classes3.dex 10,228,348 B（与 r22 官方同长）。",
+  "version": "2026.11.19 / com.veewo.neonabyss2 (TapTap 渠道)",
+  "notes": "2026-10-12 由「霓虹深渊2 会话效率复盘」P0-1 补齐：本游戏此前**没有 pipeline.json**，导致 P4 轮次门禁不可用、install_guard.sh 判「装机策略未知」形同虚设（会话里出现 7 次 uninstall 且招致用户质问「同签名游戏你为什么还要卸载重装？」）。装机包走 native 外科注入链（不是 apktool 重建）：surgical_nhsy2_2026.10.5.sh 内部构建 libstarry_magic.so + 注入 dex/so → nhsy2_sign.sh 用 starry_release.jks 签名 → NHSY2_INSTALL=1 才装机。r17 包已交付结项（md5 4c27f8da1886c8844f4724cb4a243716 / 1,338,643,610 B，L3 通过 用户 m06941），收官时按裁剪清单清理了约 2.9 GB 中间产物（02_apks/霓虹深渊2、06_dumped/霓虹深渊2、libs_nhsy2 已不在工作区）⇒ 重新开工必须先补回官包再跑 build_surgical，不要以为缺产物＝脚本坏了。\n[2026-10-14] 真机底包更新为官方 taptap 2026.10.12.3c8f88d4990（vc578，base.apk 1,346,094,567 B，md5 8d47959d27c696e9404770fc95e286b0，cert MD5 bbe1da8584fb2fb1017a512b2e99ff21 与 10.10 同证书）；libil2cpp.so md5 43018559d0c7a28fe53a47b2f606e421、global-metadata.dat md5 4432669382c8da1d473007f3fdccb97d 均已变 ⇒ 在新底包上重做移植；底包由真机只读拉取（02_apks/ 已清空、APK 不留本地）。\n[2026-10-14 夜] 真机底包再次更新为官方 taptap 2026-10-14.f5a3317af6d（vc590，base.apk 1,346,280,534 B，md5 60ef776bb109f18ba661bceb48b12ef6，cert MD5 bbe1da8584fb2fb1017a512b2e99ff21 仍为官方 Veewo）；libil2cpp.so md5 92d0367a1f0675984a0418ed8564c09d、global-metadata.dat md5 722f58a723025158a86038a04de04589 均已变 ⇒ r19 在新底包上重做移植（脚本 surgical_nhsy2_2026.10.14.sh / nhsy2_sign_2026.10.14.sh，只改 VERSION/VER_SHORT/ORIG_MD5）。\n[2026-10-19] 真机底包更新为官方 taptap 2026.10.17.b3c82c04357（vc617，base.apk 1,349,940,096 B，md5 dc067ec3b95205bfd49bbfe14eb37b71，cert MD5 bbe1da8584fb2fb1017a512b2e99ff21 仍为官方 Veewo）⇒ r22 在新底包上重做移植（surgical_nhsy2_2026.10.17b.sh / nhsy2_sign_2026.10.17b.sh，只改 VERSION/VER_SHORT/ORIG_MD5）。\\n[2026-10-21] 真机底包更新为官方 taptap 2026-10-26.76e6f5af89c（vc630，base.apk 1,346,773,784 B，md5 dbe9cff62d7f0c5fea48ceedaf6b3015，cert MD5 bbe1da8584fb2fb1017a512b2e99ff21 仍为官方 Veewo）⇒ r23 在新底包上重做移植（surgical_nhsy2_2026.10.26.sh / nhsy2_sign_2026.10.26.sh，只改 VERSION/VER_SHORT/ORIG_MD5）。判据：libil2cpp.so 140,003,168 B md5 a2c527be9eb0600c83f81b1c4c111421（r22 141,886,704/1df2e581 ⇒ 变）；global-metadata.dat 挪到 assets/bin/Data/Managed/Metadata/（23,774,364 B md5 9067e8bdc876e8f7cc8d39d6c9543d4e，头部魔数 HTPX=加密，旧 decoy+System.ctor.dll-resources.dat 结构消失）；classes3.dex 10,228,348 B（与 r22 官方同长）。\n[2026-11-24 r34] 底包换代 vc784（2026.11.19.ad4a3246d7c / md5 2741c9c3…）；正式包 霓虹深渊2_2026.11.19_surgical-releaseSigned.apk md5 b280950f…（1,368,664,857 B / CN=StarryMagic）；框架 so 必须用当前源码重编（旧件 e5811424… 的 RegisterNatives 含已下线 OTA native ⇒ 冷启 SIGABRT；新 so d91fcc54…）；包内必带 libc++_shared.so、assets/certs/starlight.crt（三级兜底）；L3 通过，08_output 已裁成唯一正式包。",
   "params": {
     "game_id": "nhsy2",
     "package": "com.veewo.neonabyss2",
     "tag": "nhsy2",
     "serial": "f9a116a2",
-    "version": "2026-10-26.76e6f5af89c",
-    "version_code": 666
+    "version": "2026-11-19.ad4a3246d7c",
+    "version_code": 784
   },
   "env": {
     "NIXIANG": "/Users/aliang/Documents/nixiang",
@@ -25,9 +25,9 @@
   "stages": [
     {
       "id": "check_apk",
-      "name": "官包核对（真机已装官方 2026.10.26 只读拉取件作底包；02_apks/ 已清空、APK 不留本地）",
+      "name": "官包核对（真机已装官方 2026.11.19 只读拉取件作底包；底包留档 02_apks/霓虹深渊2/）",
       "requires": [],
-      "command": "B=/tmp/nhsy2/nhsy2_base_2026.10.26.apk; mkdir -p /tmp/nhsy2; [ -f \"$B\" ] || adb -s $SERIAL pull \"$(adb -s $SERIAL shell pm path com.veewo.neonabyss2 | tr -d '\\r' | sed -n 's|^package:||p' | head -1)\" \"$B\"; ls -lh \"$B\" && echo \"md5=$(md5 -q \"$B\")\" && { command -v sha256sum >/dev/null 2>&1 && sha256sum \"$B\" || shasum -a 256 \"$B\"; }",
+      "command": "B=/tmp/nhsy2/nhsy2_base_2026.11.19.apk; mkdir -p /tmp/nhsy2; [ -f \"$B\" ] || adb -s $SERIAL pull \"$(adb -s $SERIAL shell pm path com.veewo.neonabyss2 | tr -d '\\r' | sed -n 's|^package:||p' | head -1)\" \"$B\"; ls -lh \"$B\" && echo \"md5=$(md5 -q \"$B\")\" && { command -v sha256sum >/dev/null 2>&1 && sha256sum \"$B\" || shasum -a 256 \"$B\"; }",
       "verify": [
         {
           "type": "file_exists",
@@ -115,7 +115,7 @@
     },
     {
       "id": "build_surgical",
-      "name": "构建 + 外科注入（surgical_nhsy2_2026.10.26.sh：NDK 构建 libstarry_magic.so → 注入 dex/so → 未签名包）",
+      "name": "构建 + 外科注入（surgical_nhsy2_2026.11.19.sh：NDK 构建 libstarry_magic.so → 注入 dex/so → 未签名包）",
       "requires": [
         "impl_mod"
       ],
@@ -123,7 +123,7 @@
         "mod菜单/starry-mod-menu/scripts/surgical_nhsy2_2026.10.26.sh",
         "04_scripts/霓虹深渊2/nhsy2_sign_2026.10.26.sh"
       ],
-      "command": "cd \"$NIXIANG/mod菜单/starry-mod-menu\" && bash scripts/surgical_nhsy2_2026.10.26.sh",
+      "command": "cd \"$NIXIANG/mod菜单/starry-mod-menu\" && bash scripts/surgical_nhsy2_2026.11.19.sh",
       "verify": [
         {
           "type": "file_exists",
@@ -151,7 +151,7 @@
       "preflight": [
         "04_scripts/霓虹深渊2/nhsy2_sign_2026.10.26.sh"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/霓虹深渊2/nhsy2_sign_2026.10.26.sh\"",
+      "command": "bash \"$NIXIANG/04_scripts/霓虹深渊2/nhsy2_sign_2026.11.19.sh\"",
       "verify": [
         {
           "type": "file_exists",
@@ -195,7 +195,7 @@
         "sign",
         "device_ready"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --game 霓虹深渊2 --rounds-threshold 3 --allow-no-harden --harden-reason \"nhsy2 未接入 harden_apk.py GAMES 表（10_docs/防御加固_通用路线图.md §7 待排期）；本轮 r29 仅改 native 返回值改写，无新增加固载荷 ⇒ 本包明确为 UNHARDENED\" --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp\" && { bash \"$NIXIANG/04_scripts/_common/install_guard.sh\" 霓虹深渊2 --cmd \"adb -s $SERIAL install -r -d $NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.26_surgical-releaseSigned.apk\" || exit $?; } && adb -s $SERIAL install -r -d \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.26_surgical-releaseSigned.apk\" && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.veewo.neonabyss2 \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.26_surgical-releaseSigned.apk\"",
+      "command": "bash \"$NIXIANG/04_scripts/_common/pre_install_gate.sh\" --game 霓虹深渊2 --rounds-threshold 3 --allow-no-harden --harden-reason \"nhsy2 未接入 harden_apk.py GAMES 表（10_docs/防御加固_通用路线图.md §7 待排期）；本轮 r34 仅做底包迁移与 so 重编，无新增加固载荷 ⇒ 本包明确为 UNHARDENED\" --cpp \"$NIXIANG/mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp\" && { bash \"$NIXIANG/04_scripts/_common/install_guard.sh\" 霓虹深渊2 --cmd \"adb -s $SERIAL install -r -d $NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.11.19_surgical-releaseSigned.apk\" || exit $?; } && adb -s $SERIAL install -r -d \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.11.19_surgical-releaseSigned.apk\" && bash \"$NIXIANG/04_scripts/_common/verify_installed_apk.sh\" \"$SERIAL\" com.veewo.neonabyss2 \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.11.19_surgical-releaseSigned.apk\"",
       "verify": [
         {
           "type": "file_exists",
@@ -220,7 +220,7 @@
       "requires": [
         "install"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/_common/finalize_game_delivery.sh\" --game 霓虹深渊2 --apk \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.10.26_surgical-releaseSigned.apk\" --date 20261027 --prune --apply --sync-doc",
+      "command": "bash \"$NIXIANG/04_scripts/_common/finalize_game_delivery.sh\" --game 霓虹深渊2 --apk \"$NIXIANG/08_output/霓虹深渊2/霓虹深渊2_2026.11.19_surgical-releaseSigned.apk\" --date 20261124 --prune --apply --sync-doc",
       "verify": [
         {
           "type": "file_exists",
@@ -235,7 +235,7 @@
       "requires": [
         "archive"
       ],
-      "command": "bash \"$NIXIANG/04_scripts/_common/archive_scoped_git.sh\" --message \"feat(霓虹深渊2): r29 底包迁移至官方 taptap 2026.10.26.76e6f5af89c/vc666 + 新增武器满级\" --path 04_scripts/霓虹深渊2 --path 10_docs/霓虹深渊2 --path 10_docs/_state/games/霓虹深渊2.md --path 10_docs/_state/机器心跳/mac.md --path mod菜单/starry-mod-menu/scripts/surgical_nhsy2_2026.10.26.sh --path mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp --path mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.h --path mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Entry.cpp",
+      "command": "bash \"$NIXIANG/04_scripts/_common/archive_scoped_git.sh\" --message \"feat(霓虹深渊2): r34 底包迁移至官方 taptap 2026.11.19.ad4a3246d7c/vc784 + 框架 so 同源码重编\" --path 04_scripts/霓虹深渊2 --path 10_docs/霓虹深渊2 --path 10_docs/_state/games/霓虹深渊2.md --path 10_docs/_state/机器心跳/mac.md --path mod菜单/starry-mod-menu/scripts/surgical_nhsy2_2026.11.19.sh --path mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.cpp --path mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Mod.h --path mod菜单/starry-mod-menu/app/src/main/jni/Games/nhsy2Entry.cpp",
       "verify": [
         {
           "type": "file_exists",
