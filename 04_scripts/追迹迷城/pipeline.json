@@ -394,20 +394,10 @@
       "preflight": [
         "04_scripts/追迹迷城/archive_zjmc.sh"
       ],
-      "verify": [
-        {
-          "type": "file_exists",
-          "path": "10_docs/追迹迷城/收尾清单_1.0.20261111.md"
-        }
-      ],
+      "verify": [],
       "status": "done",
-      "cleanup_note": "2026-11-02：archive_zjmc.sh 是 0912 版硬编码路径（含 current.md 路径级 add、Main.cpp、0912 dump 三项），与现行共享文件内容级暂存规则冲突 ⇒ 本版改为由 archive_scoped_git.sh 白名单提交，本阶段只做产物校验。",
+      "cleanup_note": "2026-11-02：archive_zjmc.sh 是 0912 版硬编码路径（含 current.md 路径级 add、Main.cpp、0912 dump 三项），与现行共享文件内容级暂存规则冲突 ⇒ 本版改为由 archive_scoped_git.sh 白名单提交，本阶段只做产物校验。 2026-11-24：archive 只校验的 11-11 收尾清单（历史档案）已按用户授权删除（Trash 隔离区 nixiang_hist_20261124_20261125_001107），对应 file_exists 校验与 artifacts 条目一并移除，本阶段保持 done 仅作历史记录。",
       "done_at": "2026-11-24 23:01:02",
-      "artifacts": {
-        "10_docs/追迹迷城/收尾清单_1.0.20261111.md": {
-          "md5": "c99b5fd35506126e132ea463918ee082"
-        }
-      },
       "inputs": {
         "04_scripts/追迹迷城/cleanup_summary.json": "0e7191e8ec0504d8f6a2dcf9aba9f2ff",
         "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json": "d6521a7193cd600918fd497a7b369a0d"
