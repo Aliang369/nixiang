@@ -43,8 +43,14 @@ echo "[1/7] 框架层不得 import 具体游戏实现类"
 FRAMEWORK_FILES=()
 while IFS= read -r _f; do
   [[ -n "$_f" ]] && FRAMEWORK_FILES+=("$_f")
+# 排除模式必须用 `*/` 前缀通配，不能拼 $JAVA —— 2026-11-24 修：$JAVA 来自 `cd ... && pwd`，
+#   在 Git Bash 下是 MSYS 形态（/e/nixiang/...），而 find 打印的路径可能是 Windows 形态
+#   （E:/nixiang/...）；-path 的模式串不做路径转换，拼 $JAVA 的写法会永不匹配 ⇒ games/ 与 core/
+#   实际被扫进来，8 个 games/<id>/GameHookImpl.java（按 design 允许写死自己包名）被误报 FAIL。
+#   实测：find 收到 E:/ 形态路径时旧写法仍命中 12 个 games/ 文件；改成 `*/com/starry/magic/games/*`
+#   后 MSYS 与 Windows 两种形态都排除干净（64 个框架文件，games 命中 0、core 命中 0）。
 done < <(find "$JAVA" -name '*.java' \
-  -not -path "$JAVA/games/*" -not -path "$JAVA/core/*" 2>/dev/null)
+  -not -path "*/com/starry/magic/games/*" -not -path "*/com/starry/magic/core/*" 2>/dev/null)
 if [[ ${#FRAMEWORK_FILES[@]} -eq 0 ]]; then
   hit "找不到框架源文件（路径变了？）"
 else

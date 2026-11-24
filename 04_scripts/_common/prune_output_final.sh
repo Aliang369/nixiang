@@ -80,8 +80,18 @@ else
 fi
 "$APKSIGNER" verify "$KEEP_APK" >/dev/null || { echo "ERROR: 保留 APK 签名校验失败: $KEEP" >&2; exit 1; }
 
-# 跨平台文件大小 / md5：macOS 是 stat -f '%z' / md5 -q；Linux+Git Bash 是 stat -c '%s' / md5sum。
-_file_size() { stat -f '%z' "$1" 2>/dev/null || stat -c '%s' "$1"; }
+# 跨平台文件大小 / md5：GNU（Linux / Git Bash）是 stat -c '%s' / md5sum；macOS BSD 是 stat -f '%z' / md5 -q。
+# 顺序必须 GNU 优先（2026-11-24 修）：Git Bash 的 GNU stat 对 `-f '%z'` 先吐 5 行文件系统信息且 rc=1，
+#   多行已经进了 stdout，`||` 救不回来 ⇒ 清单行被撑成多行 ⇒ 下游 python 报
+#   ValueError: not enough values to unpack（2026-11-24 旷野征途正式包裁剪实测，靠临时 stat 垫片才跑通）。
+#   实测（本机 Git Bash 5.2 + GNU coreutils 8.32）：
+#     stat -f '%z' preflight.sh → rc=1，stdout 5 行（File:/ID:/Block size:/Blocks:/Inodes:）
+#     stat -c '%s' preflight.sh → rc=0，单行 27615
+#   macOS 上 stat -c 立即失败且不写 stdout（用法错到 stderr），回退 BSD 分支安全。
+_file_size() { stat -c '%s' "$1" 2>/dev/null || stat -f '%z' "$1"; }
+# md5 顺序保持不动（2026-11-24 实测）：本机无 md5 可执行文件，`md5 -q` 由 .nx_shims.sh 的 shell 函数代理为
+#   `md5sum | awk '{print $1}'`，输出干净 32 位 hex（910791d8ebb0b0ccfe695b8992064923，与 `md5sum | awk` 逐字一致）；
+#   裸环境没有该函数时直接失败并回退 md5sum，同样是 32 位 hex，两种环境都不需要调顺序。
 _file_md5()  { md5 -q "$1" 2>/dev/null || md5sum "$1" | awk '{print $1}'; }
 
 TMP="$(mktemp /tmp/prune_output.XXXXXX)"
