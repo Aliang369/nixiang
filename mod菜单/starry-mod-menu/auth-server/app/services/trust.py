@@ -5,12 +5,15 @@
 
 判据（全部可配，默认最小侵入）：
 1. `device_id` 不是客户端可能产生的两种形态           → bad_device
-2. 服务端配了证书白名单，而上报的 `cert_sha256` 不在名单 → bad_cert
+2. 服务端配了证书白名单，且上报**带了** `cert_sha256` 但不在名单 → bad_cert
+   （未携带证书的上报跳过本判据，见 2026-11-24 说明）
 3. 服务端配了最低 versionCode，上报版本低于它           → old_client
 4. 服务端开了单 IP 新设备上限，本小时该 IP 新设备超限    → ip_burst
 
 边界（必须守住）：
 - 判定只影响「统计」，**不影响接口返回**，也不影响授权与功能；
+- 证书判据对「未带证书」的上报不生效：签名伪装环境下客户端上报的是原厂证书，
+  白名单无法区分我方包与原版包，生产默认留空（2026-11-24 裁决）；
 - 未配置的判据一律跳过（默认全跳过 ⇒ 与旧版本行为一致）；
 - 不记录任何可识别信息，只有原因码。
 """
@@ -74,7 +77,11 @@ def judge(
     allowed = _cert_whitelist()
     if allowed:
         got = (cert_sha256 or "").strip().lower().replace(":", "")
-        if not got or got not in allowed:
+        # 2026-11-24：**未携带证书**跳过本判据，不再算可疑。
+        # 实测依据：/v1/bootstrap 从不带 cert_sha256（AuthClient 无该参数），旧包也不带；
+        # 白名单一旦非空，这类上报会被 100% 丢弃（2026-11-24 生产累计 1107 次 bad_cert，
+        # 看板/设备日志因此全空）。保留的能力：带了证书但不在名单 ⇒ 仍然拒绝。
+        if got and got not in allowed:
             return "bad_cert"
 
     min_ver = int(get_settings().client_min_version_code or 0)

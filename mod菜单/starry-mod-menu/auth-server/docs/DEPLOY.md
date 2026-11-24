@@ -307,3 +307,23 @@ SELECT event_type, identity, COUNT(*) FROM auth_events GROUP BY event_type, iden
 
 后台确认：总在线 = 卡密 + 游客（按设备互斥）；设备日志筛选「游客」能看到 `游客出现`；
 侧栏**不应**出现 dropped-stats 入口。
+
+### 2026-11-24 热修（证书判据默认关闭 / 游客统计恢复）
+
+**现象**：后台「数据统计 / 看板 / 设备日志」几乎无数据，但线上持续有人使用。
+
+**根因（实测）**：
+1. 2026-11-24 02:01 起 `.env` 配了 `CLIENT_CERT_SHA256`（`83c5cc0b…`=`starry_release.jks` + `32fb600a…` 测试证书）；
+2. `/v1/bootstrap` **从不携带** `cert_sha256`（`AuthClient` 无该参数，nginx 日志 368/368 条无此 query）；
+3. 包做了签名伪装，`PresenceReporter` 上报的是**游戏官方证书**（yszzx `de8a75d3…`、wdyz `ce7afa48…`、
+   sf3 `b147f6a4…`、nhsy2 `b86bbedf…`），不在白名单；
+4. 结果 `trust.judge` 把每条上报判 `bad_cert` 丢弃：`data/dropped_stats.jsonl` 累计 1107 次，
+   `online_presence` 仅 4 行、`auth_events` 仅 12 条。
+
+**改动**：
+- `app/services/trust.py`：证书判据只在**上报带了证书**时生效，未携带 ⇒ 跳过（不再判可疑）；
+- 生产 `.env`：`CLIENT_CERT_SHA256=` 留空（保留注释说明原因），备份 `.env.bak_nocert_20261124`；
+- 口径同步：`docs/STATS_DEFINITION.md` §4/§6。
+
+**不需要改表结构**。验证：`tail data/dropped_stats.jsonl` 的 `delta` 归零；
+`SELECT COUNT(*) FROM online_presence` 在 10 分钟内增长；看板总在线与 nginx 360 秒内独立 `device_id` 数一致。
