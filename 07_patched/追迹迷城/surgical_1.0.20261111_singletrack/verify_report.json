@@ -1,0 +1,178 @@
+{
+  "apk": "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk",
+  "size": 1149795463,
+  "sha256": "73674f2c341b37b350f1785e6d9c5a6733554cda7ffc3e6dd40ad1df47795f1e",
+  "md5": "3a0abe66ca8c76661285f6d4a80ba48f",
+  "base_apk": "/Users/aliang/Documents/nixiang/02_apks/追迹迷城/追迹迷城_1.0.20261111_official.apk",
+  "verdict": "PASS",
+  "checks": [
+    {
+      "id": "A1",
+      "claim": "dex 布局 = classes.dex..classes6.dex（无跳号）",
+      "verdict": "PASS",
+      "evidence": "['classes.dex', 'classes2.dex', 'classes3.dex', 'classes4.dex', 'classes5.dex', 'classes6.dex']"
+    },
+    {
+      "id": "A2",
+      "claim": "包内存在 libil2cpp.so 与 global-metadata.dat",
+      "verdict": "PASS",
+      "evidence": "entries ok"
+    },
+    {
+      "id": "B0",
+      "claim": "ZIP 路径唯一（成品与底包均无重复 entry）",
+      "verdict": "PASS",
+      "evidence": "new_dup=[] base_dup=[]"
+    },
+    {
+      "id": "B1a",
+      "claim": "删除集合 ⊆ 旧签名允许集（META-INF 业务条目一条都不能少）",
+      "verdict": "PASS",
+      "evidence": "removed=0（其中旧签名 0）非签名被删=[]"
+    },
+    {
+      "id": "B1b",
+      "claim": "新增集合 ⊆ {classes6.dex, 两个 so,, 签名文件}",
+      "verdict": "PASS",
+      "evidence": "added=['META-INF/MANIFEST.MF', 'META-INF/STARRY.RSA', 'META-INF/STARRY.SF', 'classes6.dex', 'lib/arm64-v8a/libc++_shared.so', 'lib/arm64-v8a/libstarry_magic.so']"
+    },
+    {
+      "id": "B1c",
+      "claim": "成品带新签名（META-INF/MANIFEST.MF + 至少一个 .SF/.RSA）",
+      "verdict": "PASS",
+      "evidence": "sig=['META-INF/MANIFEST.MF', 'META-INF/STARRY.RSA', 'META-INF/STARRY.SF']"
+    },
+    {
+      "id": "B1",
+      "claim": "除允许改动项（Manifest/classes4/签名）外所有条目 CRC32+size 与官方底包一致",
+      "verdict": "PASS",
+      "evidence": "diff=[] missing=[]"
+    },
+    {
+      "id": "B2a",
+      "claim": "关键 7 项流式 SHA256 与底包逐字节相等（classes/2/3/5 + arsc + il2cpp + metadata）",
+      "verdict": "PASS",
+      "evidence": "classes.dex=0fd739947cae classes2.dex=dbf3b1c2e310 classes3.dex=e755e8fa8d09 classes5.dex=42bfc9095c5f resources.arsc=ab6ea848e5d2 libil2cpp.so=0c567b5414eb global-metadata.dat=ab39c32baa9c"
+    },
+    {
+      "id": "B3a",
+      "claim": "官方 META-INF 非签名条目 85 条全部存在（services/kotlinx/androidx/Unity Ads）",
+      "verdict": "PASS",
+      "evidence": "lost=[]"
+    },
+    {
+      "id": "B3b",
+      "claim": "META-INF 非签名条目逐条流式 SHA256 相等",
+      "verdict": "PASS",
+      "evidence": "changed=[]"
+    },
+    {
+      "id": "B3c",
+      "claim": "ServiceLoader×3 + Unity Ads verification.properties×2 存在且 SHA256 相等",
+      "verdict": "PASS",
+      "evidence": "fail=[] | services/java.security.Provider=b50a070540ab15ba ; services/kotlinx.coroutines.CoroutineExceptionHandler=3129b8edf6db07de ; services/kotlinx.coroutines.internal.MainDispatcherFactory=a1ea77ea8f93f419 ; com/unity3d/ads-mediation/adquality-sdk/verification.properties=3ec11d2b413ae188 ; com/unity3d/ads-mediation/mediation-sdk/verification.properties=5baba25c3f77fa76"
+    },
+    {
+      "id": "B2b",
+      "claim": "classes4.dex 确已改动（改包法落点）",
+      "verdict": "PASS",
+      "evidence": "base CRC=9f605924 new CRC=c201e7e6"
+    },
+    {
+      "id": "C1",
+      "claim": "TapSDK 改包法三处补丁在（门闩恒 true / 弹窗 return-void / provide 恒 WEB）",
+      "verdict": "PASS",
+      "evidence": "[verify] 三处补丁形态正确；TapSignKit 保持官方原样 |   [chain] checkInitialize → TapTapSdkInitializer → GatekeeperManager → GatekeeperRepository 全覆盖；字段仅 repository 自读写"
+    },
+    {
+      "id": "D1",
+      "claim": "classes6.dex 含星光入口类（StarryApp/MenuService/StarryInitProvider）",
+      "verdict": "PASS",
+      "evidence": "class_defs=206 method_ids=2535"
+    },
+    {
+      "id": "D2",
+      "claim": "classes6.dex class_defs 无 killer 类（Lbin/mt/**，解析而非字符串搜索）",
+      "verdict": "PASS",
+      "evidence": "class_defs=206 killer=[]"
+    },
+    {
+      "id": "D3",
+      "claim": "全包 6 个 dex（共 43982 个 class_defs）无 bin/mt killer 类定义",
+      "verdict": "PASS",
+      "evidence": "hits=[]"
+    },
+    {
+      "id": "D4",
+      "claim": "全包 class_defs 无已删除的 SignSpoof",
+      "verdict": "PASS",
+      "evidence": "hits=[]"
+    },
+    {
+      "id": "E1",
+      "claim": "application@appComponentFactory 保持 androidx.core.app.CoreComponentFactory",
+      "verdict": "PASS",
+      "evidence": "android:appComponentFactory      = \"androidx.core.app.CoreComponentFactory\" {resid=0x0101057a idx=44}"
+    },
+    {
+      "id": "E2",
+      "claim": "application 无 android:name（不注入 StarryApp）",
+      "verdict": "PASS",
+      "evidence": "no android:name"
+    },
+    {
+      "id": "E3",
+      "claim": "Manifest 不挂 StarryAppComponentFactory / SignSpoofAppComponentFactory",
+      "verdict": "PASS",
+      "evidence": "factory strings absent"
+    },
+    {
+      "id": "E4r",
+      "claim": "E: provider 官方→成品 = +1（23→24）",
+      "verdict": "PASS",
+      "evidence": "23 -> 24"
+    },
+    {
+      "id": "E4e",
+      "claim": "E: service 官方→成品 = +1（17→18）",
+      "verdict": "PASS",
+      "evidence": "17 -> 18"
+    },
+    {
+      "id": "E4n",
+      "claim": "E: uses-permission 官方→成品 = +2（23→25）",
+      "verdict": "PASS",
+      "evidence": "23 -> 25"
+    },
+    {
+      "id": "E7",
+      "claim": "activity 数量未变（未新增宿主 Activity）",
+      "verdict": "PASS",
+      "evidence": "123 -> 123"
+    },
+    {
+      "id": "F1",
+      "claim": "包内 so md5 == 构建产物 8a9de6b126224ba22d235d2c50a6ef83",
+      "verdict": "PASS",
+      "evidence": "8a9de6b126224ba22d235d2c50a6ef83"
+    },
+    {
+      "id": "F2",
+      "claim": "so 带本游戏标签 [Zjmc] 且无上一款 [Cstjjs]",
+      "verdict": "PASS",
+      "evidence": "tag ok"
+    },
+    {
+      "id": "F3",
+      "claim": "菜单恰 5 项且全部在 so 里（秒杀, 无敌, 全屏秒杀, 无限技能, 免广告）",
+      "verdict": "PASS",
+      "evidence": "hit=5/5: ['Toggle_秒杀', 'Toggle_无敌', 'Toggle_全屏秒杀', 'Toggle_无限技能', 'Toggle_免广告']"
+    },
+    {
+      "id": "F4",
+      "claim": "so 含免广告 Hook 标签 AT.GetFreeSkipAds",
+      "verdict": "PASS",
+      "evidence": "present"
+    }
+  ]
+}
