@@ -1,0 +1,40 @@
+{
+  "game_dir": "E:/nixiang/08_output/暗影格斗3",
+  "keep": "暗影格斗3_1.45.3_surgical-releaseSigned.apk",
+  "keep_size": 2715627251,
+  "keep_md5": "a06cbff00dc7204574f240fa186edbcd",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "暗影格斗3_1.45.3_surgical-releaseSigned.apk.idsig",
+      "size": 21390875,
+      "md5": "cc67f0efaf2793fab470a58705236df2"
+    },
+    {
+      "name": "暗影格斗3_1.45.3_surgical-releaseSigned_v1_0bc69378.apk",
+      "size": 2715627251,
+      "md5": "0bc69378712b98a3dcb62ad85aec1684"
+    },
+    {
+      "name": "暗影格斗3_1.45.3_surgical-releaseSigned_v1_0bc69378.apk.idsig",
+      "size": 21390875,
+      "md5": "87777a27cb44649dc4b45141e7bdd6bc"
+    },
+    {
+      "name": "暗影格斗3_1.45.3_surgical-releaseSigned_v2_105190f1.apk",
+      "size": 2715627251,
+      "md5": "105190f180cb3ed883734574c69e62e9"
+    },
+    {
+      "name": "暗影格斗3_1.45.3_surgical-releaseSigned_v2_105190f1.apk.idsig",
+      "size": 21390875,
+      "md5": "f1bbbb46a8cf9c3551007c70c50c5250"
+    },
+    {
+      "name": "暗影格斗3_1.45.3_surgical-unsigned.apk",
+      "size": 2715072323,
+      "md5": "adad19dacdc198d706db0b43caa127ac"
+    }
+  ],
+  "removed_count": 6
+}

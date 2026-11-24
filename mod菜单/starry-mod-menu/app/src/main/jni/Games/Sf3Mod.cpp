@@ -304,13 +304,16 @@ struct HookSlot {
     int         argc;
     void*       hookFn;
     void**      origPtr;
+    const uint8_t* prologue;   // 非空 = 用完整序言校验（比 expectInsn 更强）
+    size_t         prologueLen;
 };
 
 // 幂等 + 双路径：*orig 非空 = 已挂过（防双 Dobby 叠钩 SIGSEGV）
 static bool HookSlotInstall(const HookSlot& s) {
     if (s.origPtr && *s.origPtr) return true;
     if (s.fileOff) {
-        void* va = VaAtFileOffChecked(s.tag, s.fileOff, s.expectInsn);
+        void* va = s.prologue ? VaAtFileOffBytes(s.tag, s.fileOff, s.prologue, s.prologueLen)
+                              : VaAtFileOffChecked(s.tag, s.fileOff, s.expectInsn);
         if (va && DobbyInstall(s.tag, va, s.hookFn, s.origPtr)) return true;
     }
     return HookByName(s.tag, s.ns, s.cls, s.method, s.argc, s.hookFn, s.origPtr);
@@ -528,7 +531,7 @@ static void Hooked_SetTimeScale(float value, void* method) {
 
 static const HookSlot kDamageSlots[] = {
     {"ChangeLife(OGFLOMPOMCI)", kFileChangeLife, kInsChangeLife, "", "IKHOBFONGIE", "OGFLOMPOMCI", 5,
-     (void*)Hooked_ChangeLife, (void**)&g_origChangeLife},
+     (void*)Hooked_ChangeLife, (void**)&g_origChangeLife, kPrologueChangeLife, sizeof(kPrologueChangeLife)},
 };
 
 static const HookSlot kSpeedSlots[] = {

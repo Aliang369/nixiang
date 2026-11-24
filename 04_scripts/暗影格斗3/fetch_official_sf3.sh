@@ -16,6 +16,12 @@ ADB_BIN="${ADB_BIN:-adb}"
 [[ -f "$STATE_FILE" ]] || { echo "错误: 缺少设备状态文件，请先跑 device_ready 阶段" >&2; exit 1; }
 SERIAL="$(tr -d '[:space:]' < "$STATE_FILE")"
 [[ -n "$SERIAL" ]] || { echo "错误: 设备 serial 为空" >&2; exit 1; }
+# 点名校验（2026-11-24）：EXPECTED_SERIAL 显式给出时必须与 device_ready 落盘的 serial 一致，
+# 否则多设备环境下会拿着旧 serial 去拉错设备。
+if [[ -n "${EXPECTED_SERIAL:-}" && "$EXPECTED_SERIAL" != "$SERIAL" ]]; then
+  echo "错误: 设备状态文件为 ${SERIAL}，与 EXPECTED_SERIAL=${EXPECTED_SERIAL} 不一致；先重跑 device_ready 阶段" >&2
+  exit 1
+fi
 command -v "$ADB_BIN" >/dev/null || { echo "错误: adb 不可用" >&2; exit 1; }
 
 DUMP="$("$ADB_BIN" -s "$SERIAL" shell dumpsys package "$PKG" | tr -d '\r')"
@@ -58,7 +64,16 @@ if [[ "$REUSE_EXISTING" -eq 0 ]]; then
   rm -f "$TMP"
   trap 'rm -f "$TMP"' EXIT
   echo "==> 直接只读拉取: $REMOTE_APK"
-  if ! "$ADB_BIN" -s "$SERIAL" pull "$REMOTE_APK" "$TMP"; then
+  # Git Bash/MSYS 会把 argv 里的 /data/app/... 当本地路径改写（2026-11-24 实测变成
+  # C:/Program Files/Git/data/app/... ⇒ adb: failed to stat remote object）；该调用必须关掉参数
+  # 转换，而关掉后 adb.exe 也看不懂 /e/... 形式的本地目标，故目标先转成 Windows 形式。
+  PULL_FAILED=0
+  if command -v cygpath >/dev/null 2>&1; then
+    MSYS_NO_PATHCONV=1 "$ADB_BIN" -s "$SERIAL" pull "$REMOTE_APK" "$(cygpath -m "$TMP")" || PULL_FAILED=1
+  else
+    "$ADB_BIN" -s "$SERIAL" pull "$REMOTE_APK" "$TMP" || PULL_FAILED=1
+  fi
+  if [ "$PULL_FAILED" -ne 0 ]; then
     echo "==> 直接拉取失败，改用 root 流式读取（设备端不落第二份大文件）"
     rm -f "$TMP"
     "$ADB_BIN" -s "$SERIAL" exec-out su -c "cat '$REMOTE_APK'" > "$TMP"
@@ -70,9 +85,15 @@ if [[ "$REUSE_EXISTING" -eq 0 ]]; then
 fi
 unzip -tq "$OUT" >/dev/null
 
-SIZE="$(stat -f '%z' "$OUT")"
-SHA256="$(shasum -a 256 "$OUT" | awk '{print $1}')"
-MD5="$(md5 -q "$OUT")"
+# 跨平台指纹（2026-11-24）：macOS 是 stat -f '%z' / shasum / md5 -q，GNU（Git Bash / Linux）是
+# stat -c '%s' / sha256sum / md5sum。本机 Win 裸环境没有 md5/shasum，GNU stat 的 -f 会被当成
+# 「文件系统信息」而失败（rc=1 且把错误打到 stdout）⇒ 先探测 -c，失败再回退 BSD 写法。
+_file_size() { if stat -c '%s' "$1" >/dev/null 2>&1; then stat -c '%s' "$1"; else stat -f '%z' "$1"; fi; }
+_file_sha256() { if command -v shasum >/dev/null 2>&1; then shasum -a 256 "$1" | awk '{print $1}'; else sha256sum "$1" | awk '{print $1}'; fi; }
+_file_md5() { if command -v md5 >/dev/null 2>&1; then md5 -q "$1"; else md5sum "$1" | awk '{print $1}'; fi; }
+SIZE="$(_file_size "$OUT")"
+SHA256="$(_file_sha256 "$OUT")"
+MD5="$(_file_md5 "$OUT")"
 REMOTE_SIZE="$("$ADB_BIN" -s "$SERIAL" shell "stat -c %s '$REMOTE_APK'" | tr -d '\r')"
 REMOTE_SHA256="$("$ADB_BIN" -s "$SERIAL" shell "sha256sum '$REMOTE_APK'" | tr -d '\r' | awk '{print $1}')"
 [[ "$SIZE" == "$REMOTE_SIZE" ]] || { echo "错误: 本地大小与设备不一致: local=$SIZE remote=$REMOTE_SIZE" >&2; exit 1; }
@@ -80,7 +101,10 @@ REMOTE_SHA256="$("$ADB_BIN" -s "$SERIAL" shell "sha256sum '$REMOTE_APK'" | tr -d
 
 SIGNER=""
 SIGNER_SHA256=""
-if [[ -n "${NIXIANG_APKSIGNER:-}" && -x "$NIXIANG_APKSIGNER" ]]; then
+# [ -f ] 而非 [ -x ]（2026-11-24）：Windows 的 apksigner 只有 apksigner.bat，MSYS 对 .bat 的 -x
+# 恒为假 ⇒ 旧写法在 Win 上会让签名者读取与「斌哥包拦截」整段静默跳过（signer 字段留空）。
+# 这与 _common/env.sh 解析 apksigner 时的判定口径一致。
+if [[ -n "${NIXIANG_APKSIGNER:-}" && -f "$NIXIANG_APKSIGNER" ]]; then
   CERT_OUT="$("$NIXIANG_APKSIGNER" verify --print-certs "$OUT" 2>/dev/null || true)"
   SIGNER="$(printf '%s\n' "$CERT_OUT" | sed -n 's/^Signer #1 certificate DN: //p' | head -1)"
   SIGNER_SHA256="$(printf '%s\n' "$CERT_OUT" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -1)"

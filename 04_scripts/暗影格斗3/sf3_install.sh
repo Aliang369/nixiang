@@ -17,7 +17,15 @@
 # ================================================================
 set -euo pipefail
 
-NIXIANG="/Users/aliang/Documents/nixiang"
+# 平台垫层（2026-11-24 builder：Windows Git Bash / macOS 双跑；只改路径与工具探测）
+NIXIANG="${NIXIANG_ROOT:-/Users/aliang/Documents/nixiang}"
+# 非登录 shell（脚本直跑）不会加载 ~/.bashrc 的 NIXIANG_ROOT ⇒ 缺 workspace 时以脚本位置为准（双机同解）
+if [ ! -d "$NIXIANG/01_tools" ]; then
+  NIXIANG="$(cd "$(dirname "$0")/../.." && pwd)"
+fi
+if command -v md5sum >/dev/null 2>&1; then
+  md5() { if [ "${1:-}" = "-q" ]; then shift; md5sum "$@" | awk '{print $1}'; else md5sum "$@"; fi; }
+fi
 GAME="暗影格斗3"
 VERSION="1.45.3"
 PKG="com.wanda.sf3.wd"

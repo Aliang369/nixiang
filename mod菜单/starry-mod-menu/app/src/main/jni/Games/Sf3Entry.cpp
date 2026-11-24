@@ -27,8 +27,9 @@ static const char* kSf3_Features[] = {
 
 extern "C" const StarryGameMod* const GameMod_Get() {
     static const StarryGameMod mod = {
+        // tag ≠ 后台 game_id：tag 只做日志/菜单内部标识前缀（保留 sf3 便于对照历史日志），game_id 见 authGameId
         .tag = "sf3",
-        .authGameId = "sf3",            // 暗影格斗3
+        .authGameId = "aygd3",          // 后台 games.game_id（暗影格斗3 → 官方缩写 AYGD3，与官方签名文件名 AYGD3.RSA 同源）
         .featureList = kSf3_Features,
         .featureCount = (int)(sizeof(kSf3_Features) / sizeof(kSf3_Features[0])),
 
