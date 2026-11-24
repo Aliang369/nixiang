@@ -50,6 +50,12 @@
 #          3=BLOCKED_AUTH（授权墙未过，已发操作请求卡；等用户输卡密后重跑）
 #          4=HOOK 未命中（菜单弹出但 hook_hit 标记缺失；菜单层证据齐，游戏层缺证）
 #
+#  ⚠️ 段A 主动退出降级（2026-11-24）：进程消失时先查 `dumpsys activity exit-info <pkg>`；
+#     命中用户主动退出白名单（o-stop / F with swipe up / exit_self / reason=13+subreason=2040 /
+#     force-stop / … due to stop）且无崩溃证据 ⇒ 打 `! WARN 判定段=A 降级` 并 exit 0（不判 FAIL_A，
+#     RC 不变红；段内标记未收齐时不打印 PASS_TO_HUMAN）；取不到 exit-info 或含 crash/FATAL/signal 6|11
+#     ⇒ 保持 FAIL_A。真崩溃判定一行未改。
+#
 #  ⚠️ 段=B 假阴性教训（2026-10-10 邂逅在迷宫实测）：
 #     独立助手形态下，`native menu shown` 只在**助手 attach 的那一次**打印。
 #     若助手在预检**开始录制之前**就已经在跑（典型：上一轮验证后没关），这条唯一证据
@@ -261,6 +267,81 @@ seen=0; CUR_PID=""
 
 say_fail_a() { echo "判定段=A 依据=$1"; exit 1; }
 
+# ---------- 3a 前置：主动退出白名单（2026-11-24，段A 误判修复） ----------
+# 缺陷：用户主动退游戏（上滑清后台 / 游戏内退出）后 pidof 为空 ⇒ 3a 判「启动即退」FAIL_A ⇒ 整脚本 RC=1。
+# 本轮实测证据（2026-11-24 com.TeaMelo.DungeonChasers）：
+#   dumpsys activity exit-info 原文：
+#     reason=13 (OTHER KILLS BY SYSTEM) subreason=2040 description=stop ... due to o-stop(40)
+#     reason=2 (SIGNALED) status=9 description=exit_self_32461_11174
+#   logcat：Athena: OplusClearSystemService ... F with swipe up（用户上滑）
+#   同一次运行 FATAL EXCEPTION / Fatal signal / ANR 计数 0，tombstone 无本包记录。
+# 判据（只放宽「进程消失」这一处，且只放宽到「非红」）：
+#   进程消失 ⇒ 取 exit-info 中本包的块：
+#     ① 取不到文本 / 本包无记录 ⇒ 保持 FAIL_A（原行为，不放宽）
+#     ② 块内含真崩溃证据（crash/CRASH/FATAL/SIGSEGV/SIGABRT/SIGILL/SIGBUS/signal 6|11/reason=5|6/ANR）
+#        ⇒ 保持 FAIL_A（绝不放宽真崩溃）
+#     ③ 命中主动退出白名单且无 ② ⇒ WARN + exit 0（RC 不变红）
+# 与 classify_proc_gone.sh 分工：那个脚本按 recorder 的 events.log 里 PROC_GONE 时间窗定性，要求飞行
+# 记录仪在跑；本段是预检内的即时判据，没有 recorder 也要能用，故在脚本内自证，不改那个脚本。
+#
+# >>> QUIT-JUDGE BEGIN（可离线自测：sed -n '/QUIT-JUDGE BEGIN/,/QUIT-JUDGE END/p' 抽出 source 即用）
+# 主动退出白名单（ERE）：上滑清后台 / 游戏内退出 / 包管理器停止 / 系统 stop。
+RE_QUIT_SELF='o-stop|F with swipe up|exit_self|force-stop|force stop|am_kill|USER_STOPPED|USER_REQUESTED|description=stop|due to stop|reason=13.*subreason=2040'
+# 真崩溃否决项（ERE）：命中即绝不判「主动退出」，保持 FAIL_A。
+RE_QUIT_DENY='crash|CRASH|Crash|FATAL|SIGSEGV|SIGABRT|SIGILL|SIGBUS|signal 6|signal 11|LOW_MEMORY|lmkd|pem-kill|reason=[4567]([^0-9]|$)|ANR'
+
+exit_info_block() {   # stdin=exit-info 全文；stdout=第一条含包名的块（到空行 / 下一条 Package 为止）
+  LC_ALL=C awk -v p="${1:-}" '
+    index($0, p) > 0 { inb = 1; print; next }
+    inb && /^Package / { inb = 0; next }
+    inb && /^[[:space:]]*$/ { inb = 0; next }
+    inb { print }
+  '
+}
+
+quit_verdict() {      # stdin=exit-info 文本；$1=包名。0=可降级（用户主动退出）+stdout 命中关键字；1=保持 FAIL_A
+  _qv_pkg="${1:-}"
+  [ -n "$_qv_pkg" ] || return 1
+  _qv_raw="$(cat)"
+  [ -n "$(printf '%s' "$_qv_raw" | tr -d '[:space:]')" ] || return 1          # 取不到 ⇒ 不放宽
+  _qv_blk="$(printf '%s\n' "$_qv_raw" | exit_info_block "$_qv_pkg")"
+  [ -n "$(printf '%s' "$_qv_blk" | tr -d '[:space:]')" ] || return 1          # 本包无记录 ⇒ 不放宽
+  if printf '%s\n' "$_qv_blk" | grep -qE "$RE_QUIT_DENY"; then return 1; fi   # 真崩溃 ⇒ 不放宽
+  _qv_hit="$(printf '%s\n' "$_qv_blk" | grep -oE "$RE_QUIT_SELF" | head -1)"
+  if [ -n "$_qv_hit" ]; then printf '%s\n' "$_qv_hit"; return 0; fi
+  if printf '%s\n' "$_qv_blk" | grep -qE 'reason=13' \
+     && printf '%s\n' "$_qv_blk" | grep -qE 'subreason=2040'; then          # reason/subreason 分行时也认
+    printf '%s\n' 'reason=13+subreason=2040'; return 0
+  fi
+  return 1
+}
+# <<< QUIT-JUDGE END
+
+exit_info_text() {    # 设备侧取证：exit-info 原文（去 CR）。取不到即空
+  [ -n "${1:-}" ] || return 1
+  adbx shell "dumpsys activity exit-info ${1:-} 2>/dev/null" 2>/dev/null | tr -d '\r' | head -400
+}
+
+active_quit_evidence() {  # $1=包名。0=可作为「用户主动退出」证据 +stdout 命中关键字；1=保持原 FAIL
+  [ -n "${1:-}" ] || return 1
+  _aq_txt="$(exit_info_text "${1:-}")"
+  printf '%s\n' "$_aq_txt" | quit_verdict "${1:-}"
+}
+
+say_downgrade_a() {   # $1=命中关键字。段A 降级：不判 FAIL_A，RC 不变红
+  echo "! WARN 判定段=A 降级（NOTE，不判 FAIL_A）：进程消失但 exit-info 佐证＝用户主动退出"
+  echo "  exit-info 命中主动退出白名单: $1"
+  echo "  反证: 段内崩溃判据未命中（无本包 FATAL/signal 行）、exit-info 无 crash/FATAL/signal 6|11"
+  if [ "$so_ok" = "1" ] && [ "$shown_ok" = "1" ]; then
+    echo "  已收齐段内标记（so 加载 ✓ / 菜单弹出 ✓），用户退出前取证已完成"
+  else
+    echo "  ⚠ 段内标记未收齐（so_ok=${so_ok} shown_ok=${shown_ok}）⇒ 不打印 PASS_TO_HUMAN；请让游戏保持运行后重跑本预检"
+  fi
+  echo "  口径不变: exit-info 取不到 / 含真崩溃证据 ⇒ 仍判 FAIL_A 且 RC=1"
+  echo "  证据: $OUT"
+  exit 0
+}
+
 while :; do
   NOW=$(date +%s)
 
@@ -271,6 +352,11 @@ while :; do
       echo "== 崩溃上下文（logcat 尾 40 行）=="
       tail -40 "$LOG"
       say_fail_a "进程消失且 logcat 含 ${PKG} 崩溃标记"
+    fi
+    # 无崩溃日志 ⇒ 先查 exit-info：用户主动退出则降级（WARN + exit 0），取不到/有崩溃证据则原样 FAIL
+    QUIT_EV=""
+    if QUIT_EV="$(active_quit_evidence "$PKG")"; then
+      say_downgrade_a "$QUIT_EV"
     fi
     say_fail_a "启动 ${GRACE}s 后进程消失/未起来（pidof 空，无崩溃日志则为启动即退或被杀）"
   fi
