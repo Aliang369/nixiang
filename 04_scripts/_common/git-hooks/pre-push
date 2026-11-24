@@ -10,6 +10,17 @@
 #
 #  只查 .sh —— 本仓最高频的静默雷是 bash 语法 / 3.2 兼容;
 #  其他扩展名的机器关仍按 AGENTS.md "改完必跑 preflight" 纪律执行。
+#
+# ── Windows 侧事实（2026-11-25 本轮实测，改本文件前先读这段）────────────────────
+#   ① 本机 git 2.53.0.windows.2 + core.hooksPath=04_scripts/_common/git-hooks 下，钩子**能**执行：
+#      bash 直跑 / ./pre-push 直跑 / 原生 pwsh 里的 git push / cmd.exe 精简 PATH 四种形态 rc=0，
+#      且 git push 的输出里确有 [pre-push] 行。历史上整轮报的
+#      `env: failed to run command '04_scripts/_common/git-hooks/pre-push': Permission denied`
+#      本轮未能复现（chmod 644、CRLF 化都不改变行为）⇒ 归因为「相对 core.hooksPath + NTFS 未落
+#      exec 位」的机器相关偶发，不是 shebang 问题 ⇒ **shebang 保持 #!/usr/bin/env bash，不改成 /bin/sh**。
+#   ② Windows 侧真正的门禁 = git_push_main.sh 内联的 _pg_preflight_gate（同一批 *.sh + 同一个
+#      preflight.sh），钩子是否被 git 直启都不影响门禁生效；本文件在 mac 侧照旧由 git 直接调用。
+#   ③ 两处判据必须一致；人工 / CI 入口 = 同目录 pre-push.cmd（git 在 Windows 不会自动执行 .cmd 钩子）。
 # ================================================================
 set -u
 ZERO=0000000000000000000000000000000000000000

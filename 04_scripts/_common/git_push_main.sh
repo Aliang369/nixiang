@@ -1,8 +1,25 @@
 #!/usr/bin/env bash
 # git_push_main.sh —— 推送到 origin/<branch> 的**四通道自适应 + 自愈重试**实现
 #
-# 版本：v2.2（2026-10-15 修 HTTPS 通道退化 + 有界低速阈值）；v2.1（2026-10-11 重写并实测）；
+# 版本：v2.3（2026-11-25 加「推送前门禁」：待推范围的 .sh 必过 preflight，跨平台一致）；
+#       v2.2（2026-10-15 修 HTTPS 通道退化 + 有界低速阈值）；v2.1（2026-10-11 重写并实测）；
 #       v1 = 2026-10-10「单次探测 SSH，失败即永久改走 HTTPS」。
+#
+# ── v2.3 加的是什么（2026-11-25）──────────────────────────────────────────────
+#   在**推送动作之前**跑门禁：`origin/<branch>..HEAD` 范围内改动的 .sh 一律过
+#   `04_scripts/_common/preflight.sh`，FAIL 即中止推送（门禁 rc=1 ⇒ push_main rc=1，绝不推）。
+#   逃生门 `PUSH_SKIP_PREFLIGHT=1`（必须显式给，且日志留一行「已跳过 preflight」）。
+#   幂等：同一批文件在**同一进程内**最多跑一次（变量打标 `_PG_PREFLIGHT_DONE`）。
+#
+#   为什么放进脚本、而不是只靠 git 钩子：
+#     Windows 侧 `core.hooksPath=04_scripts/_common/git-hooks` 曾整轮报
+#     `env: failed to run command '04_scripts/_common/git-hooks/pre-push': Permission denied`
+#     （ssh22/ssh443/https 三通道同一条）—— 钩子能否被 git 直启取决于本机 exec 位/NTFS ACL
+#     与 git 版本，不是脚本内容问题；mac 侧钩子可靠。把判据放进 push_main ⇒ 两台机器只有
+#     一份逻辑，Windows 只要走 push_main（AGENTS.md §5 要求所有 push 都走它）门禁就一定跑到。
+#     钩子 `04_scripts/_common/git-hooks/pre-push` 保留并继续在 mac 侧由 git 直接调用；
+#     两处判据必须一致：同样取 `origin/<branch>..HEAD` 的 .sh（排除本次删除），同样交给
+#     preflight.sh。人工入口 / CI 见 `04_scripts/_common/git-hooks/pre-push.cmd`。
 #
 # ── v2.2 修的是什么（2026-10-15 实测，用户报「推送总失败」）───────────────────────
 #   `origin` 是 **SSH 形态**（`git@github.com:owner/repo.git`）且仓库/全局都没有 `url.insteadOf`
@@ -56,7 +73,8 @@
 #   push_main --selftest                # 只体检四条通道并逐条打印真实错误，不做推送
 #
 # 环境变量：PUSH_MAX_ATTEMPTS(6) / PUSH_WAIT_SECS(20) / PUSH_ROUTES(通道白名单) /
-#           PUSH_MIRROR_DIR(本地裸仓) / PUSH_QUIET(1=少说话)
+#           PUSH_MIRROR_DIR(本地裸仓) / PUSH_QUIET(1=少说话) /
+#           PUSH_SKIP_PREFLIGHT(1=跳过推送前门禁；仅应急，日志会留痕)
 #
 # 退出码：0 = 已推送（含 up-to-date / 仅落本地镜像）   1 = 未推送（本地提交保留，绝不强推）
 #         2 = 用法/参数错误                            3 = 远端分叉（需 fetch/rebase，不是网络问题）
@@ -193,10 +211,74 @@ _pg_pending_count() {  # $1 = 分支
   git rev-list --count "origin/$1..$1" 2>/dev/null || echo "-1"
 }
 
+# ── 推送前门禁（v2.3，2026-11-25）────────────────────────────────────────────
+# 平台判定沿用 env.sh 的 NIXIANG_HOST（win/mac/linux）；未 source env.sh 时用 uname 兜底。
+# 用途：① 日志写明哪台机器跑的 ② Win 侧一眼看出「门禁不是钩子跑的是 push_main 跑的」。
+_pg_host() {
+  if [ -n "${NIXIANG_HOST:-}" ]; then printf '%s' "$NIXIANG_HOST"; return 0; fi
+  case "$(uname -s 2>/dev/null || echo unknown)" in
+    Darwin)               printf 'mac' ;;
+    MINGW*|MSYS*|CYGWIN*) printf 'win' ;;
+    Linux)                printf 'linux' ;;
+    *)                    printf 'unknown' ;;
+  esac
+}
+
+# 本次待推范围内改动的 .sh（stdout 每行一个）。
+# 取范围与钩子 pre-push 完全一致：origin/<branch>..HEAD；无 origin/<branch> 时退回 origin/main。
+# --diff-filter=d 排除「本次删除的 .sh」：删除不是语法变更，而 preflight 会把不存在的路径判「缺失」FAIL
+#（与钩子 2026-11-22 踩的同一坑同解）。
+_pg_preflight_files() {  # $1 = 分支
+  local branch="$1" base
+  base="origin/$branch"
+  git rev-parse --verify -q "$base" >/dev/null 2>&1 || base="origin/main"
+  git rev-parse --verify -q "$base" >/dev/null 2>&1 || return 0
+  git diff --name-only --diff-filter=d "$base"..HEAD -- '*.sh' 2>/dev/null
+}
+
+# 幂等标记：记「已跑过的那批文件清单」。同一批文件（同一进程内）第二次调用直接跳过。
+_PG_PREFLIGHT_DONE=""
+
+# rc 0 = 通过/按规则跳过；1 = preflight FAIL（调用方必须中止推送）。
+_pg_preflight_gate() {  # $1 = 分支
+  local branch="$1" files pf
+  if [ "${PUSH_SKIP_PREFLIGHT:-0}" = "1" ]; then
+    _pg_log "已跳过 preflight（PUSH_SKIP_PREFLIGHT=1）"
+    return 0
+  fi
+  files="$(_pg_preflight_files "$branch")"
+  files="$(printf '%s\n' "$files" | awk 'NF && !seen[$0]++')"
+  if [ -z "$files" ]; then
+    _pg_log "PREFLIGHT=SKIP（待推范围 origin/${branch}..HEAD 无 .sh 改动）"
+    return 0
+  fi
+  if [ -n "${_PG_PREFLIGHT_DONE:-}" ] && [ "$_PG_PREFLIGHT_DONE" = "$files" ]; then
+    _pg_log "PREFLIGHT=SKIP（同一批文件本轮已跑过，幂等跳过）"
+    return 0
+  fi
+  pf="$(git rev-parse --show-toplevel 2>/dev/null || echo .)/04_scripts/_common/preflight.sh"
+  if [ ! -f "$pf" ]; then
+    _pg_log "PREFLIGHT=SKIP（未找到 preflight.sh：${pf}）"
+    return 0
+  fi
+  _pg_log "平台=$(_pg_host) 待推 .sh $(printf '%s\n' "$files" | grep -c .) 个 ⇒ 跑 preflight（推送前门禁）"
+  printf '%s\n' "$files" | sed 's/^/[push]   /'
+  # 本仓文件名不含空格，刻意不加引号做 word splitting（与钩子同）
+  # shellcheck disable=SC2086
+  if bash "$pf" $files; then
+    _PG_PREFLIGHT_DONE="$files"
+    _pg_log "PREFLIGHT=PASS route=inline"
+    return 0
+  fi
+  echo "[push] PREFLIGHT=FAIL ⇒ 中止推送（修好再推；应急：PUSH_SKIP_PREFLIGHT=1，汇报须写明）"
+  return 1
+}
+
 _pg_usage() {
   echo "[push] 用法：push_main [<branch>] [--attempts N] [--wait S] [--quiet] [--selftest]"
   echo "[push] 环境：PUSH_MAX_ATTEMPTS(6) PUSH_WAIT_SECS(20) PUSH_ROUTES(白名单) PUSH_MIRROR_DIR(本地裸仓)"
   echo "[push]       PUSH_HTTP_LOWSPEED_LIMIT(1000) PUSH_HTTP_LOWSPEED_TIME(60)"
+  echo "[push]       PUSH_SKIP_PREFLIGHT(1=跳过推送前门禁，仅应急)"
 }
 
 # 通道体检：逐条真实探测并打印错误（诊断用，read-only，不推送）
@@ -253,6 +335,8 @@ push_main() {
     _pg_log "PUSH_RESULT=NOTHING_TO_PUSH（本地无新提交，ahead 0，无需联网）"
     return 0
   fi
+  # 推送前门禁（v2.3）：本次要推的 .sh 必须先过 preflight；FAIL 直接中止，绝不带着已知问题推。
+  _pg_preflight_gate "$branch" || return 1
 
   while [ "$i" -lt "$attempts" ]; do
     i=$((i + 1)); tried=""
