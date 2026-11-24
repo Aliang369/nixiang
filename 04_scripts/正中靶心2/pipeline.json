@@ -550,7 +550,17 @@
           "path": "10_docs/正中靶心2/收尾与最小复现清单_1.10_20261124.md"
         }
       ],
-      "status": "pending"
+      "status": "done",
+      "done_at": "2026-11-24 21:12:35",
+      "artifacts": {
+        "10_docs/正中靶心2/收尾与最小复现清单_1.10_20261124.md": {
+          "md5": "a3b3172a6639c5e492bd08516751812c"
+        }
+      },
+      "inputs": {
+        "04_scripts/正中靶心2/cleanup_summary.json": "4b04a8d1172f556c4fb3879dad76f53e",
+        "06_dumped/正中靶心2/official_1.10/decrypted_js/decrypt_summary.json": "84dc7d8882804390f7dd48b1079f75e3"
+      }
     }
   ]
 }

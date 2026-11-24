@@ -31,6 +31,9 @@
 # "Classloader failed to find class of com.starry.magic.cocos.YsxzHooks"，所有开关静默读 false。
 # 必须按全名 keep（不带 allowobfuscation）。
 -keep class com.starry.magic.cocos.YsxzHooks { *; }
+# 2026-11-24（正中靶心2 1.10）：native `Zzbx2Mod.cpp:88` 按全名 FindClass + JS 反射
+# "com.starry.magic.cocos.Zzbx2Hooks"，R8 兜底规则 allowobfuscation 会改名/删除 ⇒ 必须全名 keep。
+-keep class com.starry.magic.cocos.Zzbx2Hooks { *; }
 -keep class com.starry.magic.StarryInitProvider { *; }
 -keep class com.starry.magic.boot.StarryInitProvider { *; }
 -keep class com.starry.magic.StarryApp { *; }
