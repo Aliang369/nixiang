@@ -68,3 +68,8 @@ scripts/**/*.pyc
 #    （同上方 `app/src/**/obj*/` 那条的成因）
 app/src/main/jni/*.enc.bin
 app/src/main/jni/Games/*.a
+
+# 运行时数据（2026-11-24）：auth-server 的 DROP_STATS_PATH 默认落 data/dropped_stats.jsonl，
+# 服务端每行追加一次统计快照；属部署机本机状态，双机各自累计，入库必冲突。
+# ⚠️ 必须写在本文件末尾：前部 `!auth-server/**` 会把根 .gitignore 的排除反向覆盖。
+auth-server/data/
