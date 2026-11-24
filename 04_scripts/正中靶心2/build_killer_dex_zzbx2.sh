@@ -11,8 +11,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
-VER="${ZZBX2_VER:-1.9}"
-BASE_APK="${ZZBX2_BASE_APK:-$NIXIANG/02_apks/正中靶心2/正中靶心2_${VER}_official.apk}"
+VER="${ZZBX2_VER:-1.10}"
+BASE_APK="${ZZBX2_BASE_APK:-$NIXIANG/02_apks/正中靶心2/zzbx2_taptap_1.10_official.apk}"
 PKG="com.openew.monster"
 CERT_SHA256="${ZZBX2_CERT_SHA256:-57fbc23b3f94ee6d31932ba976e4498b5f1fca7a30138ae73dca5db06e67ea58}"
 SMALI_SRC="$SCRIPT_DIR/assets/zzbx2_killer_smali"

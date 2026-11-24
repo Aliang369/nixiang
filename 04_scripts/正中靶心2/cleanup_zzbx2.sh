@@ -5,11 +5,11 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GAME="正中靶心2"
-VER="${ZZBX2_VER:-1.9}"
+VER="${ZZBX2_VER:-1.10}"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
 SUMMARY="$SCRIPT_DIR/cleanup_summary.json"
 FINAL_APK="$NIXIANG_ROOT/08_output/$GAME/${GAME}_${VER}_starry-releaseSigned.apk"
-FINAL_MD5="${ZZBX2_FINAL_MD5:-ee63733e8e2159e9b0f990ab63dfe0e4}"  # 2026-11-02 双轨制复刻版
+FINAL_MD5="${ZZBX2_FINAL_MD5:-05076b91d321e137f8f21b00402421e9}"  # 2026-11-24 1.10 星光正式包
 ADB_BIN="${ADB_BIN:-adb}"
 
 cd "$NIXIANG_ROOT"

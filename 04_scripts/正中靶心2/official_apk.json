@@ -2,16 +2,37 @@
   "package": "com.openew.monster",
   "game": "正中靶心2",
   "kind": "official",
-  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/正中靶心2_1.9_official.apk",
-  "version_name": "1.9",
-  "version_code": 10,
+  "apk_path": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/zzbx2_taptap_1.10_official.apk",
+  "version_name": "1.10",
+  "version_code": 11,
   "installer": "com.android.packageinstaller",
   "primary_cpu_abi": "arm64-v8a",
   "serial": "f9a116a2",
-  "remote_path": "/data/app/~~3e02EEzAJM_At-MmK9GPug==/com.openew.monster-bdw18lquhqvjDB5cnEfPEg==/base.apk",
-  "size": 208712666,
-  "sha256": "4b51e2cfc367d09934f2c79bcd0a9cd0bfb0663f629313ecdefc3fd6018661c9",
-  "md5": "3b126e42a931d712ceef85b0c9b8ec05",
+  "remote_path": "/data/app/~~pcMFThaG9ZGu9viIjj2Rhw==/com.openew.monster-VXYjUp_J5CeXUQdmGrBvug==/base.apk",
+  "size": 215038033,
+  "sha256": "82993b9147147c3ef109a95477ef513b872987bdc7bc77975a2a4a77201d9dc1",
+  "md5": "9ec07d24c21e4b59ab3ac0b69fd81440",
   "signer_dn": "CN=elliot lee, OU=Openew. Inc, O=Openew, L=GuangZhou, ST=GuangDong, C=gd",
-  "signer_sha256": "57fbc23b3f94ee6d31932ba976e4498b5f1fca7a30138ae73dca5db06e67ea58"
+  "signer_sha256": "57fbc23b3f94ee6d31932ba976e4498b5f1fca7a30138ae73dca5db06e67ea58",
+  "min_sdk": 24,
+  "target_sdk": 35,
+  "extract_native_libs": false,
+  "splits": [
+    "base"
+  ],
+  "abis_in_apk": [
+    "arm64-v8a",
+    "armeabi-v7a"
+  ],
+  "engine": "cocos2d-js (libcocos2djs.so)",
+  "signature_schemes": [
+    "v2"
+  ],
+  "remote_mtime": "2026-11-24 19:37:30",
+  "local_mtime": "2026-11-24 19:41:33",
+  "fetched_at": "2026-11-24",
+  "prev_baseline_sha256": "4b51e2cfc367d09934f2c79bcd0a9cd0bfb0663f629313ecdefc3fd6018661c9",
+  "prev_size": 208712666,
+  "prev_version_name": "1.9",
+  "prev_version_code": 10
 }

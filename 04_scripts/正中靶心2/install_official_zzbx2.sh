@@ -10,7 +10,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STATE_FILE="$SCRIPT_DIR/.device_serial"
-VER="${ZZBX2_VER:-1.9}"
+VER="${ZZBX2_VER:-1.10}"
 APK="${ZZBX2_SIGNED:-$NIXIANG_ROOT/08_output/正中靶心2/正中靶心2_${VER}_starry-releaseSigned.apk}"
 PKG="com.openew.monster"
 ADB_BIN="${ADB_BIN:-adb}"

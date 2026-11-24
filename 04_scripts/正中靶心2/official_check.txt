@@ -1,6 +1,6 @@
 package=com.openew.monster
-versionName=1.9
-versionCode=10
+versionName=1.10
+versionCode=11
 signerDN=CN=elliot lee, OU=Openew. Inc, O=Openew, L=GuangZhou, ST=GuangDong, C=gd
 signerSHA256=57fbc23b3f94ee6d31932ba976e4498b5f1fca7a30138ae73dca5db06e67ea58
 has_libil2cpp=0

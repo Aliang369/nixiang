@@ -1,8 +1,8 @@
 {
-  "apk": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/正中靶心2_1.9_official.apk",
+  "apk": "/Users/aliang/Documents/nixiang/02_apks/正中靶心2/zzbx2_taptap_1.10_official.apk",
   "package": "com.openew.monster",
-  "version_name": "1.9",
-  "version_code": 10,
+  "version_name": "1.10",
+  "version_code": 11,
   "signer_dn": "CN=elliot lee, OU=Openew. Inc, O=Openew, L=GuangZhou, ST=GuangDong, C=gd",
   "signer_sha256": "57fbc23b3f94ee6d31932ba976e4498b5f1fca7a30138ae73dca5db06e67ea58",
   "markers": {

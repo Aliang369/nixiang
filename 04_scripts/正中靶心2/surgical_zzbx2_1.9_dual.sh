@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 正中靶心2 1.9 — 星空外科组装（2026-11-02 双轨制版）。
+# 正中靶心2 1.10 — 星空外科组装（2026-11-02 双轨制版；2026-11-24 底包升 1.10/vc11）。
 #
 # 与 2026-09-26 版（surgical_zzbx2_1.9.sh）的差别：只改 TapTap 这条链，玩法侧零改动。
 #   签名/完整性校验 → B 轨「运行时签名替换」：注入 MT ApkSignatureKillerEx 形态的
@@ -13,7 +13,7 @@
 # 依据：AGENTS.md §3「渠道包是 TapTap/TapSDK」条目 + skill/re-analyze/login/taptap-web-login.md
 #       「现行口径（2026-10-29 双轨制）」+ 10_docs/_templates/经验_运行时签名替换挂载点与dex等长改包_20261029.md
 #
-# 底包唯一合法输入：官方 1.9 原包（md5 3b126e42a931d712ceef85b0c9b8ec05）。
+# 底包唯一合法输入：官方 1.10 原包 zzbx2_taptap_1.10_official.apk（md5 9ec07d24c21e4b59ab3ac0b69fd81440）。
 set -euo pipefail
 
 BUILD_TYPE="${STARRY_BUILD_TYPE:-release}"
@@ -29,9 +29,9 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
-VER="${ZZBX2_VER:-1.9}"
-ORIG_APK="${ZZBX2_BASE_APK:-$NIXIANG/02_apks/正中靶心2/正中靶心2_${VER}_official.apk}"
-ORIG_MD5="${ZZBX2_BASE_MD5:-3b126e42a931d712ceef85b0c9b8ec05}"
+VER="${ZZBX2_VER:-1.10}"
+ORIG_APK="${ZZBX2_BASE_APK:-$NIXIANG/02_apks/正中靶心2/zzbx2_taptap_1.10_official.apk}"
+ORIG_MD5="${ZZBX2_BASE_MD5:-9ec07d24c21e4b59ab3ac0b69fd81440}"
 OUT_DIR="$NIXIANG/07_patched/正中靶心2"
 UNSIGNED="$OUT_DIR/正中靶心2_${VER}_starry-unsigned.apk"
 PATCH_JS="$SCRIPT_DIR/patch_main.js"

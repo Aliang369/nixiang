@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/正中靶心2",
+  "keep": "正中靶心2_1.10_starry-releaseSigned.apk",
+  "keep_size": 219742990,
+  "keep_md5": "05076b91d321e137f8f21b00402421e9",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "正中靶心2_1.10_starry-releaseSigned.apk.idsig",
+      "size": 1742363,
+      "md5": "7b18c96639e66696dd98dceba5d36b21"
+    }
+  ],
+  "removed_count": 1
+}

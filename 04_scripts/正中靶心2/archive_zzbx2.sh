@@ -9,7 +9,7 @@ cd "$NIXIANG_ROOT"
 git config core.quotepath false
 
 [[ -f "04_scripts/正中靶心2/cleanup_summary.json" ]] || { echo "错误: 缺少 cleanup_summary.json，先跑清理阶段" >&2; exit 1; }
-[[ -f "10_docs/正中靶心2/收尾与最小复现清单_1.9_20260926.md" ]] || { echo "错误: 缺少本作收尾清单" >&2; exit 1; }
+[[ -f "10_docs/正中靶心2/收尾与最小复现清单_1.10_20261124.md" ]] || { echo "错误: 缺少本作收尾清单" >&2; exit 1; }
 
 git add -- \
   "04_scripts/正中靶心2" \

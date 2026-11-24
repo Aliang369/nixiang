@@ -1,5 +1,5 @@
 {
-  "source": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.9/decrypted_js/src/assets/Script/src/GameLogic.js",
+  "source": "/Users/aliang/Documents/nixiang/06_dumped/正中靶心2/official_1.10/decrypted_js/src/assets/Script/src/GameLogic.js",
   "needles": {
     "BaseObjectComponent": true,
     "getBuffCanBeAttack": true,

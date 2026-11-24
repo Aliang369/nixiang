@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# 正中靶心2 1.9 — 签名阶段（2026-11-02 双轨制：killer dex + classes3 改包法）。
+# 正中靶心2 1.10 — 签名阶段（2026-11-02 双轨制：killer dex + classes3 改包法）。
 set -euo pipefail
 
 NIXIANG="/Users/aliang/Documents/nixiang"
-VER="${ZZBX2_VER:-1.9}"
+VER="${ZZBX2_VER:-1.10}"
 UNSIGNED="${ZZBX2_UNSIGNED:-$NIXIANG/07_patched/正中靶心2/正中靶心2_${VER}_starry-unsigned.apk}"
 OUT="$NIXIANG/08_output/正中靶心2"
 SIGNED="$OUT/正中靶心2_${VER}_starry-releaseSigned.apk"
