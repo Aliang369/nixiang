@@ -37,6 +37,7 @@
 #include <mutex>      // §④ 装钩互斥
 #include <setjmp.h>   // §④ sigsetjmp 保护区
 #include <signal.h>   // §④ 致命信号兜底
+#include <sys/stat.h> // 3.2 探针：stat(libil2cpp.so) 取文件大小（大小兜底判据）
 
 #include "Dobby/dobby.h"
 #include "Includes/Logger.h"
@@ -85,6 +86,7 @@ static thread_local bool t_inModTick = false;   // Tick 线程标记（禁止在
 //        允许直调（KYZT22_THREAD_PROVEN）。
 // ---------------------------------------------------------------------------
 static void DbgLog(const char* fmt, ...);   // 前向声明（定义在本文件后段）
+static void ModHitFirst(const char* tag);   // 前向声明（MODHIT 首报；定义在 §⑤-c DbgLog 之后）
 static std::atomic<unsigned long> g_unityTid{0};
 static std::atomic<int>  g_tidProbe{0};        // 0=未测 1=相同 2=不同 3=无参照
 
@@ -100,6 +102,7 @@ static std::atomic<int> g_updCalls{0};
 
 static void Hooked_GameUpdate(void* self, void* method) {
     const int n = g_updCalls.fetch_add(1) + 1;
+    ModHitFirst("GameUpdate");   // MODHIT：帧锚点真的被游戏调用
 #if KYZT_HAS_ECONOMY22
     // 隔离：h 内部若抛 C++ 异常，不得吞掉游戏自己的 Update。
     // 注意：本隔离只兜 C++ 异常；托管异常由 runtime_invoke 的 exc 出参处理，
@@ -146,6 +149,7 @@ static std::atomic<bool> g_anyHooked{false};
 static std::atomic<bool> g_dmg{false};
 static std::atomic<bool> g_inv{false};
 static std::atomic<bool> g_spd{false};
+static std::atomic<bool> g_spdRestore{false};  // OFF 后待恢复 timeScale=1.0（UI 线程只置位，Tick 里执行）
 static std::atomic<bool> g_noad{false};   // 免广告
 static std::atomic<bool> g_reenter{false};
 
@@ -188,44 +192,84 @@ enum : size_t {
 // 前向声明：②-b 段在 ⑤ 挂点机器之前，需先声明这两个底层助手
 static void* FileOffToVa(const char* lib, uintptr_t fileOff);
 static bool  ReadU32Guarded(const char* tag, const void* p, uint32_t* out);
+static bool  LibGuestRange(const char* lib, uintptr_t* lo, uintptr_t* hi);          // 3.2 装钩自证
+static bool  LibFileSize(const char* lib, unsigned long long* out);                 // 3.2 探针兜底
+static bool  IsExecRange(uintptr_t p);                                             // MODHOOK：任意可执行段判定
+static void  LogHookDiag(const char* tag, void* target, void* orig, int installed); // MODHOOK 单行
 
 static uintptr_t kRvaShowInternal = 0x1C8A9AC;   // 1.8 实测（file）
 static uintptr_t kRvaHandleNative = 0x1C8A724;   // 1.8 实测（file，只调不挂）
 static uintptr_t kRvaEnterInterp  = 0x19876a8;   // 1.8 实测（file）
-static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2 / 24=2.4
+static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2 / 24=2.4 / 32=3.2
+
+// 3.2 指纹常量（2026-11-24 静态实测；全部 **file offset**，VA = file + 0x4000）
+static const uintptr_t kOff32Show   = 0x1CFC6D0u;  // ShowInternal（VA 0x1D006D0，序言 0xF81E0FFE）
+static const uintptr_t kOff32Interp = 0x19F6364u;  // EnterFrameFromInterpreter（VA 0x19FA364，序言 0xF81D0FFE）
+static const uintptr_t kOff32Timescale = 0x37B27A8u;    // Time::set_timeScale（VA 0x37B67A8，序言 0xFC1E0FE8）
+static const uint32_t  kInsnTimeScale  = 0xFC1E0FE8u;   // str d8,[sp,#-0x20]! —— 装钩前序言校验字
+static const unsigned long long kSize32Lib = 66268112ull;  // libil2cpp.so 66,268,112 B（sha256 b249a131…332b）
 
 // 探针：用「首指令是否等于已知序言」判版本，不依赖包名/版本号字符串
 static int DetectLibVersion() {
     struct Probe { int ver; uintptr_t off; };
-    // 探针 = 各版本 ShowInternal(file) 首指令；三者互不误判（2.4 侧由 delta24 静态核验）：
+    // 探针 = 各版本 ShowInternal(file) 首指令；旧版互不误判（2.4 侧由 delta24 静态核验）：
     //   2.4 独有探针 0x1CCE6CC 处 = 0xF81E0FFE（str x30,[sp,#-0x20]!）
     //   2.4 在 2.2 探针 0x1CA9130 处 = 0xB4000D96（≠0xF81E0FFE，不会误判成 2.2）
     //   2.4 在 1.8 探针 0x1C8A9AC 处 = 0x97F951DD（≠0xF81E0FFE）
-    static const Probe probes[] = {{24, 0x1CCE6CCu}, {22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
+    // 3.2 单点序言不足（0xF81E0FFE 在段内多处同构）⇒ 三点取二，见下。
+    static const Probe probes[] = {{32, kOff32Show}, {24, 0x1CCE6CCu}, {22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
     for (const auto& pr : probes) {
         void* va = FileOffToVa(TPL_TARGET_LIB, pr.off);
         if (!va) continue;
         uint32_t insn = 0;
-        if (ReadU32Guarded("verprobe", va, &insn) && insn == 0xF81E0FFEu) {
-            g_libVer.store(pr.ver);
-            if (pr.ver == 24) {
-                kRvaShowInternal = 0x1CCE6CCu;  // file；VA 0x1CD26CC
-                kRvaHandleNative = 0x1CCE444u;  // file；VA 0x1CD2444（仅记录，本轮不挂）
-                kRvaEnterInterp  = 0x19C9A78u;  // file；VA 0x19cda78，序言 0xF81D0FFE
-                LOGI(TPL_LOG " lib version probe: 2.4 (ShowInternal file=0x1CCE6CC, interp=0x19C9A78)");
-                DbgLog("verprobe: 2.4 showInternal=0x1CCE6CC interp=0x19C9A78");
-            } else if (pr.ver == 22) {
-                kRvaShowInternal = 0x1CA9130u;
-                kRvaHandleNative = 0x1CA8EA8u;
-                kRvaEnterInterp  = 0x19a5004u;  // file；VA 0x19a9004（原来只写在 InstallBattleHooks 里）
-                LOGI(TPL_LOG " lib version probe: 2.2 (ShowInternal file=0x1CA9130, interp=0x19a5004)");
-                DbgLog("verprobe: 2.2 showInternal=0x1CA9130 interp=0x19a5004");
-            } else {
-                LOGI(TPL_LOG " lib version probe: 1.8 (ShowInternal file=0x1C8A9AC)");
-                DbgLog("verprobe: 1.8");
-            }
-            return pr.ver;
+        const bool prologueOk = ReadU32Guarded("verprobe", va, &insn) && insn == 0xF81E0FFEu;
+
+        if (pr.ver == 32) {
+            // 3.2 判据（三选二，2026-11-24 静态实测）：
+            //   ① file 0x1CFC6D0 == 0xF81E0FFE（ShowInternal 序言）
+            //   ② file 0x19F6364 == 0xF81D0FFE（解释器帧入口序言）
+            //   ③ libil2cpp.so 文件大小 == 66,268,112
+            // 接受条件：① && (② || ③)  或  ② && ③。
+            // 只中 ①（另两条都不符）⇒ 证据不足，判未知并继续向后探旧版本，不硬套 2.x 地址。
+            const bool c1 = prologueOk;
+            bool c2 = false, c3 = false;
+            uint32_t insn2 = 0;
+            void* va2 = FileOffToVa(TPL_TARGET_LIB, kOff32Interp);
+            if (va2) c2 = ReadU32Guarded("verprobe", va2, &insn2) && insn2 == 0xF81D0FFEu;
+            unsigned long long fsz = 0;
+            c3 = LibFileSize(TPL_TARGET_LIB, &fsz) && fsz == kSize32Lib;
+            LOGI(TPL_LOG " verprobe 3.2 cond show=%d interp=%d size=%d/%llu",
+                 (int)c1, (int)c2, (int)c3, fsz);
+            DbgLog("verprobe: 3.2 cond show=%d interp=%d size=%d/%llu", (int)c1, (int)c2, (int)c3, fsz);
+            if (!((c1 && (c2 || c3)) || (c2 && c3))) continue;
+            g_libVer.store(32);
+            kRvaShowInternal = kOff32Show;      // file；VA 0x1D006D0
+            kRvaHandleNative = 0x1CFC448u;      // file；VA 0x1D00448（只记录，不挂）
+            kRvaEnterInterp  = kOff32Interp;    // file；VA 0x19FA364，序言 0xF81D0FFE
+            LOGI(TPL_LOG " lib version probe: 3.2 (ShowInternal file=0x1CFC6D0, interp=0x19F6364)");
+            DbgLog("verprobe: 3.2 showInternal=0x1CFC6D0 interp=0x19F6364");
+            return 32;
         }
+
+        if (!prologueOk) continue;
+        g_libVer.store(pr.ver);
+        if (pr.ver == 24) {
+            kRvaShowInternal = 0x1CCE6CCu;  // file；VA 0x1CD26CC
+            kRvaHandleNative = 0x1CCE444u;  // file；VA 0x1CD2444（仅记录，本轮不挂）
+            kRvaEnterInterp  = 0x19C9A78u;  // file；VA 0x19cda78，序言 0xF81D0FFE
+            LOGI(TPL_LOG " lib version probe: 2.4 (ShowInternal file=0x1CCE6CC, interp=0x19C9A78)");
+            DbgLog("verprobe: 2.4 showInternal=0x1CCE6CC interp=0x19C9A78");
+        } else if (pr.ver == 22) {
+            kRvaShowInternal = 0x1CA9130u;
+            kRvaHandleNative = 0x1CA8EA8u;
+            kRvaEnterInterp  = 0x19a5004u;  // file；VA 0x19a9004（原来只写在 InstallBattleHooks 里）
+            LOGI(TPL_LOG " lib version probe: 2.2 (ShowInternal file=0x1CA9130, interp=0x19a5004)");
+            DbgLog("verprobe: 2.2 showInternal=0x1CA9130 interp=0x19a5004");
+        } else {
+            LOGI(TPL_LOG " lib version probe: 1.8 (ShowInternal file=0x1C8A9AC)");
+            DbgLog("verprobe: 1.8");
+        }
+        return pr.ver;
     }
     LOGW(TPL_LOG " lib version probe: 未命中已知序言（未知版本）⇒ 仅按名路径");
     DbgLog("verprobe: UNKNOWN patch-ready=no");
@@ -392,8 +436,11 @@ static bool DobbyHookGuarded(const char* tag, void* target, void* hook, void** o
         t_inGuard = 0;
         if (rc != 0) {
             LOGW(TPL_LOG " %s dobby fail rc=%d", tag, rc);
+            LogHookDiag(tag, target, nullptr, 0);   // 失败也落一行：便于对照「没装 / 装了不可信」
             return false;
         }
+        // ★ 每次 DobbyHook 后必落 MODHOOK：target / 返回的 orig / orig 是否落在 libil2cpp guest 区间
+        LogHookDiag(tag, target, orig ? *orig : nullptr, 1);
         return true;
     }
     // longjmp 回来：保护区内的致命信号已被吞掉
@@ -402,6 +449,7 @@ static bool DobbyHookGuarded(const char* tag, void* target, void* hook, void** o
     LOGW(TPL_LOG " %s dobby SIG(%d) @%p — 槽位熔断，游戏继续",
          tag, (int)t_faultSig, (void*)t_faultAddr);
     if (orig) *orig = nullptr;   // ★ 必须清掉可能被半写的 orig，否则后续调用跳到野指针
+    LogHookDiag(tag, target, nullptr, -1);          // 半写状态：orig 已清，记录这次熔断
     return false;
 }
 
@@ -479,6 +527,159 @@ static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
     }
     std::fclose(fp);
     return best;
+}
+
+// libil2cpp 在 /proc/self/maps 里的**整段 guest 映射区间**（含 r--p / r-xp 等所有段，取总跨度）。
+// 真机 arm64 原生执行时这就是 .so 被 mmap 的全部范围；Dobby 返回的 orig 必然落在其中。
+// 模拟器 Houdini 翻译层下 arm64 guest 段也会出现在 maps 里，但 Dobby 可能把 orig 返回到
+// x86_64 用户空间（0x7xxx…）⇒ 区间外 ⇒ 该次装钩不可信。
+static bool LibGuestRange(const char* lib, uintptr_t* lo, uintptr_t* hi) {
+    FILE* fp = std::fopen("/proc/self/maps", "r");
+    if (!fp) return false;
+    char line[768];
+    uintptr_t l = UINTPTR_MAX, h = 0;
+    while (std::fgets(line, sizeof(line), fp)) {
+        if (!IsLibMapLine(line, lib)) continue;
+        uintptr_t start = 0, end = 0, off = 0;
+        char perm[8] = {};
+        if (std::sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
+        if (end <= start) continue;
+        if (start < l) l = start;
+        if (end > h) h = end;
+    }
+    std::fclose(fp);
+    if (h <= l) return false;
+    if (lo) *lo = l;
+    if (hi) *hi = h;
+    return true;
+}
+
+// 3.2 探针的「文件大小兜底」判据：从 maps 取 libil2cpp.so 的磁盘路径再 stat。
+// 大小不受「段内偶然同构序言」影响，是最稳的一条；取不到就返回 false（只作加分项，不阻塞）。
+static bool LibFileSize(const char* lib, unsigned long long* out) {
+    FILE* fp = std::fopen("/proc/self/maps", "r");
+    if (!fp) return false;
+    char line[768];
+    char path[512] = {0};
+    while (std::fgets(line, sizeof(line), fp)) {
+        if (!IsLibMapLine(line, lib)) continue;
+        const char* sl = std::strchr(line, '/');
+        if (!sl) continue;
+        std::snprintf(path, sizeof(path), "%s", sl);
+        char* nl = std::strchr(path, '\n');
+        if (nl) *nl = '\0';
+        break;
+    }
+    std::fclose(fp);
+    if (!path[0]) return false;
+    struct stat st;
+    if (::stat(path, &st) != 0) return false;
+    if (out) *out = (unsigned long long)st.st_size;
+    return true;
+}
+
+// 任意含 'x' 权限的映射段判定（/proc/self/maps）。
+// 用途：Dobby 的 orig 是它自己 mmap 出来的 **trampoline**（可执行页），天然不在 libil2cpp 区间内；
+// 真机 arm64 用户态地址本来就在 0x7xxx… ⇒ 「不在 guest 区间」「0x7xxx ⇒ x86」都不是故障判据。
+// 唯一有效的判据：orig 必须落在**某个可执行映射段**里；落在不可执行段/未映射区才是非法返回。
+static bool IsExecRange(uintptr_t p) {
+    if (!p) return false;
+    FILE* fp = std::fopen("/proc/self/maps", "r");
+    if (!fp) return false;
+    char line[768];
+    bool hit = false;
+    while (std::fgets(line, sizeof(line), fp)) {
+        uintptr_t start = 0, end = 0, off = 0;
+        char perm[8] = {};
+        if (std::sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
+        if (p < start || p >= end) continue;
+        if (std::strchr(perm, 'x')) hit = true;   // 命中可执行段
+        break;                                    // 命中任意段（含不可执行）即停：地址只属于一段
+    }
+    std::fclose(fp);
+    return hit;
+}
+
+// ============================================================================
+//  ⑥-a 装钩自证（MODHOOK / MODHIT）— 2026-11-24 新增，防「装上了却不可信」
+//
+//  目标设备：真机 Xiaomi M2102K1AC / arm64-v8a 原生 / 未 root
+//    ⇒ 读不到 /data/data/com.xf.kyzt/files/（DbgLog 文件），**诊断必须同时进 logcat**。
+//    历史风险设备：雷电模拟器（Houdini 翻译层，libil2cpp 代码段 r--p）曾有「Dobby 返回成功
+//    但句柄落 x86 空间」的假阳性 ⇒ 下面这条判定就是那次风险的防线，必须保留。
+//
+//  判定口径（写死在代码里，日志一眼可判）：
+//    · orig 落在 [libbase, libbase+libsize) 内 ⇒ inGuest=1 ⇒ 装钩可信；
+//    · inGuest=0（典型 orig = 0x7xxx… 的 x86_64 用户空间，或区间外野地址）⇒ **装钩不可信**，
+//      即便 Dobby 返回 0 也不能认为 hook 生效；此时也不会有对应的 MODHIT 行。
+//      libbase/libsize 取自 /proc/self/maps 中 libil2cpp 全部段的并集跨度。
+//
+//  日志格式固定字段顺序（勿改，配合 adb logcat -d | grep MODHOOK）：
+//    MODHOOK tag=.. target=.. orig=.. inGuest=.. libbase=.. libsize=.. tgtInGuest=.. installed=..
+//    MODHIT  tag=.. n=1 va=..            （首次真正命中，每 tag 只落一次）
+// ============================================================================
+static const int kHookDiagMax = 8;                                 // 本文件 hook 标签数上限
+static std::mutex g_hookDiagMutex;
+static const char* g_hookDiagTag[kHookDiagMax] = {};
+static uintptr_t   g_hookDiagVa[kHookDiagMax]  = {};
+
+static void RememberHookVa(const char* tag, uintptr_t va) {
+    if (!tag || !va) return;
+    std::lock_guard<std::mutex> lk(g_hookDiagMutex);
+    for (int i = 0; i < kHookDiagMax; ++i) {
+        if (g_hookDiagTag[i] && std::strcmp(g_hookDiagTag[i], tag) == 0) { g_hookDiagVa[i] = va; return; }
+    }
+    for (int i = 0; i < kHookDiagMax; ++i) {
+        if (!g_hookDiagTag[i]) { g_hookDiagTag[i] = tag; g_hookDiagVa[i] = va; return; }
+    }
+}
+
+static uintptr_t HookVaOf(const char* tag) {
+    if (!tag) return 0;
+    std::lock_guard<std::mutex> lk(g_hookDiagMutex);
+    for (int i = 0; i < kHookDiagMax; ++i)
+        if (g_hookDiagTag[i] && std::strcmp(g_hookDiagTag[i], tag) == 0) return g_hookDiagVa[i];
+    return 0;
+}
+
+// installed: 1=装钩成功 / 0=Dobby 返回失败 / -1=装钩期致命信号（保护区吞掉）
+//
+// 判定口径（2026-11-24 真机修订，首版判据是误报，勿回退）：
+//   · Dobby 返回的 orig 默认是它自己分配的 **trampoline**（独立可执行页），
+//     天然不在 libil2cpp 区间内 ⇒ inGuest=0 属**正常**，不能据此告警；
+//   · 真机 arm64 用户态地址本来就在 0x7xxx…，**「0x7xxx = x86 空间」是错的**；
+//   · 唯一有效判据：orig 必须落在**任意 r-x 可执行映射段**（origExec=1）；
+//     orig=null 或 origExec=0（且 installed=1）⇒ 这才是「装钩不可信」。
+//   · inGuest / tgtInGuest 保留：tgtInGuest 对 target 是否落在目标库仍有用，inGuest 仅供参考。
+// 字段顺序固定（origExec 为尾部新增，前 8 段不变）：
+//   MODHOOK tag= target= orig= inGuest= libbase= libsize= tgtInGuest= installed= origExec=
+static void LogHookDiag(const char* tag, void* target, void* orig, int installed) {
+    uintptr_t lo = 0, hi = 0;
+    const bool have = LibGuestRange(TPL_TARGET_LIB, &lo, &hi);
+    const uintptr_t t = (uintptr_t)target, o = (uintptr_t)orig;
+    const int tgtIn    = (have && t >= lo && t < hi) ? 1 : 0;
+    const int inGuest  = (have && o >= lo && o < hi) ? 1 : 0;
+    const int origExec = IsExecRange(o) ? 1 : 0;
+    const unsigned long long span = have ? (unsigned long long)(hi - lo) : 0ull;
+
+    LOGI(TPL_LOG " MODHOOK tag=%s target=0x%lX orig=0x%lX inGuest=%d libbase=0x%lX libsize=0x%llX tgtInGuest=%d installed=%d origExec=%d",
+         tag, (unsigned long)t, (unsigned long)o, inGuest,
+         (unsigned long)lo, span, tgtIn, installed, origExec);
+    DbgLog("MODHOOK tag=%s target=0x%lX orig=0x%lX inGuest=%d libbase=0x%lX libsize=0x%llX tgtInGuest=%d installed=%d origExec=%d",
+           tag, (unsigned long)t, (unsigned long)o, inGuest,
+           (unsigned long)lo, span, tgtIn, installed, origExec);
+
+    if (installed == 1) RememberHookVa(tag, t);   // MODHIT 回填用
+    if (installed != 1) return;                    // 失败/熔断已在别处告警，这里不重复判
+    if (!o)
+        LOGW(TPL_LOG " MODHOOK tag=%s orig=null ⇒ 装钩不可信", tag);
+    else if (!origExec)
+        LOGW(TPL_LOG " MODHOOK tag=%s orig=0x%lX 不在任何可执行映射段 ⇒ 装钩不可信（无 trampoline）",
+             tag, (unsigned long)o);
+    else if (!inGuest)
+        LOGI(TPL_LOG " MODHOOK tag=%s orig 为 Dobby trampoline（不在 libil2cpp 区间属正常，勿按此判失败）", tag);
+    if (!have)
+        LOGI(TPL_LOG " MODHOOK tag=%s 未找到 libil2cpp 映射 ⇒ inGuest/tgtInGuest 无意义（不影响 orig 判定）", tag);
 }
 
 static bool HookAtRva(const char* tag, uintptr_t rva, uint32_t expectInsn,
@@ -583,8 +784,16 @@ struct HookSlot {
 // 幂等安装（防同址双 Dobby 叠钩 SIGSEGV）→ RVA 优先 → 失败转按名
 static bool HookSlotInstall(const HookSlot& s) {
     if (s.origPtr && *s.origPtr) return true;
-    if (s.rva && HookAtRva(s.tag, s.rva, s.expectInsn, s.hookFn, s.origPtr)) return true;
-    return HookByName(s.tag, s.ns, s.cls, s.method, s.argc, s.hookFn, s.origPtr);
+    if (s.rva && HookAtRva(s.tag, s.rva, s.expectInsn, s.hookFn, s.origPtr)) {
+        DbgLog("hook %s: path=rva 0x%lX", s.tag, (unsigned long)s.rva);   // logcat 侧见 "hooked @rva"
+        return true;
+    }
+    // 兜底：只有 rva 为 0 / 序言不符 / rva 不在 RX 时才走到这里。
+    // 注意 AOT **直调**方法（如 Time.set_timeScale）按名装钩会「装上但零命中」，日志必须能区分。
+    const bool ok = HookByName(s.tag, s.ns, s.cls, s.method, s.argc, s.hookFn, s.origPtr);
+    DbgLog("hook %s: path=by-name ok=%d (rva=%d expect=0x%08X)", s.tag, (int)ok, (int)(s.rva ? 1 : 0),
+           (unsigned)s.expectInsn);
+    return ok;
 }
 
 // ============================================================================
@@ -614,6 +823,35 @@ static void DbgLog(const char* fmt, ...) {
     va_end(ap);
     std::fputc(10, f);
     std::fclose(f);
+}
+
+// 「首次真正命中」首报：每 tag 只落一次（logcat + 文件双落）。
+// 用途：真机未 root 时唯一能证明「钩子真的被游戏调用」的证据 ——
+//   MODHOOK installed=1 只说明地址改成功；有 MODHIT 才说明该地址确实是热路径。
+// 缺失 MODHIT + 有 MODHOOK installed=1 ⇒ 大概率挂在了同构序言的假地址上（假阳性）。
+static std::mutex g_hitMutex;
+static const char* g_hitTag[8]  = {};
+static bool        g_hitDone[8] = {};
+
+static void ModHitFirst(const char* tag) {
+    bool report = false;
+    {
+        std::lock_guard<std::mutex> lk(g_hitMutex);
+        int slot = -1;
+        for (int i = 0; i < 8; ++i) {
+            if (g_hitTag[i] && std::strcmp(g_hitTag[i], tag) == 0) { slot = i; break; }
+        }
+        if (slot < 0) {
+            for (int i = 0; i < 8; ++i) {
+                if (!g_hitTag[i]) { g_hitTag[i] = tag; slot = i; break; }
+            }
+        }
+        if (slot >= 0 && !g_hitDone[slot]) { g_hitDone[slot] = true; report = true; }
+    }
+    if (!report) return;
+    const uintptr_t va = HookVaOf(tag);
+    LOGI(TPL_LOG " MODHIT tag=%s n=1 va=0x%lX", tag, (unsigned long)va);
+    DbgLog("MODHIT tag=%s n=1 va=0x%lX", tag, (unsigned long)va);
 }
 
 static std::atomic<int> g_miTries{0};
@@ -647,6 +885,7 @@ static void* Hooked_EnterInterp(void* self, void* methodInfo, void* argsPkt) {
         return g_origEnterInterp ? g_origEnterInterp(self, methodInfo, argsPkt) : nullptr;
     }
     t_inApplyHp = true;
+    ModHitFirst("EnterInterp");  // MODHIT：1.8 路（kSlots 装）帧入口命中 ApplyHp
 
     void* victim = *(void**)argsPkt;
     void* res = (void*)(*(uintptr_t*)((uintptr_t)argsPkt + 24));
@@ -776,6 +1015,7 @@ static bool Hooked_ShowInternal(void* self, void* options) {
     if (!g_noad.load() || !self)
         return g_origShowInternal ? g_origShowInternal(self, options) : false;
     const int n = g_noAdHits.fetch_add(1);
+    ModHitFirst("NoAd");         // MODHIT：ShowInternal 真的被触发（免广告生效的前提）
     EmitDirichletEvent(self, "reward", true, 1);
     EmitDirichletEvent(self, "close", true, 0);
     if (n < 10) DbgLog("noAd: fake reward+close #%d ad=%p hn=%p", n + 1, self, g_pfnHandleNativeEvent);
@@ -787,12 +1027,16 @@ static bool Hooked_ShowInternal(void* self, void* options) {
 //     铁律：一个具体方法一个槽；绝不 hook 共享 invoke 入口。
 // ============================================================================
 static void Hooked_SetTimeScale(float value, void* method) {
+    // 说明：3.2 走 inline hook 后，本函数由**真实调用点**进入（AOT 直调只传 float），
+    // x1 里的 "method" 不是 MethodInfo，仅是调用点残留。它只被原样转发给 trampoline，
+    // 而 set_timeScale(float) 不读第二个参数 ⇒ 无副作用；g_tsMethod 只当「已命中」标记用。
     g_tsMethod.store(method);
     if (g_unityTid.load() == 0) {
         g_unityTid.store((unsigned long)pthread_self());
         DbgLog("tid: unity=%lu (from set_timeScale)", (unsigned long)pthread_self());
     }
     const int n = g_tsCalls.fetch_add(1);
+    ModHitFirst("TimeScale");    // MODHIT：按名挂的 set_timeScale 真的被调用
     if (n < 8) LOGI(TPL_LOG " set_timeScale call#%d arg=%.3f spd=%d", n + 1, value, (int)g_spd.load());
     const float v = g_spd.load() ? 1.8f : value;
     if (g_origSetTimeScale) g_origSetTimeScale(v, method);
@@ -800,6 +1044,8 @@ static void Hooked_SetTimeScale(float value, void* method) {
 
 // TODO：rva/expectInsn 由 dump.cs / IDA 实测后回填（0 = 仅按名）
 static HookSlot kSlots[] = {
+    // rva/expectInsn 由 InitSlotAddrs() 按版本填（3.2 = 0x37B27A8 / 0xFC1E0FE8）：
+    // AOT 直调点只能靠 inline hook 改函数体；按名仅在 rva 缺失时兜底（真机实测按名零命中）。
     {"TimeScale", 0x0, 0x0, "UnityEngine", "Time", "set_timeScale",
      1, (void*)Hooked_SetTimeScale, (void**)&g_origSetTimeScale},
     // HybridCLR 解释器入口：无按名路径，纯 RVA + 序言校验（漂移即拒绝，不盲挂）
@@ -829,31 +1075,62 @@ static void InitSlotAddrs() {
     // 全部是 **file offset**（HookAtRva/FileOffToVa 口径，运行时走 /proc/self/maps；禁 base+RVA）。
     const uintptr_t interp = (ver == 18) ? 0x19876a8u
                            : (ver == 22) ? 0x19a5004u          // VA 0x19a9004
-                           : (ver == 24) ? 0x19C9A78u : 0u;    // 2.4 VA 0x19cda78
+                           : (ver == 24) ? 0x19C9A78u          // VA 0x19cda78
+                           : (ver == 32) ? kOff32Interp : 0u;  // 3.2 VA 0x19FA364（序言 0xF81D0FFE）
     const uintptr_t noad   = (ver == 18) ? 0x1C8A9ACu
                            : (ver == 22) ? 0x1CA9130u
-                           : (ver == 24) ? 0x1CCE6CCu : 0u;    // 2.4 VA 0x1CD26CC
+                           : (ver == 24) ? 0x1CCE6CCu          // VA 0x1CD26CC
+                           : (ver == 32) ? kOff32Show : 0u;    // 3.2 VA 0x1D006D0
     kRvaEnterInterp = interp;
     kRvaShowInternal = noad;
     kRvaHandleNative = (ver == 18) ? 0x1C8A724u
                      : (ver == 22) ? 0x1CA8EA8u
-                     : (ver == 24) ? 0x1CCE444u : 0u;      // 2.4 只记录不挂
+                     : (ver == 24) ? 0x1CCE444u            // 2.4 只记录不挂
+                     : (ver == 32) ? 0x1CFC448u : 0u;      // 3.2 VA 0x1D00448（只记录不挂）
+    // TimeScale 必须走 inline hook（真机实测 2026-11-24）：
+    //   UnityEngine.Time::set_timeScale 在游戏 C# 里是 **AOT 直调**（bl 到函数体），
+    //   by-name 换 MethodInfo->methodPointer 影响不到直调点 ⇒ 装钩成功但零命中（MODHIT 缺失）。
+    //   GameUpdate 之所以 by-name 能命中，是因为它由 Unity 引擎回调（delegate/虚表路径）。
+    const uintptr_t timescale = (ver == 32) ? kOff32Timescale    // 3.2 VA 0x37B67A8，序言 0xFC1E0FE8
+                              : (ver == 24) ? 0x37541A0u          // 2.4 VA 0x37581A0（同一序言，静态文档 §2c）
+                              : 0u;                               // 其它版本/未知 ⇒ 0，退回按名（已知无效，仅兜底）
     for (auto& sl : kSlots) {
-        // EnterInterp 只在 1.8 由 kSlots 装；2.2/2.4 由 InstallBattleHooks 单点显式装
+        // EnterInterp 只在 1.8 由 kSlots 装；2.2/2.4/3.2 由 InstallBattleHooks 单点显式装
         // （同址双 Dobby 叠钩会 SIGSEGV ⇒ 这里绝不能重复填 rva）
         if (std::strcmp(sl.tag, "EnterInterp") == 0) sl.rva = (ver == 18) ? interp : 0u;
         else if (std::strcmp(sl.tag, "NoAd") == 0)   sl.rva = noad;
+        else if (std::strcmp(sl.tag, "TimeScale") == 0) {
+            sl.rva = timescale;                                  // rva 优先（序言不符即拒绝，不硬装）
+            sl.expectInsn = timescale ? kInsnTimeScale : 0u;      // 0xFC1E0FE8 = str d8,[sp,#-0x20]!
+        }
     }
-    DbgLog("slot addrs: interp=0x%lX noad=0x%lX ver=%d",
-           (unsigned long)kRvaEnterInterp, (unsigned long)kRvaShowInternal, g_libVer.load());
+    DbgLog("slot addrs: interp=0x%lX noad=0x%lX timescale=0x%lX ver=%d",
+           (unsigned long)kRvaEnterInterp, (unsigned long)kRvaShowInternal,
+           (unsigned long)timescale, g_libVer.load());
+    LOGI(TPL_LOG " slot addrs: interp=0x%lX noad=0x%lX timescale=0x%lX ver=%d",
+         (unsigned long)kRvaEnterInterp, (unsigned long)kRvaShowInternal,
+         (unsigned long)timescale, g_libVer.load());
 }
 
 // ============================================================================
-//  ④-b 战斗（2.2）：EnterFrame 入口按 MethodInfo 精确匹配 ApplyHp(argc=4)
-//  已证：EnterFrame=0x19a9004 (InterpFrameGroup*, MethodInfo*, StackObject*)->InterpFrame*
-//        ApplyHp 槽序 +0 this / +8 atker / +16 atkSeatNum / +24 dmgInfo / +32 OnDie
-//        伤害为负（IL add→set_curHp）；Mathf.Max 只用于 reallyDmg 上报
-//  行为：无敌=本机目标且 d<0 → d=0；百倍=本机输出且非本机目标且 d<0 → d*100（float 边界 clamp）
+//  ④-b 战斗：EnterFrame 入口按 MethodInfo 精确匹配 ApplyHp
+//
+//  【3.2 合同（2026-11-24 从 HotUpdate.decrypted.dll 反推，sha256 812e6563…d551b0）】
+//    sig : void ApplyHp(BattleRoleActor atker, int atkSeatNum,
+//                       BattleDamageResult dmgInfo, Action<BattleRoleActor> OnDie)
+//          rva 0x0FF20C / body 1594 B / fat / metadata Param 行 = 4（**不含 this**）
+//          ldarg 首用：0=this@IL_0003 1=atker@IL_0014 2=atkSeatNum@IL_004c
+//                      3=dmgInfo@IL_0000 4=OnDie@IL_052b（ldarg.s 4）
+//    argBase 槽序 +0 this / +8 atker / +16 atkSeatNum / +24 dmgInfo / +32 OnDie
+//    IL 锚点：isGod 取用 @IL_021C（本文件**不调用**该属性）；首次 set_curHp @IL_0249；
+//              ret @IL_000B/0036/0055/0091/0205/0230/0639
+//    落血语义未变：ldloc.0 = dmgInfo.get_intDmg()（get_intDmg = ceil(dmg) + 下界钳位），
+//                  set_curHp(curHp + intDmg) ⇒ dmg 为负即扣血 ⇒ 写 dmgInfo.dmg 就能左右结果
+//    this = 挨打方（HP 主人）；atker 可能是召唤物（ldarg.1 后续会取 get_SummonOwner）
+//  【2.4 历史合同（保留作对照，勿删）】
+//    argc=4 / body=1265 B / isGod 取用 @IL_0173 / set_curHp @IL_0197→IL_01A0 / ret @IL_0187
+//
+//  行为：无敌=本机受击且 d<0 → d=0；百倍=本机输出且非本机受击且 d<0 → d*100（float 边界 clamp）
 //  orig 无条件调用；不读 WasApplied；不用 isGod；不碰审计/特权/检测。
 #ifndef KYZT_BATTLE_ENABLE
 #define KYZT_BATTLE_ENABLE 1
@@ -864,17 +1141,27 @@ namespace kb {
   // 合同常量（与 IL 交叉表一一对应，改动必须同步 check_battle_contract.py）
   //   method_get_param 是 0 基且**不含 this**：0=atker 1=atkSeatNum 2=dmgInfo 3=OnDie
   //   argBase 槽位是另一套编号：+0=this +8=atker +16=atkSeatNum +24=dmgInfo +32=OnDie
+  //   3.2 实测（metadata Param 行 = atker/atkSeatNum/dmgInfo/OnDie，共 4 个，不含 this）：
+  //     argc(=method_param_count) = 4；把 this 也算进去才是 5 个 argBase 槽位 —— 两者别混。
   constexpr int kIdxAtker = 0;
   constexpr int kIdxSeat  = 1;
   constexpr int kIdxDmg   = 2;
   constexpr int kIdxOnDie = 3;
   constexpr int kSlotThis = 0;
   constexpr int kSlotAtker= 8;
+  constexpr int kSlotSeat = 16;
   constexpr int kSlotDmg  = 24;
+  constexpr int kSlotOnDie= 32;
+  // ApplyHp 的 argc 接受面：4 = il2cpp method_param_count 口径（不含 this，3.2 metadata 实测）；
+  // 5 = 把 this 计入槽位的口径（2026-11-24 转述值，防止口径差把功能静默关掉）。
+  // 真正防误匹配靠「方法名 + 声明类 == BattleRoleActor + param0/param2 类型」三重校验。
+  constexpr int kApplyHpArgc = 4;
+  constexpr int kApplyHpArgcWithThis = 5;
   static_assert(kIdxAtker == 0 && kIdxSeat == 1 && kIdxDmg == 2 && kIdxOnDie == 3,
                 "param 索引必须 0 基且不含 this（atker=0/seat=1/dmg=2/onDie=3）");
-  static_assert(kSlotThis == 0 && kSlotAtker == 8 && kSlotDmg == 24,
-                "argBase 槽位必须 +0 this / +8 atker / +24 dmgInfo");
+  static_assert(kSlotThis == 0 && kSlotAtker == 8 && kSlotSeat == 16
+                && kSlotDmg == 24 && kSlotOnDie == 32,
+                "argBase 槽位必须 +0 this / +8 atker / +16 seat / +24 dmgInfo / +32 OnDie（3.2 IL 反推）");
   static_assert(kSlotDmg != kIdxDmg, "槽位编号与 param 索引是两套编号，禁止混用");
   typedef void  (*fget_t)(void*, void*, void*);
   typedef void  (*fset_t)(void*, void*, void*);
@@ -903,6 +1190,7 @@ namespace kb {
   static std::atomic<bool> g_bGod{false};
   static std::atomic<bool> g_bX100{false};
   static std::atomic<bool> g_ready{false};
+  static std::atomic<int>  g_argcLog{0};   // ApplyHp argc 口径只记一次（真机 logcat 可判 4/5）
   static std::mutex        g_initMtx;
   static long long g_lastInitMs = 0;
 
@@ -968,7 +1256,15 @@ namespace kb {
           auto& api = GetApi();
           const char* nm = api.method_get_name ? api.method_get_name(mi) : nullptr;
           uint8_t argc = api.method_param_count ? api.method_param_count(mi) : 0;
-          bool match = (nm && std::strcmp(nm, "ApplyHp") == 0 && argc == 4
+          if (nm && std::strcmp(nm, "ApplyHp") == 0 && p_mgetClass && p_mgetClass(mi) == clsRole
+              && g_argcLog.fetch_add(1) == 0) {
+              // 3.2 口径自证（只落一次）：4 = method_param_count 不含 this（metadata Param 行=4）；
+              // 若真机打出 5，说明本机 il2cpp 把 this 计入了参数表 ⇒ 两种都放行，功能不受影响。
+              DbgLog("battle: ApplyHp argc=%u (param 行 atker/atkSeatNum/dmgInfo/OnDie=4)", (unsigned) argc);
+              LOGI(TPL_LOG " battle: ApplyHp argc=%u", (unsigned) argc);
+          }
+          const bool argcOk = (argc == kApplyHpArgc || argc == kApplyHpArgcWithThis);
+          bool match = (nm && std::strcmp(nm, "ApplyHp") == 0 && argcOk
                         && p_mgetClass && p_mgetClass(mi) == clsRole);
           if (match && p_mgetParam && p_classFromType) {
               void* tA = p_mgetParam(mi, kIdxAtker);
@@ -985,6 +1281,7 @@ namespace kb {
           void* pDmg  = *(void**)((char*)argBase + kSlotDmg);
           if (!pThis || !pDmg) return;
           if (api.object_class(pThis) != clsRole || api.object_class(pDmg) != clsDmg) return;
+          ModHitFirst("Battle");   // MODHIT：解释器帧入口命中 ApplyHp（战斗两项的前提）
           float d = 0.f;
           p_fget(pDmg, f_dmg, &d);
           void* lp = LocalPlayer();
@@ -1024,13 +1321,13 @@ static int InstallBattleHooks() {
         }
     }
 #if KYZT_BATTLE_ENABLE
-    // 帧入口（HybridCLR 解释器，无按名路径）：22 / 24 都从这里单点装，1.8 走 kSlots。
+    // 帧入口（HybridCLR 解释器，无按名路径）：22 / 24 / 32 都从这里单点装，1.8 走 kSlots。
     // 注意：HookAtRva 的参数是 **file offset**（内部走 FileOffToVa），不是 VA。
     //   · 2.2：VA 0x19a9004 ⇔ file 0x19a5004（该 VA 处为 0xB4052B20 ⇒ 传 VA 必失败）
     //   · 2.4：VA 0x19cda78 ⇔ file 0x19C9A78（序言 0xF81D0FFE = str x30,[sp,#-0x30]!）
     // 地址一律取 InitSlotAddrs 填好的 kRvaEnterInterp（不在此写版本字面量）。
     const int verHook = g_libVer.load();
-    if (verHook == 22 || verHook == 24) {
+    if (verHook == 22 || verHook == 24 || verHook == 32) {
         if (HookAtRva("Battle", kRvaEnterInterp, 0xF81D0FFEu,
                       (void*)kb::Hooked_EnterFrame, &kb::g_origEnter)) {
             ++ok;
@@ -1507,7 +1804,7 @@ void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
         if (g_libVer.load() == 0) DetectLibVersion();
         // 2.4 同口径：Economy22 的字段/属性/方法一律 il2cpp_field_get_offset 按名现取
         //（delta24 已核 2.4 HotUpdate.dll 名字齐备）⇒ 字段常量零改动，只放行版本门。
-        if (g_libVer.load() == 22 || g_libVer.load() == 24) {
+        if (g_libVer.load() == 22 || g_libVer.load() == 24 || g_libVer.load() == 32) {
             // 2.2：菜单回调（Java UI 线程）**只入队**，真正调用发生在 ET.GameManagerMono.Update
             // （Unity 线程）里 drain —— 不在 UI 线程直接碰 il2cpp 对象。
             const unsigned long ut = g_unityTid.load();
@@ -1541,7 +1838,16 @@ void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
         case 旷野征途_FEAT_GOLD:    if (enabled && !GrantGold(9999)) GrantItem(1, 9999); break;
         case 旷野征途_FEAT_DIAMOND: if (enabled && !GrantDiamond(9999)) GrantItem(2, 9999); break;
         case 旷野征途_FEAT_POINT:   if (enabled && !GrantPoints(9999)) GrantItem(3, 9999); break;
-        case 旷野征途_FEAT_SPD: g_spd.store(enabled); break;
+        case 旷野征途_FEAT_SPD: {
+            // 只在「开→关」沿置恢复标志：关掉后必须主动写回 1.0，
+            // 否则最后一笔 1.8 会一直留在 Time.timeScale 上（真机 2026-11-24：战斗内可能不再调 setter，
+            // 用户看到「关了还有加速」，最长要等游戏自己下一次 set_timeScale 才恢复）。
+            // UI 线程不直接调 orig（跨线程调 Unity API 风险），只置标志，由 Tick 落地。
+            const bool was = g_spd.exchange(enabled);
+            if (!enabled && was) g_spdRestore.store(true);
+            else if (enabled)    g_spdRestore.store(false);   // 重新开启 ⇒ 撤销待恢复，避免竞态下先写 1.0
+            break;
+        }
         case 旷野征途_FEAT_DMG: g_dmg.store(enabled); break;
         case 旷野征途_FEAT_INV: g_inv.store(enabled); break;
         case 旷野征途_FEAT_NOAD: g_noad.store(enabled); break;
@@ -1606,13 +1912,31 @@ void 旷野征途_Tick(const bool* features, const int* /*values*/) {
     }
     SyncHooks();
 
-    // 主动钉 timeScale：不依赖游戏主动调用 setter（本作可能在启动时只调一次）
+    // OFF 主动恢复：把 1.0 写回去，不等游戏自己下一次调用 setter。
+    // g_tsMethod 未解析出来时**不吃标志**（保持 pending，下帧再试），否则关掉后再也不会恢复。
+    if (g_spdRestore.load() && !g_spd.load()) {
+        void* m = g_tsMethod.load();
+        if (m && g_origSetTimeScale) {
+            g_origSetTimeScale(1.0f, m);
+            g_spdRestore.store(false);
+            LOGI(TPL_LOG " restore timeScale=1.0 (toggle off) spd=%d", (int)g_spd.load());
+        }
+    }
+
+    // 主动钉 timeScale：不依赖游戏主动调用 setter（本作可能在启动时只调一次）。
+    // 2026-11-24：从「每帧」改成 **100 ms 一次**（每帧调既浪费又与开关竞态；1.8 时代的正确形态就是 100ms 重置）。
     if (g_spd.load()) {
         void* m = g_tsMethod.load();
         if (m && g_origSetTimeScale) {
-            g_origSetTimeScale(1.8f, m);
-            static int tickLog = 0;
-            if (tickLog < 3) { ++tickLog; LOGI(TPL_LOG " force timeScale=1.8 (direct orig call)"); }
+            const long long nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now().time_since_epoch()).count();
+            static long long lastForceMs = 0;
+            if (lastForceMs == 0 || (nowMs - lastForceMs) >= 100) {
+                lastForceMs = nowMs;
+                g_origSetTimeScale(1.8f, m);
+                static int tickLog = 0;
+                if (tickLog < 3) { ++tickLog; LOGI(TPL_LOG " force timeScale=1.8 (100ms tick) spd=%d", (int)g_spd.load()); }
+            }
         }
     }
 
@@ -1620,7 +1944,8 @@ void 旷野征途_Tick(const bool* features, const int* /*values*/) {
 }
 
 void 旷野征途_ForceClear() {
-    g_spd.store(false);
+    // 同一类缺陷的另一条出口：强制全清时若加速还开着，也要让 Tick 把 1.0 写回去
+    if (g_spd.exchange(false)) g_spdRestore.store(true);   // 等价于 g_spd=false，只是顺带置恢复标志
     g_dmg.store(false);
     g_inv.store(false);
     g_noad.store(false);
