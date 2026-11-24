@@ -2,5 +2,5 @@
 逆向分析笔记、算法还原文档、学习资料等。按 `{游戏名}/` 分子目录。
 
 - 新笔记模板：`_templates/分析笔记模板.md` → 复制到 `{游戏名}/`
-- 云存档工具：`11_proj_tools/动物餐厅/cloud_save_tool/README.md`
+- 云存档工具：`11_proj_tools/动物餐厅/cloud_save_tool/README.md`（2026-11-24 已清理，落点 11_proj_tools/动物餐厅 已移入 Trash；动物餐厅重做时需重建）
 - 动物餐厅完整记录：`动物餐厅/动物餐厅_逆向分析与漏洞报告.md`
