@@ -2,7 +2,7 @@
 
 # 绿梦 · 文档索引
 
-> 生成于 2026-11-24｜42 个文件、0 个子目录。
+> 生成于 2026-11-25｜42 个文件、0 个子目录。
 > 本文件是**检索用清单**，不是分析结论；结论读 `_state/games/绿梦.md`。
 > 同名多版本（裁剪清单/星空落地）只有 mtime 最新的标【当前】，其余【历史】。
 > 重新生成：`python3 04_scripts/_common/gen_game_doc_index.py --game 绿梦`
@@ -53,14 +53,14 @@
 - `tapsdk签名校验与网页登录_20261028.md` — 绿梦 1.0.5 · TapTap 签名校验与强制网页登录（2026-10-28 夜，进行中）（10KB，2026-10-29）
 - `使用说明_直装_20261028.md` — 星光魔法 使用说明（绿梦：时空之声 1.0.5 · 直装版）（4KB，2026-10-28）
 - `lmskzs_menu_template.json`（405B，2026-10-28）
-- `动态内存抓取替代_GG调研_20261020.md` — 绿梦：时空之声 1.0.5 — GG 修改器 / 同类内存修改器 作为「Frida 被反制后的动态内存抓取」替代：调研（23KB，2026-10-26）
-- `先例复用评估_seccomp_ptrace_20261020.md` — 绿梦 FairGuard：「seccomp / ptrace 抓 killer PC」先例复用评估（2026-10-20）（22KB，2026-10-26）
-- `killer_pc_seccomp_A_20261020.md` — 绿梦 · 方案 A 第一刀：seccomp 拦 tgkill 取 killer PC（RET_LOG 档）实测报告（14KB，2026-10-26）
-- `killer_pc_seccomp_A2_20261020.md` — 绿梦 · 方案 A 第二刀：mode 2（RET_TRAP+SIGSYS）与 mode 3（Dobby 观测）实测报告（10KB，2026-10-26）
-- `il2cpp_win_flip_20261020.md` — 绿梦 · Phase 1：libil2cpp rwxp 影副本窗口时序快照（翻转时刻取证）（7KB，2026-10-26）
-- `fg_transform_hunter_20261020.md` — 绿梦 · Phase 2：抓「滚动变换执行者」——三条路的实测结果（静态 / perf / 页写陷阱）（14KB，2026-10-26）
-- `cert_reader_mode7_20261020.md` — 绿梦 · FairGuard cert 读取者定位（mode 7 判死 → mode 8/9 接力）（34KB，2026-10-26）
-- `Frida替代模块调研_20261020.md` — 绿梦：时空之声 1.0.5 — 「替代 Frida」的动态手段全景调研（26KB，2026-10-26）
+- `动态内存抓取替代_GG调研_20261020.md` — 绿梦：时空之声 1.0.5 — GG 修改器 / 同类内存修改器 作为「Frida 被反制后的动态内存抓取」替代：调研（23KB，2026-10-26 ⏳）
+- `先例复用评估_seccomp_ptrace_20261020.md` — 绿梦 FairGuard：「seccomp / ptrace 抓 killer PC」先例复用评估（2026-10-20）（22KB，2026-10-26 ⏳）
+- `killer_pc_seccomp_A_20261020.md` — 绿梦 · 方案 A 第一刀：seccomp 拦 tgkill 取 killer PC（RET_LOG 档）实测报告（14KB，2026-10-26 ⏳）
+- `killer_pc_seccomp_A2_20261020.md` — 绿梦 · 方案 A 第二刀：mode 2（RET_TRAP+SIGSYS）与 mode 3（Dobby 观测）实测报告（10KB，2026-10-26 ⏳）
+- `il2cpp_win_flip_20261020.md` — 绿梦 · Phase 1：libil2cpp rwxp 影副本窗口时序快照（翻转时刻取证）（7KB，2026-10-26 ⏳）
+- `fg_transform_hunter_20261020.md` — 绿梦 · Phase 2：抓「滚动变换执行者」——三条路的实测结果（静态 / perf / 页写陷阱）（14KB，2026-10-26 ⏳）
+- `cert_reader_mode7_20261020.md` — 绿梦 · FairGuard cert 读取者定位（mode 7 判死 → mode 8/9 接力）（34KB，2026-10-26 ⏳）
+- `Frida替代模块调研_20261020.md` — 绿梦：时空之声 1.0.5 — 「替代 Frida」的动态手段全景调研（26KB，2026-10-26 ⏳）
 - `换攻击面_启用源定位.md` — 绿梦：时空之声 — 换攻击面：启用源定位（Stage 9，离线为主 + fvv 只读取证）（4KB，2026-10-20 ⏳）
 - `FairGuard读签名机制判定.md` — 绿梦：时空之声 — FairGuard「怎么读签名」机制判定（Stage 5，纯观测）（4KB，2026-10-20 ⏳）
 - `FairGuard运行期取证.md` — 绿梦：时空之声 — libFairGuard.so 运行期取证（Stage 2，只读）（11KB，2026-10-20 ⏳）
