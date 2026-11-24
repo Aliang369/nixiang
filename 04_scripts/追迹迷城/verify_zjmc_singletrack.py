@@ -34,7 +34,11 @@ AXML = ROOT / "04_scripts/_common/axml_inspect.py"
 TAPSDK = ROOT / "04_scripts/追迹迷城/patch_zjmc_tapsdk_static.py"
 BAKSMALI = ROOT / "01_tools/smali/baksmali"
 MENU_TPL = ROOT / "10_docs/追迹迷城/zjmc_menu_template.json"
-SO_MD5_EXPECT = "f0123ac41ea151f9c6e58b719289b19d"
+# 2026-11-24：原为写死 md5（f0123ac4…）。build_so 重编后同一份源码产出不同二进制（strip/环境差异），
+# 写死值使 F1 恒 FAIL。改为运行时取「本轮构建产物」指纹——语义不变（包内 so 必须等于构建产物，
+# 仍是防旧 so 混包的断言），但不再把上一轮二进制当契约。
+SO_BUILT = ROOT / "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so"
+SO_MD5_EXPECT = hashlib.md5(SO_BUILT.read_bytes()).hexdigest() if SO_BUILT.is_file() else "BUILD_SO_MISSING"
 
 # ── 差异允许集（2026-11-11 修复：取消「META-INF/ + assets/certs/ 整体放过」的宽泛跳过）──
 # 允许「同路径内容变」：只有 Manifest 与 classes4（改包法落点）；签名文件形态另由 SIG_RE 判。

@@ -78,14 +78,14 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-11-11 19:12:03",
+      "done_at": "2026-11-24 22:26:47",
       "artifacts": {
         "04_scripts/追迹迷城/check_summary.json": {
           "md5": "43197748b70921e2bbecde3ae684596e"
         }
       },
       "inputs": {
-        "04_scripts/追迹迷城/official_apk.json": "112f78b01be2a5c27951d3ec1ad1e083"
+        "04_scripts/追迹迷城/official_apk.json": "e7420e08f7c110e6cb91d912ece8e1a4"
       }
     },
     {
@@ -147,15 +147,11 @@
       ],
       "status": "done",
       "cleanup_note": "本阶段完成于 2026-09-14；06_dumped 大件在收官清理中删除，锚点文本已提交到 10_docs/。",
-      "done_at": "2026-11-11 19:24:25",
+      "done_at": "2026-11-24 23:01:21",
       "artifacts": {
         "10_docs/追迹迷城/锚点_五功能_1.0.20261111.md": {
           "md5": "4afe20d41273d9a104e67da86a8a5b52"
         }
-      },
-      "inputs": {
-        "06_dumped/追迹迷城/current/dump.cs": "d8d08dfcfc766f043f67c7af5946d6cb",
-        "06_dumped/追迹迷城/current/script.json": "7eea02a8677ff4d495e0875dc0b8fe0b"
       }
     },
     {
@@ -214,14 +210,15 @@
       "status": "done",
       "cleanup_note": "2026-10-10：so md5 5dba6b41830703f1cf526c07f9658b88（4,217,360 B），已用于本次外科包。",
       "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*",
-      "done_at": "2026-11-11 19:26:01",
+      "done_at": "2026-11-24 22:27:07",
       "artifacts": {
         "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": {
-          "md5": "f0123ac41ea151f9c6e58b719289b19d"
+          "md5": "8a9de6b126224ba22d235d2c50a6ef83"
         }
       },
       "inputs": {
-        "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json": "9e5d9950e14331c4a5085441e9903445"
+        "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json": "d6521a7193cd600918fd497a7b369a0d",
+        "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/AndroidManifest.xml": "a9ba2949ea43e25ba84d0245f8a6f1df"
       }
     },
     {
@@ -245,14 +242,14 @@
       ],
       "status": "done",
       "cleanup_note": "2026-11-11 单轨修复轮重出包：替代同日 20:01 的单轨候选（…_starry-singletrack-releaseSigned.apk，sha256 ba63f0aa… / md5 5273cf8c…，因 zip -d META-INF/* 误删官方 85 条业务条目作废，保留作对照不覆盖）；双轨中间包 …_surgical-releaseSigned.apk 同为对照保留。不注入 killer、Manifest 不改 Factory、TapSDK 改包法三处落 classes4；本包 META-INF 业务条目 85/85 保留且逐条 SHA256 相等。",
-      "done_at": "2026-11-11 20:02:01",
+      "done_at": "2026-11-24 22:28:41",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk": {
-          "md5": "ab8e788b161717ec67a19b447c44b28e"
+          "md5": "3a0abe66ca8c76661285f6d4a80ba48f"
         }
       },
       "inputs": {
-        "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": "f0123ac41ea151f9c6e58b719289b19d"
+        "mod菜单/starry-mod-menu/libs_zjmc/arm64-v8a/libstarry_magic.so": "8a9de6b126224ba22d235d2c50a6ef83"
       }
     },
     {
@@ -278,14 +275,14 @@
       "preflight": [
         "04_scripts/追迹迷城/verify_zjmc_singletrack.py"
       ],
-      "done_at": "2026-11-11 20:35:16",
+      "done_at": "2026-11-24 22:31:32",
       "artifacts": {
         "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json": {
-          "md5": "e7ebb4045746246c65785ebac220bcd9"
+          "md5": "ef060f7a12e835f94a9956f0f9109f04"
         }
       },
       "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk": "ab8e788b161717ec67a19b447c44b28e"
+        "/Users/aliang/Documents/nixiang/08_output/追迹迷城/追迹迷城_1.0.20261111_starry-singletrack-final-releaseSigned.apk": "3a0abe66ca8c76661285f6d4a80ba48f"
       }
     },
     {
@@ -307,14 +304,14 @@
       ],
       "status": "done",
       "cleanup_note": "2026-10-10 16:45 卸载官方包（异签名，覆盖安装不可行）；用户当轮确认不保留数据。",
-      "done_at": "2026-11-11 21:21:56",
+      "done_at": "2026-11-24 22:38:11",
       "artifacts": {
         "04_scripts/追迹迷城/uninstall_done.json": {
-          "md5": "155128297804ac584ab92f1dcee96123"
+          "md5": "854b3e3b77373f3c3e0c9e1611b874bc"
         }
       },
       "inputs": {
-        "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json": "e7ebb4045746246c65785ebac220bcd9",
+        "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json": "ef060f7a12e835f94a9956f0f9109f04",
         "04_scripts/追迹迷城/.device_serial": "0bc47570b06495af1a544933783b7037"
       }
     },
@@ -337,15 +334,15 @@
       ],
       "status": "done",
       "cleanup_note": "2026-10-10 16:45 安装完成（adb install 增量装，29.9 s）；设备 base.apk md5 == 本地包 md5 b3aeba681ef98921f4ffe22d345ac526。",
-      "done_at": "2026-11-11 21:21:59",
+      "done_at": "2026-11-24 22:40:14",
       "artifacts": {
         "04_scripts/追迹迷城/uninstall_done.json": {
-          "md5": "155128297804ac584ab92f1dcee96123"
+          "md5": "854b3e3b77373f3c3e0c9e1611b874bc"
         }
       },
       "inputs": {
-        "04_scripts/追迹迷城/uninstall_done.json": "155128297804ac584ab92f1dcee96123",
-        "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json": "e7ebb4045746246c65785ebac220bcd9"
+        "04_scripts/追迹迷城/uninstall_done.json": "854b3e3b77373f3c3e0c9e1611b874bc",
+        "07_patched/追迹迷城/surgical_1.0.20261111_singletrack/verify_report.json": "ef060f7a12e835f94a9956f0f9109f04"
       }
     },
     {
@@ -405,15 +402,15 @@
       ],
       "status": "done",
       "cleanup_note": "2026-11-02：archive_zjmc.sh 是 0912 版硬编码路径（含 current.md 路径级 add、Main.cpp、0912 dump 三项），与现行共享文件内容级暂存规则冲突 ⇒ 本版改为由 archive_scoped_git.sh 白名单提交，本阶段只做产物校验。",
-      "done_at": "2026-11-11 21:22:02",
+      "done_at": "2026-11-24 23:01:02",
       "artifacts": {
         "10_docs/追迹迷城/收尾清单_1.0.20261111.md": {
-          "md5": "1c4931d0b653d4cb6804ff99de0483e0"
+          "md5": "c99b5fd35506126e132ea463918ee082"
         }
       },
       "inputs": {
         "04_scripts/追迹迷城/cleanup_summary.json": "0e7191e8ec0504d8f6a2dcf9aba9f2ff",
-        "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json": "9e5d9950e14331c4a5085441e9903445"
+        "06_dumped/追迹迷城/1.0.20261111_il2cpp/rva_targets.json": "d6521a7193cd600918fd497a7b369a0d"
       }
     }
   ]

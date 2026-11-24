@@ -2,7 +2,7 @@
   "template_id": "zjmc",
   "name": "追迹迷城",
   "package": "com.TeaMelo.DungeonChasers",
-  "source": "Main.cpp g_featureList（ZJMC 块 552-556）+ Games/ZjmcMod.h enum ZjmcFeat",
+  "source": "Main.cpp g_featureList（ZJMC 块 548-555）+ Games/ZjmcMod.h enum ZjmcFeat",
   "features": [
     {
       "feat_num": 1,
