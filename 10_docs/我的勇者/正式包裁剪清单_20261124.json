@@ -1,0 +1,52 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/我的勇者",
+  "keep": "我的勇者_7.6.5_surgical-releaseSigned.apk",
+  "keep_size": 1529538370,
+  "keep_md5": "411013bf4759f376fd3de6e39fe74db2",
+  "keep_sha256": "86493e050ceaee963faac78923e4f29fcb984331b2d92e3900ce07dca36d3fd6",
+  "mode": "--apply",
+  "rename": {
+    "from": "我的勇者_7.6.5_fix1_surgical-releaseSigned.apk",
+    "to": "我的勇者_7.6.5_surgical-releaseSigned.apk",
+    "md5_before": "411013bf4759f376fd3de6e39fe74db2",
+    "md5_after": "411013bf4759f376fd3de6e39fe74db2",
+    "note": "只 mv 改名，无重打包、无重签名；改名前后 md5/sha256/大小完全一致"
+  },
+  "removed": [
+    {
+      "name": "我的勇者_7.6.5_surgical-releaseSigned.apk",
+      "path": "/Users/aliang/Documents/nixiang/08_output/我的勇者/我的勇者_7.6.5_surgical-releaseSigned.apk",
+      "size": 1529538312,
+      "md5": "688b3b091b555cdbe265539ac290d551",
+      "sha256": "240d8f097c293325e655e0f8febd0a36d0a6284431fd958bfe35c2bc7e627dc6",
+      "reason": "旧包（17:42，无 classes3.dex killer / 无 B 轨 GameHookImpl），已被 fix1 包取代"
+    },
+    {
+      "name": "我的勇者_7.6.5_surgical-releaseSigned.apk.idsig",
+      "path": "/Users/aliang/Documents/nixiang/08_output/我的勇者/我的勇者_7.6.5_surgical-releaseSigned.apk.idsig",
+      "size": 12051995,
+      "md5": "06ee0c93ac90836e3e2a1eec0d906c12",
+      "sha256": "f1b19a1c2eab144b836ef5804113e322268f00f166b545ada0c12a268c3785ec",
+      "reason": "旧包的 v4 idsig，随旧包一并淘汰"
+    },
+    {
+      "name": "我的勇者_7.6.5_fix1_starry.apk",
+      "path": "/Users/aliang/Documents/nixiang/08_output/我的勇者/我的勇者_7.6.5_fix1_starry.apk",
+      "size": 1529538370,
+      "md5": "411013bf4759f376fd3de6e39fe74db2",
+      "sha256": "86493e050ceaee963faac78923e4f29fcb984331b2d92e3900ce07dca36d3fd6",
+      "reason": "脚本别名，与正式包逐字节相同（sha256 相等）⇒ 冗余副本"
+    },
+    {
+      "name": "我的勇者_7.6.5_fix1_surgical-releaseSigned.apk.idsig",
+      "path": "/Users/aliang/Documents/nixiang/08_output/我的勇者/我的勇者_7.6.5_fix1_surgical-releaseSigned.apk.idsig",
+      "size": 12051995,
+      "md5": "622f3c8c5ce564b85c30c823dbcce8f8",
+      "sha256": "307e310d09b3103d98fdcec9f648463ca5f719728ca592a6567bc535865407d2",
+      "reason": "prune_output_final.sh 契约：08_output/{游戏} 只留唯一 APK（apk/idsig 计数=1），保留包的 v4 idsig 一并清理；可由 keystore 重新生成，本轮未重签名"
+    }
+  ],
+  "removed_count": 4,
+  "note": "由 bash 04_scripts/_common/prune_output_final.sh 08_output/我的勇者 <keep> --apply 执行（脚本原样写 keep/removed），随后按口令补齐 sha256/原路径/原因，并记录改名。prune 用 rm 直删（不经 Trash）：trash_paths.sh 硬禁 08_output（脚本第 181 行），且 1.5 GB 级文件进 Trash 不释放空间。",
+  "date": "2026-11-24"
+}

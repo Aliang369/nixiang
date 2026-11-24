@@ -90,12 +90,16 @@ return g_rt_ok;  // 登录后永不过期
 - **菜单展开 `maybeRenewGrant("expand")` 保留**：15s 节流，作为手动兜底续票；硬拒只刷 UI 不踢
 - **logcat 诊断**：`renew ok (cold-start)` / `renew auth fail (..., authoritative=...)` / `cold-start renew scheduled`；旧 `heartbeat ok (bg-heartbeat)` 日志已不存在
 
-## HTTPS 证书固定来源（2026-09-06 起）
+## HTTPS 证书来源：系统 CA + 主机名校验（**自签固定已退役**）
 
-- 固定公钥 `starlight.crt` **编译期烘焙在 `libstarry_magic.so`**（`jni/CertPinned.h`），`AuthClient.init()` 经 `ModBridge.nativeGetPinnedCert()`（RegisterNatives 19/19 之一）取 PEM 字节，不再读 `assets/certs/starlight.crt`
-- native 未加载 / 烘焙缺失时 **fail-closed**：`request()` 对 HTTPS 一律拒绝（`HTTPS aborted (no pinned cert)`），不退回系统信任、不闪退
-- 自测证据：星空魔法 SELF 包 logcat `pinned cert loaded from native so: CN=47.100.216.101` + bootstrap/heartbeat 200（2026-09-06，f9a116a2）；真实游戏外科包回归见[经验卡](../../10_docs/_templates/经验_证书嵌入so_20260906.md)
-- **换证书须重编 so**：`xxd -i ../assets/certs/starlight.crt > CertPinned.h`（命令见头文件注释），只换 assets 无效；存量旧包仍读 assets，服务端已兼容
+> **已退役（2026-11-22 提交 `e08b8ba1`）**：本节原内容为「固定公钥 `starlight.crt` 编译期烘焙在 `libstarry_magic.so`（`CertPinned.h`）+ native 未加载时 fail-closed」。该方案整链路已删除，**不要再按旧文实现或验收**。
+
+- **现行**：`AuthClient.java:15-16` 只用**系统 CA 信任链 + 平台主机名校验**；不再读 `assets/certs/starlight.crt`，也不再有 `nativeGetPinnedCert` 桥接（RegisterNatives 19/19 已不含该项）。
+- `jni/CertPinned.h` 已清空 ⇒ `libstarry_magic.so` **不得含 PEM**。装机前自检：`unzip -p 成品.apk lib/arm64-v8a/libstarry_magic.so | grep -a -c "BEGIN CERTIFICATE"` 期望 **0**（历史口径「≥1」已作废）。
+- 不再有 fail-closed 拒发分支；HTTPS 失败按普通网络错误处理（软失败 + 有界重试，见上节）。
+- 服务端证书须是**公网可信 CA 签发**（不再是自签）；换证书无需重编 so。
+- 历史经验（**已失效，仅追溯**）：`10_docs/_templates/经验_证书嵌入so_20260906.md`（自签证书嵌入 so 的旧方案，2026-11-22 起不再适用）。
+- 真机证据（2026-11-24，我的勇者 7.6.5 fix1）：覆盖安装后 TapTap 登录成功 `TapSdkCore: OnLogin … open_id=HqKwDnJdVgN0HFrCa31POQ==`，后台 `bootstrap` 正常下发、`grant` 落盘 mask `0x1e` ⇒ 系统 CA 链路通。
 
 ---
 

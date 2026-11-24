@@ -65,25 +65,30 @@ typedef void (*SettleMp_t)(void* self, int value);
 static SettleMp_t g_origHeroSettleMp = nullptr;
 
 // ============================================================
-// ② 偏移与 RVA（7.6.4 base 重 dump：rt360 热更 = 本表 +0x208）
-//   绑定产物：/tmp/wdyz_dump/base/libil2cpp.so sha256 288c1a24…（7.6.4 包内 so，base 配对）
+// ② 偏移与 RVA（7.6.5 base 重 dump，2026-11-24；7.6.4 值降为历史行）
+//   绑定产物：06_dumped/我的勇者/7.6.5_il2cpp/_input/libil2cpp.so
+//     sha256 259622aa…（142,698,280 B，7.6.5 底包 lib/arm64-v8a/libil2cpp.so 原样）；
+//     配对 metadata sha256 5ba8f5f6…（30,808,312 B）；dump.cs sha256 7d37194b…
 //   地址口径 = dump.cs 的 Offset（文件偏移），供 FileOffToVa 在 /proc/self/maps 换算 VA。
-//   RVA 序言首 4 字节（小端，2026-10-23 从 so 逐字节实测）：
-//     MonsterCore.SettleDamage   Offset 0x47ECE5C  "eb 2b bb 6d" → 0x6DBB2BEB
-//     HeroCore.SettleDamage      Offset 0x47E26BC  "eb 2b bc 6d" → 0x6DBC2BEB
-//     BattleObjectCore.SettleDamage Offset 0x47A25B0 "ff 03 05 d1" → 0xD10503FF
-//     HeroCore.settleMp          Offset 0x47E27F8  "fe 0f 1e f8" → 0xF81E0FFE
-//     SKillBase.CheckSkill(bool) Offset 0x485B26C  "fe 4f bf a9" → 0xA9BF4FFE
-//       （无CD 4B 补丁点 = 入口 +0x60 = 0x485B2CC，原指令 "00 00 13 2a"=0x2A130000）
+//   RVA 序言首 4 字节（小端，2026-11-24 xxd 从 7.6.5 so 逐字节实测）：
+//     MonsterCore.SettleDamage   Offset 0x488AD44  "eb 2b bb 6d" → 0x6DBB2BEB
+//     HeroCore.SettleDamage      Offset 0x48805A4  "eb 2b bc 6d" → 0x6DBC2BEB
+//     BattleObjectCore.SettleDamage Offset 0x486078C "ff 03 05 d1" → 0xD10503FF
+//     HeroCore.settleMp          Offset 0x48806E0  "fe 0f 1e f8" → 0xF81E0FFE
+//     SKillBase.CheckSkill(bool) Offset 0x48F90F8  "fe 4f bf a9" → 0xA9BF4FFE
+//       （无CD 4B 补丁点 = 入口 +0x60 = 0x48F9158，原指令 "00 00 13 2a"=0x2A130000；
+//        8B "00 00 13 2a fe 4f c1 a8" 全 so 唯一，2026-11-24 实测 1 命中）
+//   历史 7.6.4 base（rt360 热更 = +0x208，勿删）：Monster 0x47ECE5C / Hero 0x47E26BC /
+//     Base 0x47A25B0 / settleMp 0x47E27F8 / 无CD 入口 0x485B26C（补丁点 0x485B2CC）。
 //   历史 357（7.6.3 包用 357 热更 so，勿删）：Monster 0x47C08B0 / Hero 0x4795FAC /
 //     Base 0x4775EE0 / settleMp 0x47960F0 / 无CD ResolveFn 0x482ECB8。
 //   任一序言不符（热更/漂移）→ 自动转按名，不挂错地址。
 // ============================================================
 enum : size_t {
-    kRvaMonsterSettle = 0x47ECE5C,
-    kRvaHeroSettle    = 0x47E26BC,
-    kRvaBaseSettle    = 0x47A25B0,
-    kRvaHeroSettleMp  = 0x47E27F8,
+    kRvaMonsterSettle = 0x488AD44,
+    kRvaHeroSettle    = 0x48805A4,
+    kRvaBaseSettle    = 0x486078C,
+    kRvaHeroSettleMp  = 0x48806E0,
 };
 
 // ============================================================
