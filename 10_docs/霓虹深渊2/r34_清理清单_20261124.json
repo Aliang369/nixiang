@@ -1,0 +1,22 @@
+{
+  "root": "/Users/aliang/Documents/nixiang",
+  "quarantine": "/Users/aliang/.Trash/nixiang_r34-finish_20261124_163708",
+  "timestamp": "20261124_163708",
+  "mode": "apply",
+  "items": [
+    {
+      "path": "03_decompiled/霓虹深渊2/2026.11.19",
+      "type": "dir",
+      "size_kib": 207212,
+      "source": "/Users/aliang/Documents/nixiang/03_decompiled/霓虹深渊2/2026.11.19",
+      "quarantine": "/Users/aliang/.Trash/nixiang_r34-finish_20261124_163708/03_decompiled/霓虹深渊2/2026.11.19"
+    },
+    {
+      "path": "07_patched/霓虹深渊2",
+      "type": "dir",
+      "size_kib": 44,
+      "source": "/Users/aliang/Documents/nixiang/07_patched/霓虹深渊2",
+      "quarantine": "/Users/aliang/.Trash/nixiang_r34-finish_20261124_163708/07_patched/霓虹深渊2"
+    }
+  ]
+}

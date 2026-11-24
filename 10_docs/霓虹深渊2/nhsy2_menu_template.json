@@ -2,18 +2,19 @@
   "template_id": "nhsy2",
   "name": "霓虹深渊2",
   "package": "com.veewo.neonabyss2",
-  "source": "Games/nhsy2Entry.cpp knhsy2_Features + Games/nhsy2Mod.h nhsy2Feat（2026-10-25 r28 复核：vc646 / 2026.10.22.119e94ee6ab 底包，11 项功能 L3 全过，so md5 ccead68ee6cea7968df318939e37b3ec）",
+  "source": "Games/nhsy2Entry.cpp knhsy2_Features + Games/nhsy2Mod.h nhsy2Feat（2026-11-24 r34 复核：底包 2026-11.19.ad4a3246d7c / vc784，12 项功能 + 2 分类，so md5 d91fcc545073f804f07362ba5aa25af8）",
   "features": [
     {"feat_num": 1, "name": "伤害倍率"},
     {"feat_num": 2, "name": "无敌"},
     {"feat_num": 3, "name": "全屏攻击"},
     {"feat_num": 4, "name": "移速倍率"},
     {"feat_num": 5, "name": "无限跳"},
-    {"feat_num": 7, "name": "解锁标准版"},
-    {"feat_num": 8, "name": "无限手雷"},
-    {"feat_num": 9, "name": "无限金币"},
-    {"feat_num": 10, "name": "无限水晶"},
-    {"feat_num": 11, "name": "无限钥匙"},
-    {"feat_num": 12, "name": "无限彩色钥匙"}
+    {"feat_num": 6, "name": "武器升级"},
+    {"feat_num": 8, "name": "解锁标准版"},
+    {"feat_num": 9, "name": "无限手雷"},
+    {"feat_num": 10, "name": "无限金币"},
+    {"feat_num": 11, "name": "无限水晶"},
+    {"feat_num": 12, "name": "无限钥匙"},
+    {"feat_num": 13, "name": "无限彩色钥匙"}
   ]
 }
