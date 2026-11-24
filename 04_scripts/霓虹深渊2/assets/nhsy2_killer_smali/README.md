@@ -5,7 +5,10 @@
 `classes6.dex`。
 
 - 源：`04_scripts/我在神界刷装备/assets/sjzz_killer_smali/mt/signature/`（13 文件，MT ApkSignatureKillerEx 193 版；
-  11 个游戏同源同 md5 `fb91a89fbb9c2f6adac7c7531673c256`），按本脚本 [4/8] 期望的目录层级下沉到 `bin/` 之下。
+  11 个游戏同源同 md5 `fb91a89fbb9c2f6adac7c7531673c256`）。
+- **本仓布局＝`mt/signature/`（不带 `bin/`）**：`04_scripts/**/bin/` 被根 `.gitignore` 排除（2026-11-24 实测），
+  把 smali 放在 `bin/` 下会导致源件**进不了 git**（表现：`git status` 干净但只有 README 入库）。
+  `bin/` 层由构建脚本在临时目录里补（surgical 脚本与 `build_killer_dex_nhsy2.sh` 均已按「源内无 bin/ 则下沉到 bin/」处理）。
 - 占位符（**不要手工替换**，构建时自动烘焙）：
   - `const-string v1, "@@PKG@@"` → 目标包名
   - `const-string v0, "@@CERT_B64_WRAPPED@"` → 官方证书 DER base64

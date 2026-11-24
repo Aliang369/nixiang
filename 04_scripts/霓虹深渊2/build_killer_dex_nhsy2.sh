@@ -77,8 +77,8 @@ print('  cert DER %d B, MD5 %s, base64 %d 字符（折行 76，共 %d 行）'
       % (len(der), md5, len(b64), len(wrapped.split('\\n'))))
 PY
 
-mkdir -p "$WORK/smali"
-cp -R "$SMALI_SRC/." "$WORK/smali/"
+mkdir -p "$WORK/smali/bin"
+cp -R "$SMALI_SRC/." "$WORK/smali/bin/"
 python3 - "$WORK/smali/bin/mt/signature/KillerApplication193.smali" "$WORK/cert.b64" "$PKG" <<'PY'
 import sys
 from pathlib import Path

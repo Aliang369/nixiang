@@ -31,7 +31,7 @@
 #   NHSY2_ORIG_APK    底包路径
 #   NHSY2_SO          预构建 so（默认 <repo>/libs_nhsy2/arm64-v8a/libstarry_magic.so）
 #   NHSY2_MENU_DEX    预构建菜单 dex（=classes5.dex 内容；给了就跳过 gradle）
-#   NHSY2_KILLER_SMALI  killer smali 目录（默认 07_patched/暗影格斗3/surgical/killer_smali）
+#   NHSY2_KILLER_SMALI  killer smali 目录（默认 04_scripts/霓虹深渊2/assets/nhsy2_killer_smali，占位符版；旧暗影格斗3源件仍可显式传入）
 #   NHSY2_STARRY_APK  预构建星光 apk（gradle 产物）
 #   NHSY2_SKIP_GRADLE=1  跳过 gradle（要求 NHSY2_STARRY_APK 或已有 app-release.apk）
 set -euo pipefail
@@ -52,7 +52,7 @@ UNSIGNED="$OUT/${GAME}_${VER_SHORT}_surgical-unsigned.apk"
 MF_CACHE="$NIXIANG/07_patched/$GAME/surgical_${VER_SHORT}/AndroidManifest.xml"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
-KILLER_SMALI="${NHSY2_KILLER_SMALI:-$NIXIANG/07_patched/暗影格斗3/surgical/killer_smali}"
+KILLER_SMALI="${NHSY2_KILLER_SMALI:-$NIXIANG/04_scripts/霓虹深渊2/assets/nhsy2_killer_smali}"
 NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 AAPT2="${AAPT2:-$HOME/Library/Android/sdk/build-tools/36.0.0/aapt2}"
 AUTHORITY="$PKG.starryinit"
@@ -289,7 +289,13 @@ FPR="$(openssl x509 -in "$WORK/cert.pem" -noout -fingerprint -md5 | sed 's/.*=//
 echo "  官方证书 DER: $(stat -f '%z' "$WORK/official.der") B  MD5=$FPR ✓"
 
 rm -rf "$WORK/killer_smali"
-cp -R "$KILLER_SMALI" "$WORK/killer_smali"
+mkdir -p "$WORK/killer_smali"
+if [[ -d "$KILLER_SMALI/bin/mt" ]]; then
+  cp -R "$KILLER_SMALI/." "$WORK/killer_smali/"      # 旧件：源内已含 bin/ 层
+else
+  mkdir -p "$WORK/killer_smali/bin"
+  cp -R "$KILLER_SMALI/." "$WORK/killer_smali/bin/"  # 占位符版：源为 mt/signature，下沉到 bin/ 下
+fi
 python3 - "$WORK/killer_smali" "$WORK/official.der" "$PKG" <<'PY'
 import base64, io, os, sys
 root, der_path, pkg = sys.argv[1], sys.argv[2], sys.argv[3]
