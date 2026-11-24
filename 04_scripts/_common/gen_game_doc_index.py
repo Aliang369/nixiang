@@ -17,8 +17,9 @@
 设计要点：
     * **不读正文**：只取每个文件的首个标题行（`# ...`）或首个引用块作为一句话说明，
       避免为了生成索引把 772 个文件读进上下文。
-    * **按修改时间判"当前"**：同一前缀（如「星光落地_」）只把 mtime 最新的标为【当前】，
+    * **按文档日期判"当前"**：同一前缀（如「星光落地_」）只把提交日期最新的标为【当前】，
       其余标【历史】。这比人工维护清单可靠 —— 它不会忘记更新。
+    * **文档日期＝最后一次 git 提交日期**（`_doc_date()`），不是文件 mtime；见该函数注释。
     * `_index.md` 是生成物，头部写明禁止手改；`--check` 供 preflight 用。
     * 目录里已存在的人工 `README.md` 不覆盖：索引正文追加在 `_index.md`，
       两者分工＝README 写人读的说明、`_index.md` 写机器/检索用的清单。
@@ -26,6 +27,7 @@
 import argparse
 import datetime
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -50,6 +52,88 @@ CATEGORIES = [
 VERSIONED = re.compile(r"^(正式包裁剪清单|滚动物清理清单|清理清单|星空落地|星光落地|交付清单)")
 HEADING = re.compile(r"^#{1,3}\s+(.+?)\s*$")
 QUOTE = re.compile(r"^>\s*(.+?)\s*$")
+
+# ---------------------------------------------------------------
+# 文档日期：统一用「最后一次 git 提交日期」，不用文件 mtime
+#   为什么：git 不保存 mtime，换机 / 重新 checkout / 重新克隆后 mtime 全变，
+#   `_index.md` 里记的每个文件日期就跟着漂 —— 2026-11-24 实测 111 个目录长期
+#   被判「过期」，preflight 的 [游戏文档索引] 闸门因此常年 FAIL。
+#   基准只有一个：条目日期、【当前/历史】判定、⏳ 过期判定、以及列表排序
+#   全部走 _doc_date()。要改回「按本地 mtime 判 ⏳」必须四处一起改，
+#   否则就是两套时间基准混用（那比漂移更难查）。
+# ---------------------------------------------------------------
+_DATE_CACHE = {}
+_DATE_MAP = None          # 仓库内已跟踪文件 → 最后提交日期（一次 shell 调用建好）
+
+
+def _git_date_map():
+    """一次性拿到全仓已跟踪文件的最后提交日期（path -> YYYY-MM-DD）。
+
+    用 git log --format=%x00%cs --name-only --no-renames：提交按新→旧排列，
+    路径第一次出现即「最后一次改动它的提交」，所以先到先得。
+    992 个提交实测 0.2 s；逐个文件 git log -1 -- <path> 要 1900 次 ≈ 60 s。
+    git 不可用 / 不在仓库里 / 解析失败 => 返回空表，_doc_date 全部回落 mtime。
+    """
+    global _DATE_MAP
+    if _DATE_MAP is not None:
+        return _DATE_MAP
+    _DATE_MAP = {}
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(ROOT), "-c", "core.quotepath=false",
+             "log", "--format=%x00%cs", "--name-only", "--no-renames"],
+            capture_output=True, encoding="utf-8", errors="replace", timeout=180)
+        if r.returncode == 0:
+            cur = None
+            for line in (r.stdout or "").splitlines():
+                if line.startswith("\x00"):
+                    cur = line[1:].strip()
+                    continue
+                if not line.strip() or cur is None:
+                    continue
+                _DATE_MAP.setdefault(line, cur)   # 先到先得＝最近一次提交
+    except Exception:                             # noqa: BLE001 —— 取不到日期不是错误
+        _DATE_MAP = {}
+    return _DATE_MAP
+
+
+def _doc_date(path: Path) -> datetime.date:
+    """文件/目录的「文档日期」＝最后一次 git 提交日期；取不到才回落 mtime。
+
+    - 文件：改过它的最后一次提交日期；未跟踪 / 无提交 => 本地 mtime。
+    - 目录：git 不记目录日期，取该目录下已跟踪文件里最新的提交日期；空目录 => mtime。
+    - 两条路径都不抛异常：拿不到提交日期 => mtime；mtime 也读不到 => 今天。
+    同一路径只算一次（_DATE_CACHE）。
+    """
+    key = str(path)
+    hit = _DATE_CACHE.get(key)
+    if hit is not None:
+        return hit
+    d = None
+    try:
+        rel = path.resolve().relative_to(ROOT).as_posix()
+    except (ValueError, OSError):
+        rel = None
+    if rel:
+        try:
+            dates = _git_date_map()
+            s = dates.get(rel)
+            if s is None and path.is_dir():
+                pref = rel.rstrip("/") + "/"
+                sub = [v for k, v in dates.items() if k.startswith(pref)]
+                if sub:
+                    s = max(sub)              # 目录日期＝其下最新提交日期
+            if s:
+                d = datetime.date.fromisoformat(s)
+        except (ValueError, OSError):
+            d = None
+    if d is None:
+        try:
+            d = datetime.date.fromtimestamp(path.stat().st_mtime)
+        except (OSError, OverflowError, ValueError):
+            d = datetime.date.today()
+    _DATE_CACHE[key] = d
+    return d
 
 
 def one_line(path: Path) -> str:
@@ -98,8 +182,9 @@ def classify(name: str) -> str:
 def build(game_dir: Path, stale_days: int) -> str:
     now = datetime.date.today()
     files = [p for p in game_dir.iterdir() if p.is_file() and p.name != INDEX_NAME]
+    dates = {p: _doc_date(p) for p in files}      # 每个文件只取一次日期
     dirs = sorted([p for p in game_dir.iterdir() if p.is_dir()],
-                  key=lambda p: (-p.stat().st_mtime, p.name))
+                  key=lambda p: (-_doc_date(p).toordinal(), p.name))
 
     # 同名多版本 → 最新者为当前
     newest = {}
@@ -107,9 +192,9 @@ def build(game_dir: Path, stale_days: int) -> str:
         m = VERSIONED.match(p.stem)
         key = re.sub(r"[_\d.]+$", "", p.stem) if m else None
         if key:
-            mt = p.stat().st_mtime
-            if key not in newest or mt > newest[key][0]:
-                newest[key] = (mt, p.name)
+            seen = (dates[p].toordinal(), p.name)   # 同日期时按名字定序，避免跨机不定
+            if key not in newest or seen > newest[key]:
+                newest[key] = seen
 
     groups = {}
     for p in files:
@@ -123,7 +208,7 @@ def build(game_dir: Path, stale_days: int) -> str:
         "",
         f"> 生成于 {now.isoformat()}｜{len(files)} 个文件、{len(dirs)} 个子目录。",
         "> 本文件是**检索用清单**，不是分析结论；结论读 `_state/games/" + game_dir.name + ".md`。",
-        "> 同名多版本（裁剪清单/星空落地）只有 mtime 最新的标【当前】，其余【历史】。",
+        "> 同名多版本（裁剪清单/星空落地）只有提交日期最新的标【当前】，其余【历史】。",
         "> 重新生成：`python3 04_scripts/_common/gen_game_doc_index.py --game " + game_dir.name + "`",
         "",
     ]
@@ -132,11 +217,11 @@ def build(game_dir: Path, stale_days: int) -> str:
         items = groups.get(label)
         if not items:
             continue
-        items.sort(key=lambda p: (-p.stat().st_mtime, p.name))
+        items.sort(key=lambda p: (-dates[p].toordinal(), p.name))
         out.append(f"## {label}")
         out.append("")
         for p in items:
-            mt = datetime.date.fromtimestamp(p.stat().st_mtime)
+            mt = dates[p]
             age = (now - mt).days
             tag = ""
             m = VERSIONED.match(p.stem)
