@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..database import get_db
-from ..models import Game, GameChannel, UpdateRequest, WishRequest
+from ..models import Game, GameChannel, MenuTemplateFeature, UpdateRequest, WishRequest
 from ..schemas import UpdateRequestCreate, WishRequestCreate
 from ..security_guard import client_ip
 
@@ -273,5 +273,189 @@ def submit_wish(
             "game_name": row.game_name,
             "channel": row.channel,
             "created_at": row.created_at.isoformat() if row.created_at else None,
+        },
+    }
+
+
+@router.get("/game-info")
+def game_info(game_id: str = "", db: Session = Depends(get_db)):
+    """按 game_id 返回游戏名 + 功能列表（后台菜单模板功能，按 feat_num 顺序）。
+
+    2026-11-24：文章页顶部卡片用（游戏名 / 功能缩略 / 全部功能面板）。
+    只暴露游戏名与功能名称，不含模板内部结构、包名等后台字段。
+    游戏不存在或已停用 → {"ok": true, "data": null}，前台保留手写文案。
+    """
+    gid = (game_id or "").strip()
+    if not gid:
+        raise HTTPException(status_code=400, detail="缺少 game_id")
+    g = (
+        db.query(Game)
+        .filter(Game.game_id == gid, Game.enabled.is_(True))
+        .first()
+    )
+    if not g:
+        return {"ok": True, "data": None}
+
+    features: list[str] = []
+    tpl = (g.menu_template or "").strip()
+    if tpl:
+        rows = (
+            db.query(MenuTemplateFeature.name)
+            .filter(MenuTemplateFeature.template_id == tpl)
+            .order_by(MenuTemplateFeature.feat_num.asc())
+            .all()
+        )
+        features = [str(r[0]).strip() for r in rows if r and str(r[0]).strip()]
+
+    return {
+        "ok": True,
+        "data": {"game_id": g.game_id, "name": g.name, "features": features},
+    }
+
+
+@router.get("/game-infos")
+def game_infos(ids: str = "", db: Session = Depends(get_db)):
+    """批量版 game-info：列表页一次取多款游戏的名称与功能。
+
+    ids=逗号分隔的 game_id（最多 100 个）。
+    返回 {"ok": true, "data": {"<game_id>": {"name": ..., "features": [...]}}}
+    不存在的 game_id 直接不出现在 data 里，前端据此回退。
+    """
+    raw = (ids or "").strip()
+    if not raw:
+        raise HTTPException(status_code=400, detail="缺少 ids")
+    gids: list[str] = []
+    for part in raw.split(","):
+        g = part.strip()
+        if g and g not in gids:
+            gids.append(g)
+        if len(gids) >= 100:
+            break
+    if not gids:
+        raise HTTPException(status_code=400, detail="缺少 ids")
+
+    rows = (
+        db.query(Game)
+        .filter(Game.game_id.in_(gids), Game.enabled.is_(True))
+        .all()
+    )
+    tpls = sorted(
+        {(r.menu_template or "").strip() for r in rows if (r.menu_template or "").strip()}
+    )
+    feat_map: dict[str, list[str]] = {}
+    if tpls:
+        feats = (
+            db.query(MenuTemplateFeature.template_id, MenuTemplateFeature.name)
+            .filter(MenuTemplateFeature.template_id.in_(tpls))
+            .order_by(MenuTemplateFeature.feat_num.asc())
+            .all()
+        )
+        for tid, nm in feats:
+            name = str(nm or "").strip()
+            if name:
+                feat_map.setdefault(str(tid), []).append(name)
+
+    data: dict[str, dict] = {}
+    for r in rows:
+        tpl = (r.menu_template or "").strip()
+        data[r.game_id] = {"name": r.name, "features": feat_map.get(tpl, [])}
+    return {"ok": True, "data": data}
+
+
+
+# ---------------------------------------------------------------------------
+# 2026-11-24 新增：文章页「下载地址」自动填充（唯一下载渠道来源 = 星光后台游戏列表）
+#    GET /v1/public/game-downloads?game_id=xxx
+#    只读公开接口，返回 game_id / 游戏名 / 网盘列表，不含后台任何敏感字段。
+#    背景：WordPress 文章页不再手写百度/夸克链接，改由后台 games.download_url 自动下发。
+# ---------------------------------------------------------------------------
+
+import json as _json
+
+
+def _guess_netdisk_name(url: str) -> str:
+    """旧数据只有 URL 时按域名猜网盘名，保证前台按钮文案不留空。"""
+    u = (url or "").lower()
+    if "pan.baidu" in u or "baidu.com" in u:
+        return "百度网盘"
+    if "quark.cn" in u:
+        return "夸克网盘"
+    if "uc.cn" in u:
+        return "UC网盘"
+    if "aliyundrive" in u or "alipan" in u:
+        return "阿里云盘"
+    if "123pan" in u:
+        return "123网盘"
+    if "lanzou" in u:
+        return "蓝奏云"
+    if "weiyun" in u:
+        return "微云"
+    return "下载地址"
+
+
+def _parse_downloads(raw: str | None) -> list[dict]:
+    """把 games.download_url 归一成 [{"name": ..., "url": ...}]。
+
+    兼容三种历史形态：
+      · JSON 数组 [{"name": "百度网盘", "url": "https://..."}]
+      · JSON 字符串数组 ["https://..."]
+      · 旧数据：纯 URL 字符串 "https://..."
+    任何解析不了的脏数据都返回空列表，由前台回退到静态链接。
+    """
+    text = (raw or "").strip()
+    if not text:
+        return []
+    parsed = None
+    if text[0] in "[{":
+        try:
+            parsed = _json.loads(text)
+        except (ValueError, TypeError):
+            parsed = None
+    if isinstance(parsed, dict):
+        parsed = [parsed]
+    if isinstance(parsed, list):
+        items: list[dict] = []
+        for it in parsed:
+            if isinstance(it, dict):
+                url = str(it.get("url") or "").strip()
+                name = str(it.get("name") or "").strip()
+            else:
+                url = str(it or "").strip()
+                name = ""
+            if not url:
+                continue
+            items.append(
+                {"name": name or _guess_netdisk_name(url), "url": url}
+            )
+        return items
+    if text.lower().startswith(("http://", "https://")):
+        return [{"name": _guess_netdisk_name(text), "url": text}]
+    return []
+
+
+@router.get("/game-downloads")
+def game_downloads(game_id: str = "", db: Session = Depends(get_db)):
+    """按 game_id 返回该游戏在后台配置的网盘列表（只读）。
+
+    返回：
+      · 游戏不存在 / 已停用  → {"ok": true, "data": null}（前台保留静态兜底链接）
+      · 游戏存在            → {"ok": true, "data": {"game_id", "name", "downloads": [...]}}
+    """
+    gid = (game_id or "").strip()
+    if not gid:
+        raise HTTPException(status_code=400, detail="缺少 game_id")
+    g = (
+        db.query(Game)
+        .filter(Game.game_id == gid, Game.enabled.is_(True))
+        .first()
+    )
+    if not g:
+        return {"ok": True, "data": None}
+    return {
+        "ok": True,
+        "data": {
+            "game_id": g.game_id,
+            "name": g.name,
+            "downloads": _parse_downloads(getattr(g, "download_url", None)),
         },
     }
