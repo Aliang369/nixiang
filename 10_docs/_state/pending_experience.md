@@ -347,3 +347,6 @@ python3 -B 04_scripts/_common/audit_experience_registry.py
 - 状态：**已合并** → `skill/re-analyze/antiaddiction-tapsdk-skip.md`（含链路、三处改判、`.registers` 事故）
 - 证据：我的技能无限触发 1.6.3 真机 f9a116a2 实测；`logcat -b crash` 的 NPE 栈 + 修复后用户「没问题了」
 - 边界：防沉迷门禁改动，须用户当轮点名；换版本重新取锚点
+
+- [ACE 转发桩 ⇒ 放弃 inline hook（终末地 1.7.2，2026-11-26）](../_templates/经验_ACE转发桩放弃inlinehook_20261126.md)：**候选，未合并（class: tech）**——`il2cpp_init` 导出被壳换成 `adrp/add/br`（12 B）或 `ldr/br`（8 B）转发桩时，Dobby 16 B 跳板会踩「桩+12」回落点 ⇒ SIGILL（`si_addr==pc`）；判据用「不同 VMA + `r-x`」而非 `pathname` 为空。拟落 `skill/re-implement/hook-rules.md` + `skill/diagnosis-index.md`。
+- [脏外置数据污染崩溃归因样本（终末地 1.7.2，2026-11-26）](../_templates/经验_脏外置数据污染崩溃归因_20261126.md)：**候选，未合并（class: tech）**——31 GB 外置热更数据经多轮 rename/chown 归位后，官方包同样 ~4 min SIGBUS（RSS 峰 2.70 GB），干净环境同包 10 min 零崩 ⇒ 归因前必须先做「干净环境 × 官方包」基线。拟落 `skill/diagnosis-index.md` + `skill/re-lessons/SKILL.md`。
