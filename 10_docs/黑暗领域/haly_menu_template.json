@@ -2,7 +2,7 @@
   "template_id": "haly",
   "name": "黑暗领域",
   "package": "com.haly.tap",
-  "source": "Main.cpp g_featureList STARRY_GAME_HALY 751-757 + Games/HalyMod.h HALY_FEAT_*；底包 com.haly.tap 1.0/vc1 md5 e39bbe6276a1be2dd32757d5bb8d4a73；正式包 md5 e22cc4cac9caa7f0fab35137002dad2e",
+  "source": "Main.cpp g_featureList STARRY_GAME_HALY 751-757 + Games/HalyMod.h HALY_FEAT_*；底包 com.haly.tap 1.0/vc1 md5 e39bbe6276a1be2dd32757d5bb8d4a73；正式包 md5 c4a0b1ba860859e7e49c2ccca134de3d（combo_v3，159,916,232 B）",
   "features": [
     {
       "feat_num": 1,
