@@ -17,17 +17,13 @@ hook_hit|\[Endfield\] lib ready
 # 授权墙标记（过不去只发操作请求卡，不诊断服务端）
 auth_fail|renew auth fail
 
-# 崩溃判定（本作**收窄**，2026-10-16 小米 96f0d883 实测）：默认 RE_CRASH 含**裸 `tombstone`
-# 关键字**，而 MIUI 的 ScoutManager/DumpScoutTraceThread 遥测会为前台 App 抓 Java 栈，
-# tombstoned 随即连打四行（registered intercept … kDebuggerdJavaBacktrace / received crash
-# request for pid … / found intercept fd … / skipping tombstone file creation due to intercept）
-# ⇒ 每次 MIUI 抓栈都误判 FAIL_A（本轮连吃两次）。这里改用**精确崩溃签名**：
+# 崩溃判定（本作用精确崩溃签名，不用裸 tombstone 关键字）：
 #   native 崩溃 = Fatal signal / Abort message / Tombstone written to
 #   Java 崩溃   = FATAL EXCEPTION
 #   ANR / Unity 崩溃处理器 = ANR in / E CRASH
-# 语义是「收窄误报面」而非放宽：真崩的每一条都在上述签名里。
+# 理由：MIUI 前台抓 Java 栈时会连打 tombstoned 遥测行，裸 tombstone 关键字会把每次抓栈误判成崩溃；
+# 上述签名覆盖真崩溃的每一条，收窄的是误报面而非判定标准。
 crash|FATAL EXCEPTION|Fatal signal|SIGSEGV|SIGABRT|E CRASH|ANR in|Tombstone written to|Abort message
 
-# 崩溃误报排除：**本作不再需要手写** —— 2026-10-16 起 `post_install_precheck.sh` 的默认
-# `RE_CRASH_IGNORE` 已覆盖 MIUI ScoutManager 抓栈的五种行，且 `crash_ignore` 改为**追加**语义
-# （原为覆盖 ⇒ 必须手抄默认四项；见 `框架待办` FW-21）。日后本作确有额外误报再加一行。
+# 崩溃误报排除：本作不需要手写 crash_ignore —— post_install_precheck.sh 默认 RE_CRASH_IGNORE
+# 已覆盖 MIUI ScoutManager 抓栈行，且 crash_ignore 为追加语义。日后确有额外误报再加一行。

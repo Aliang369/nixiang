@@ -23,6 +23,80 @@
 
 using Il2Cpp::GetApi;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// 诊断专用崩溃落盘（★2026-11-25 P0「开无敌挨打必崩」）：SIGSEGV/SIGBUS/SIGABRT 时
+// 用 _Unwind_Backtrace + dladdr 收 ≤24 帧写到 files/ef_crash.txt（失败退 sdcard），然后 _exit(139)。
+// 只允许在 STARRY_ENDFIELD_CRASHLOG=1 时编译；**不得进正式包**（默认不定义）。
+// handler 内不 malloc / 不调 il2cpp / 不用 LOGx（只 write(2)/syscall）。
+// ═══════════════════════════════════════════════════════════════════════════
+#if defined(STARRY_ENDFIELD_CRASHLOG) && STARRY_ENDFIELD_CRASHLOG
+#include <unwind.h>
+#include <dlfcn.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <sys/syscall.h>
+namespace efcrash {
+static char   g_buf[6144];
+static size_t g_len = 0;
+static uintptr_t g_pcs[24];
+static int    g_frames = 0;
+static void putn(const char* s, size_t n) {
+    for (size_t i = 0; i < n && g_len < sizeof(g_buf) - 1; ++i) g_buf[g_len++] = s[i];
+}
+static void puts_(const char* s) { size_t n = 0; while (s[n]) ++n; putn(s, n); }
+static void hexs(uintptr_t v) {
+    char t[19]; t[0] = '0'; t[1] = 'x';
+    for (int i = 0; i < 16; ++i) { unsigned d = (unsigned)((v >> ((15 - i) * 4)) & 0xFu); t[2 + i] = (char)(d < 10 ? ('0' + d) : ('a' + d - 10)); }
+    t[18] = '\0'; puts_(t);
+}
+static void decs(long v) {
+    char t[24]; int i = 23; t[i] = '\0';
+    bool neg = v < 0; unsigned long u = neg ? (unsigned long)(-v) : (unsigned long)v;
+    do { t[--i] = (char)('0' + (u % 10)); u /= 10; } while (u);
+    if (neg) t[--i] = '-'; puts_(t + i);
+}
+static _Unwind_Reason_Code cb(struct _Unwind_Context* ctx, void*) {
+    uintptr_t pc = (uintptr_t)_Unwind_GetIP(ctx);
+    if (pc && g_frames < 24) g_pcs[g_frames++] = pc;
+    return _URC_NO_REASON;
+}
+static void handler(int sig, siginfo_t* si, void*) {
+    g_len = 0; g_frames = 0;
+    puts_("== ef_crash ==\nsignal="); decs(sig);
+    puts_(" code="); decs(si ? si->si_code : 0);
+    puts_(" fault="); hexs((uintptr_t)(si ? si->si_addr : nullptr));
+    puts_(" tid="); decs((long)syscall(SYS_gettid)); puts_("\n");
+    _Unwind_Backtrace(cb, nullptr);
+    for (int i = 0; i < g_frames; ++i) {
+        puts_("#"); decs(i); puts_(" pc="); hexs(g_pcs[i]);
+        Dl_info di;
+        if (dladdr((void*)g_pcs[i], &di) && di.dli_fname) {
+            puts_(" "); puts_(di.dli_fname);
+            if (di.dli_fbase) { puts_("+"); hexs((uintptr_t)g_pcs[i] - (uintptr_t)di.dli_fbase); }
+            if (di.dli_sname) { puts_(" "); puts_(di.dli_sname); }
+        }
+        puts_("\n");
+    }
+    int fd = (int)syscall(SYS_openat, AT_FDCWD, "/data/data/com.hypergryph.endfield/files/ef_crash.txt",
+                          O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (fd < 0)
+        fd = (int)syscall(SYS_openat, AT_FDCWD, "/sdcard/Android/data/com.hypergryph.endfield/files/ef_crash.txt",
+                          O_WRONLY | O_CREAT | O_TRUNC, 0600);
+    if (fd >= 0) { ssize_t w = write(fd, g_buf, g_len); (void)w; close(fd); }
+    _exit(139);
+}
+static void install() {
+    struct sigaction sa; memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = handler; sigemptyset(&sa.sa_mask);
+    sa.sa_flags = SA_SIGINFO | SA_NODEFER;
+    sigaction(SIGSEGV, &sa, nullptr);
+    sigaction(SIGBUS,  &sa, nullptr);
+    sigaction(SIGABRT, &sa, nullptr);
+}
+} // namespace efcrash
+#endif
+
+
 #define EF_LOG "[Endfield]"
 
 #if defined(STARRY_TRACE) && STARRY_TRACE
@@ -41,6 +115,12 @@ using Il2Cpp::GetApi;
 
 static std::atomic<bool> g_libReady{false};
 static std::atomic<bool> g_anyHooked{false};
+// ★2026-11-25：装钩幂等 —— 四组各只装一次；失败组允许单独补装，已成功组绝不重装/重建 orig。
+static std::atomic<bool> g_instDmg{false}, g_instInv{false}, g_instJump{false}, g_instSkill{false};
+// ★2026-11-25 诊断：arity/first-call（只打一次，不进热路径）
+static std::atomic<int> g_calcFirst{0}, g_applyFirst{0};
+static std::atomic<bool> g_il2cppInitDone{false};
+
 static std::atomic<bool> g_dmg{false};
 static std::atomic<bool> g_inv{false};
 static std::atomic<bool> g_jump{false};
@@ -491,10 +571,21 @@ static void* LearnWorker(void*) {
     LOGI(EF_LOG " learn worker up (idle — v14 回到按名 hook 路线)");
     // v12/v13 复盘：堆扫实例全是元数据假阳性，真实例从未命中，invoke 路线废弃。
     // 线程保留挂起待命，不再扫描/invoke。
-    for (;;) pause();
+    // ★2026-11-25：即便如此也**必须过就绪门** —— 门没放行（ACE 桩 ⇒ hookFailed=1 ⇒ 30s 放弃）时
+    // 一律 sleep 等待，绝不越过门做任何 il2cpp 读取（本函数目前无读取，加门是防将来改动踩线）。
+    for (;;) {
+        if (!g_il2cppInitDone.load()) { usleep(500 * 1000); continue; }
+        usleep(500 * 1000);
+    }
     return nullptr;
 }
 static void StartLearnWorker() {
+    // ★2026-11-25：默认不启动。LearnWorker 是 v14.2 之前的偏移学习遗留，四挂点已按名装好后它毫无用处；
+    // 只在显式 ENDFIELD_LEARN_WORKER=1 时创建线程（排查历史问题时才开）。
+    if (const char* e = getenv("ENDFIELD_LEARN_WORKER"); !(e && e[0] == '1')) {
+        LOGI(EF_LOG " learn worker 未启动（默认关闭；设 ENDFIELD_LEARN_WORKER=1 可开）");
+        return;
+    }
     static std::once_flag once;
     std::call_once(once, [] {
         pthread_t t;
@@ -572,6 +663,8 @@ static float Hooked_CalcF5(void* a0, void* a1, void* a2, void* a3, void* a4, voi
 typedef double (*D5_t)(void*, void*, void*, void*, void*);
 typedef double (*D6_t)(void*, void*, void*, void*, void*, void*);
 static double Hooked_CalcD5(void* a0, void* a1, void* a2, void* a3, void* method) {
+    if (g_calcFirst.fetch_add(1) == 0)
+        LOGI(EF_LOG " calc first-call a0=%p a1=%p argc=%d", a0, a1, g_calcArgc);
     double r = g_origCalc ? ((D5_t)g_origCalc)(a0, a1, a2, a3, method) : 0.0;
     if (g_dmg.load() && r > 0.0 && r < 1e15) {
         g_hitsDmg.fetch_add(1, std::memory_order_relaxed);
@@ -580,6 +673,8 @@ static double Hooked_CalcD5(void* a0, void* a1, void* a2, void* a3, void* method
     return r;
 }
 static double Hooked_CalcD6(void* a0, void* a1, void* a2, void* a3, void* a4, void* method) {
+    if (g_calcFirst.fetch_add(1) == 0)
+        LOGI(EF_LOG " calc first-call a0=%p a1=%p argc=%d", a0, a1, g_calcArgc);
     double r = g_origCalc ? ((D6_t)g_origCalc)(a0, a1, a2, a3, a4, method) : 0.0;
     if (g_dmg.load() && r > 0.0 && r < 1e15) {
         g_hitsDmg.fetch_add(1, std::memory_order_relaxed);
@@ -649,6 +744,8 @@ static Faction_t FacNativeFor(void* self) {
 }
 static bool InvGate(void* self) {
     if (!g_inv.load()) return false;
+    if (g_applyFirst.fetch_add(1) == 0)   // 只打首次，不进热路径
+        LOGI(EF_LOG " apply first-call self=%p argc=%d facPtr=%p", self, g_applyArgc, (void*)g_facNative);
     Faction_t f = FacNativeFor(self);
     if (!f) f = g_facNative;
     if (f) {
@@ -753,6 +850,9 @@ static bool InstallCalcDamage() {
         LOGW(EF_LOG " CalculateDamage miss");
         return false;
     }
+    g_calcArgc = argc;
+    LOGI(EF_LOG " CalculateDamage argc=%d paramCount=%u", argc,
+         (unsigned)(GetApi().method_param_count ? GetApi().method_param_count(mi) : 0u));
     // v14.2：先拿真实签名（返回+逐参类型），匹配桩再装——整数桩打坏 FP
     // 参数寄存器导致伤害恒 0 的教训（v14/v14.1 + v5 时代就从未生效）。
     auto& api = GetApi();
@@ -780,6 +880,7 @@ static bool InstallCalcDamage() {
     bool isStatic = (flags & 0x0010u) != 0;
     void* fn = MethodPtr(mi);
     void* hook = isStatic ? (void*)Hooked_CalcD5 : (void*)Hooked_CalcD6;
+    const char* calcStub = isStatic ? "D5(static,5槽)" : "D6(instance,6槽)";
     if (DobbyHook(fn, hook, &g_origCalc) != 0) {
         g_origCalc = nullptr;
         if (++g_failCalc >= 3)
@@ -789,7 +890,7 @@ static bool InstallCalcDamage() {
         return false;
     }
     g_failCalc = 0;
-    LOGI(EF_LOG " CalculateDamage hooked argc=%d static=%d double_ret", argc, isStatic ? 1 : 0);
+    LOGI(EF_LOG " CalculateDamage hooked argc=%d static=%d stub=%s", argc, isStatic ? 1 : 0, calcStub);
     return true;
 }
 
@@ -815,6 +916,8 @@ static bool InstallApplyModifier() {
     else if (pre == 2) hook = (void*)Hooked_ApplyV2;
     else hook = (void*)Hooked_ApplyV3;
     g_applyArgc = argc;
+    LOGI(EF_LOG " ApplyModifier argc=%d paramCount=%u", argc,
+         (unsigned)(GetApi().method_param_count ? GetApi().method_param_count(mi) : 0u));
     if (DobbyHook(fn, hook, &g_origApplyMod) != 0) {
         g_origApplyMod = nullptr;
         if (++g_failApply >= 3)
@@ -824,15 +927,17 @@ static bool InstallApplyModifier() {
         return false;
     }
     g_failApply = 0;
-    LOGI(EF_LOG " ApplyModifier hooked managed_argc=%d", argc);
+    LOGI(EF_LOG " ApplyModifier hooked managed_argc=%d stub=%s", argc, pre <= 1 ? "V1(1槽)" : (pre == 2 ? "V2(2槽)" : "V3(3槽)"));
     return true;
 }
 
 static void InstallDmgHooks() {
-    if (InstallCalcDamage()) g_anyHooked.store(true);
+    if (g_instDmg.load()) return;                 // 已装：不重复 DobbyHook
+    if (InstallCalcDamage()) { g_instDmg.store(true); g_anyHooked.store(true); }
 }
 
 static void InstallInvHooks() {
+    if (g_instInv.load()) return;                 // 已装：不重复 DobbyHook
     if (InstallApplyModifier()) {
         // 敌我判定所需：get_factionIndex 原生指针（同 klass 按名解析）
         void* k = ResolveClass("Beyond.Gameplay.Core", "AbilitySystem");
@@ -841,17 +946,21 @@ static void InstallInvHooks() {
             g_facNative = (Faction_t)MethodPtr(g_miFaction);
         }
         LOGI(EF_LOG " faction native=%d (Good=2 玩家 Bad=3 怪)", g_facNative ? 1 : 0);
+        g_instInv.store(true);
         g_anyHooked.store(true);
     }
 }
 
 static void InstallJumpHooks() {
+    if (g_instJump.load()) return;                // 已装：不重复 DobbyHook
     if (HookBool0("jump", "Beyond.Gameplay.Core", "MovePipelineAir", "CanJumpAgain",
-                  (void*)Hooked_CanJumpAgain, &g_origJump))
-        g_anyHooked.store(true);
+                  (void*)Hooked_CanJumpAgain, &g_origJump)) {
+        g_instJump.store(true); g_anyHooked.store(true);
+    }
 }
 
 static void InstallSkillHooks() {
+    if (g_instSkill.load()) return;               // 已装：不重复 DobbyHook
     // CheckSkillCd 可能不在 Skill 类上
     if (HookBool0("skillCd", "Beyond.Gameplay.Core", "Skill", "CheckSkillCd",
                   (void*)Hooked_CheckSkillCd, &g_origCheckSkillCd))
@@ -930,7 +1039,6 @@ static const int         kHookMaxAttempts = 60;
 //   ② 挂钩失败 / 错过调用点 ⇒ 时间兜底放行（30s，实测 init 的数十倍），保证功能不死锁；
 //   ③ v14.5 的「登记线程 + SafeProbe」保留为最后一层兜底，不再当主要防线。
 // ============================================================
-static std::atomic<bool> g_il2cppInitDone{false};
 static std::atomic<bool> g_initHookTried{false};
 static std::atomic<bool> g_initHookFailed{false};
 typedef int (*EfIl2cppInit_t)(const char*);
@@ -947,6 +1055,70 @@ static int EfHooked_Il2cppInit(const char* domainName) {
     LOGI(EF_LOG " il2cpp_init 返回 %d ⇒ 就绪门打开（此后才允许触碰 il2cpp）", r);
     if (r == 1) g_il2cppInitDone.store(true);
     return r;
+}
+
+// ★2026-11-25（首启 SIGILL 定案，见 10_docs/终末地/首启闪退_native栈_20261125.md）：
+//   1.7.2 的 il2cpp_init 导出不是真身，而是 ACE 的 12 字节转发桩：
+//     adrp xN,page ; add xN,xN,#imm ; br xN → 跳到「无 section/pathname 的 RX 注入段」里的派发器，
+//   派发器执行被搬走的函数头、再跳回「桩+12」。任何 ≥12 字节的 inline patch（Dobby 是 16 字节
+//   字面量块）都会覆盖该回落点 ⇒ ACE 跳回时执行到补丁字面量 ⇒ SIGILL(ILL_ILLOPC)，pc==si_addr。
+//   按指令字位域识别（不用绝对地址），命中则不装钩。
+// outForm：1 = adrp/add/br（12 字节，1.7.2 实测形态）；2 = ldr-literal/br（8 字节，预置形态，未实测命中）
+static bool IsAceForwarderStub(const void* fn, uintptr_t* outTarget, int* outForm) {
+    if (!fn) return false;
+    const uintptr_t pc = reinterpret_cast<uintptr_t>(fn);
+    const uint32_t* w = reinterpret_cast<const uint32_t*>(pc);
+    const uint32_t i0 = w[0], i1 = w[1];
+    if ((i0 & 0x9F000000u) == 0x90000000u) {                       // ── 形态 1：adrp/add/br
+        const uint32_t i2 = w[2];
+        const uint32_t rd = i0 & 0x1Fu;
+        if ((i1 & 0xFFC00000u) != 0x91000000u) return false;       // add xN, xN, #imm (64 位, 不左移)
+        if ((i1 & 0x1Fu) != rd || ((i1 >> 5) & 0x1Fu) != rd) return false;
+        if ((i2 & 0xFFFFFC1Fu) != 0xD61F0000u) return false;       // br xN
+        if (((i2 >> 5) & 0x1Fu) != rd) return false;
+        if (outTarget) {
+            int64_t imm = (int64_t)(((i0 >> 5) & 0x7FFFFu) << 2 | ((i0 >> 29) & 0x3u));
+            if (imm & (1LL << 20)) imm -= (1LL << 21);            // 21 位符号扩展
+            *outTarget = (uintptr_t)((pc & ~(uintptr_t)0xFFFu) + ((uintptr_t)imm << 12) + ((i1 >> 10) & 0xFFFu));
+        }
+        if (outForm) *outForm = 1;
+        return true;
+    }
+    if ((i0 & 0xFF000000u) == 0x58000000u) {                       // ── 形态 2：ldr xN,[pc,#imm] ; br xN
+        const uint32_t rd = i0 & 0x1Fu;
+        if ((i1 & 0xFFFFFC1Fu) != 0xD61F0000u) return false;       // br xN（同寄存器）
+        if (((i1 >> 5) & 0x1Fu) != rd) return false;
+        if (outTarget) {
+            int64_t off = (int64_t)((i0 >> 5) & 0x7FFFFu);
+            if (off & (1LL << 18)) off -= (1LL << 19);            // 19 位符号扩展
+            uint64_t v = 0;
+            memcpy(&v, reinterpret_cast<const void*>(pc + (uintptr_t)(off << 2)), sizeof(v));
+            *outTarget = (uintptr_t)v;                            // 字面量里就是真身地址
+        }
+        if (outForm) *outForm = 2;
+        return true;
+    }
+    return false;
+}
+
+// 桩目标是否落在「独立可执行映射」里（= 保护壳注入段：与 .text 不同的 VMA，文件里无 section 覆盖）。
+// 注：该段在 maps 里仍带 libil2cpp.so 的 pathname（同文件额外 LOAD），所以判据用「不同 VMA + r-x」，
+// 不用「pathname 为空」——后者实测不成立（2026-11-25 首轮 V3 实测 hook 未被拦，见复盘）。
+static bool InInjectedExecSegment(uintptr_t fn, uintptr_t target) {
+    FILE* f = fopen("/proc/self/maps", "r");
+    if (!f) return false;
+    char line[512];
+    unsigned long fnStart = 0, tgtStart = 0;
+    bool tgtExec = false;
+    while (fgets(line, sizeof(line), f)) {
+        unsigned long s = 0, e = 0;
+        char perms[8] = {0};
+        if (sscanf(line, "%lx-%lx %7s", &s, &e, perms) < 3) continue;
+        if (fn >= s && fn < e) fnStart = s;
+        if (target >= s && target < e) { tgtStart = s; tgtExec = (perms[0] == 'r' && perms[2] == 'x'); }
+    }
+    fclose(f);
+    return tgtExec && tgtStart != 0 && tgtStart != fnStart;
 }
 
 // 只做「解析符号 + 打补丁」，不调用任何 il2cpp API ⇒ 可在 init 前安全执行。
@@ -968,8 +1140,17 @@ static void ArmIl2cppInitGate() {
         g_initHookFailed.store(true);
         return;
     }
+    // ACE 转发桩 ⇒ 绝不 inline hook（会踩掉「桩+12」回落点，1.7.2 首启 SIGILL 根因）
+    uintptr_t stubTarget = 0;
+    int stubForm = 0;
+    if (IsAceForwarderStub(fn, &stubTarget, &stubForm) && InInjectedExecSegment((uintptr_t)fn, stubTarget)) {
+        LOGW(EF_LOG " il2cpp_init 为 ACE 转发桩(%s @%p → 注入段 %p) ⇒ 放弃 inline hook，走时间兜底",
+             stubForm == 2 ? "ldr-literal/br 8B" : "adrp/add/br 12B", fn, (void*)stubTarget);
+        g_initHookFailed.store(true);
+        return;
+    }
     if (DobbyHook(fn, (void*)EfHooked_Il2cppInit, (void**)&g_origIl2cppInit) == 0) {
-        LOGI(EF_LOG " il2cpp_init 就绪门已挂 @%p (%s)", fn, how);
+        LOGI(EF_LOG " il2cpp_init 就绪门已挂 @%p (%s，非桩真函数)", fn, how);
     } else {
         LOGW(EF_LOG " il2cpp_init DobbyHook 失败 ⇒ 退化为时间兜底盲等");
         g_initHookFailed.store(true);
@@ -1010,9 +1191,12 @@ static void SyncHooks() {
                      (long long)waitedMs, (long long)kGateCapMs, g_initHookFailed.load() ? 1 : 0);
             return;
         }
-        LOGW(EF_LOG " 就绪门时间兜底：等 %lldms 未见 il2cpp_init 返回（hookFailed=%d）⇒ 放行",
-             (long long)waitedMs, g_initHookFailed.load() ? 1 : 0);
-        g_il2cppInitDone.store(true);
+        // ★2026-11-25（P0 首启后 10 分钟 SIGSEGV 复盘）：到点**不再盲放行**。
+        // 盲放行会在 il2cpp 未就绪时按名解析/装钩 ⇒ FW-20 毒线程崩溃（延迟到分钟级）。
+        // 改为放弃本次装钩（稳态 il2cpp 调用 = 0）；用户动开关时由 OnFeatureChanged 重新武装。
+        LOGW(EF_LOG " 就绪门 30s 到点仍无可验证信号 ⇒ 放弃本次装钩（不触碰 il2cpp；动开关会重新武装）");
+        g_hookDone.store(true);
+        return;
     }
     // 退避节拍：框架每 ~300ms 调一次本函数 ⇒ 用 tick 序号当节拍器，不引入时钟依赖。
     const int tickNo = g_hookTickNo.fetch_add(1) + 1;
@@ -1065,6 +1249,19 @@ bool Endfield_TryInit() {
 bool Endfield_IsReady() { return g_libReady.load(); }
 
 void Endfield_OnFeatureChanged(int featNum, bool enabled) {
+    // ★2026-11-25：用户动开关 = 人已在游戏里（Unity 早已起、il2cpp_init 早已返回）⇒ 唯一可信信号。
+    // 但框架**启动时会恢复已保存开关**并同样调本函数（实测 18:18:35.504 起，#1..#4，距进程起 ≈1s），
+    // 那不是用户操作：若在该时刻放行，就是 1.6.4 FW-20 的盲放行 ⇒ UnityMain SIGABRT（已实测复现，
+    // 见 09_test/终末地/diag_20261125_v6/idle5min_attempt1_gate_released_CRASH）。
+    // 故用「距本函数首次回调 >20 s」区分恢复期与真实拨开关（真实操作必在用户打开菜单之后）。
+    static const int64_t s_firstFeatMs = EfNowMs();
+    if ((EfNowMs() - s_firstFeatMs) > 20000) {
+        g_il2cppInitDone.store(true);
+#if defined(STARRY_ENDFIELD_CRASHLOG) && STARRY_ENDFIELD_CRASHLOG
+        static bool s_crashHookOnce = false;
+        if (!s_crashHookOnce) { s_crashHookOnce = true; efcrash::install(); LOGW(EF_LOG " [诊断] ef_crash handler 已安装(SEGV/BUS/ABRT → files/ef_crash.txt)"); }
+#endif
+    }
     switch (featNum) {
         case ENDFIELD_FEAT_DMG100: g_dmg.store(enabled); break;
         case ENDFIELD_FEAT_INV: g_inv.store(enabled); break;
@@ -1072,7 +1269,15 @@ void Endfield_OnFeatureChanged(int featNum, bool enabled) {
         case ENDFIELD_FEAT_SKILL: g_skill.store(enabled); break;
         default: break;
     }
-    // v14.4：用户动开关 ⇒ 重新武装**有界**重试（退避期/give-up 之后仍有机会装上）
+    // ★2026-11-25：四组都装成 ⇒ 只更新开关，不重装。
+    if (g_instDmg.load() && g_instInv.load() && g_instJump.load() && g_instSkill.load()) {
+        LOGI(EF_LOG " feature #%d=%s (hooks already installed, no rehook)", featNum, enabled ? "on" : "off");
+        return;
+    }
+    // ★2026-11-25（真机实测）：就绪门 30s 放弃那一支会落 g_hookDone=true，入口短路会让「用户拨开关」
+    // 永远救不回来（V9 实测：只打 feature 行、没有 hooks sync）。这里**真正重新武装**：清 done/计数/节拍，
+    // 再进 SyncHooks；就绪门已由上面的 g_il2cppInitDone=true 放行，不会卡 30s 分支。已装成的组靠 g_inst* 幂等。
+    LOGI(EF_LOG " rearm on feature #%d=%s (hookDone reset)", featNum, enabled ? "on" : "off");
     g_hookDone.store(false);
     g_hookAttempts.store(0);
     g_hookTickNo.store(0);

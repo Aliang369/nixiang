@@ -154,11 +154,14 @@ def main() -> int:
             return 1
         if old != content:
             # 结构一致、仅 refs 漂移：刷新计数但不判失败
-            OUT.write_text(content, encoding="utf-8", newline="\n")
+            # 3.9 兼容：pathlib.write_text 无 newline 参数（2026-11-25 实测 TypeError）
+            with OUT.open("w", encoding="utf-8", newline="") as f:
+                f.write(content)
         print(f"✓ 脚本索引一致（{len(scripts)} 个，孤儿 {len(orphans)} 个）")
         return 0
 
-    OUT.write_text(content, encoding="utf-8", newline="\n")
+    with OUT.open("w", encoding="utf-8", newline="") as f:
+        f.write(content)
     if not args.quiet:
         print(f"✓ 已写 {OUT.relative_to(ROOT)}：{len(scripts)} 个脚本，其中孤儿 {len(orphans)} 个")
         if orphans:

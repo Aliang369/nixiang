@@ -2,16 +2,19 @@
   "schema": "starry-audit-waivers/v1",
   "game": "终末地",
   "package": "com.hypergryph.endfield",
-  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。2026-10-16 收尾：原 axml_provider_false_negative 豁免已**删除**——该假阴性根因已由 d6aaeb5f「修共享门禁三条缺陷」修掉（不再用 printf|grep -qF），本轮复跑 [F] 两条均**原生 ✓**，豁免已无对象，留着只会掩盖回归。",
+  "note": "framework_entry_audit.sh 对本游戏的已知无害偏离。命中则打 ✓豁免（附理由+证据），不判 FAIL；review_by 过期后自动恢复 ✗ 提醒重判。新增豁免必须带证据行，禁止只写结论。",
   "waivers": [
     {
       "id": "android_mk_branch_private_mk",
-      "match": ["激活分支", "与 --game"],
+      "match": [
+        "激活分支",
+        "与 --game"
+      ],
       "conclusion": "接受偏离",
-      "reason": "1.6.4 轮起本游戏走 **modern 注册表 + 私有 mk**（新 Games/EndfieldEntry.cpp + Android_mrfzzmd.mk），公共 Android.mk 按 2026-10-15 m00007 铁律**零接触**，故工作区 Android.mk 的激活分支仍停在上一款（CSTJJS）属设计如此，不会编出别的游戏的 so。通用审计的 [D] 项只认 legacy 切换路径，对本形态无判别力。",
-      "evidence": "私有 mk：mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzzmd.mk（含 -DENABLE_UNITY_HOOK -DSTARRY_GAME_ENDFIELD + Games/EndfieldMod.cpp + Games/EndfieldEntry.cpp）；产物 so（当轮 md5 7c5ed8bb1e77dfc89f78ab4b89c2c1a8）含 [Endfield]×13、mrfzzmd×1、五个菜单中文串，反查 [Wggls]/[Gjc2]/[Dwct]/[Cstjjs]/[Hzsj]/[Wxsj] 全部 0 命中（-F 字面量比）。构建日志见 10_docs/终末地/版本适配_1.6.4_20261016.md。注：该 md5 对应的构建中间件已按收官规则清理，so 可由 Android_mrfzzmd.mk + ndk-build 重建。",
-      "date": "2026-10-16",
-      "review_by": "2027-01-16"
+      "reason": "本游戏走 **modern 注册表 + 私有 mk**（Games/EndfieldEntry.cpp + Android_mrfzzmd.mk），公共 Android.mk 按 2026-10-15 m00007 铁律零接触，故工作区 Android.mk 的激活分支仍停在上一款（CSTJJS）属设计如此，不会编出别的游戏的 so。通用审计的 [D] 项只认 legacy 切换路径，对本形态无判别力。",
+      "evidence": "私有 mk：mod菜单/starry-mod-menu/app/src/main/jni/Android_mrfzzmd.mk（LOCAL_SRC_FILES 含 MainModern.cpp + Games/EndfieldMod.cpp + Games/EndfieldEntry.cpp；CFLAGS 含 -DENABLE_UNITY_HOOK -DSTARRY_GAME_ENDFIELD）；1.7.2 交付包内 so（md5 fb3fcba9a5fd3715374410e2967f9a58，201,576 B）含 [Endfield] 37 处、mrfzzmd 1 处、四个菜单中文串各 1 处，反查 [Wggls]/[Gjc2]/[Dwct]/[Cstjjs]/[Hzsj]/[Wxsj] 全部 0 命中（python 字节计数，-F 无匹配歧义）。so 可由 Android_mrfzzmd.mk + ndk-build 重建；复现命令与断言见 10_docs/终末地/交付_1.7.2_20261126.md 第四节。",
+      "date": "2026-11-26",
+      "review_by": "2027-02-26"
     }
   ]
 }

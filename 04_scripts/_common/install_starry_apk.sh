@@ -27,6 +27,7 @@
 #                            同签名三次 --clean，用户反复重登）
 #    --force-clean           真·卸载重装（绕过签名预判；只在确实要清数据/清 OTA so 时用）
 #    --allow-resource-loss   备胎失败时仍继续卸载（默认拒绝，退出码 3）—— 需显式承担重下代价
+#    ALLOW_FOREIGN_SIGNER=1  环境变量：放行非 StarryMagic 签名（**只用于装官方底包做对照实验**）
 #    --no-seed               不跑 ensure_starry_device_id_seed.sh
 #    --dry-run               只打印将执行的判定与命令，不做任何写操作（也不做备胎核对）
 #    退出码：0=成功；1=校验/装机/闭环核对失败；2=用法错；3=备胎失败且未加 --allow-resource-loss
@@ -95,13 +96,20 @@ echo "  md5    = ${LOCAL_MD5}"
 echo "  pkg    = ${PKG}    serial = ${SERIAL:-<默认>}    clean=${CLEAN} dry=${DRY}"
 
 # ---- 查 1：签名身份必须是星光自签 ----
+#   例外（2026-11-25）：对照组实验要装**官方底包**（CN=HyperGryph），此时
+#   ALLOW_FOREIGN_SIGNER=1 把查 1 降为警告。只用于「我们改的包 vs 官方包」单变量
+#   对照；正常出包装机不得设置该变量。
 if [[ -n "$BT" ]]; then
   "$BT/apksigner" verify --print-certs "$APK" > "${TMP}/signer.txt" 2>&1 || true
   if grep -q "CN=StarryMagic" "${TMP}/signer.txt"; then
     echo "  ✓ 签名身份 CN=StarryMagic"
+  elif [[ "${ALLOW_FOREIGN_SIGNER:-0}" == 1 ]]; then
+    echo "  ! 签名身份非 StarryMagic，已按 ALLOW_FOREIGN_SIGNER=1 放行（对照组实验专用）" >&2
+    sed -n '1,6p' "${TMP}/signer.txt" >&2
   else
     echo "ERROR: 签名身份不是 StarryMagic（异签名覆盖装会失败）：" >&2
     sed -n '1,6p' "${TMP}/signer.txt" >&2
+    echo "       （装官方底包做对照实验时加 ALLOW_FOREIGN_SIGNER=1）" >&2
     exit 1
   fi
 else

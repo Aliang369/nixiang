@@ -1,0 +1,11 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/终末地",
+  "keep": "终末地_1.7.2_surgical-releaseSigned.apk",
+  "keep_size": 1653187648,
+  "keep_md5": "04ccb86cec043777a29d8c5520e0e750",
+  "keep_sha256": "6364c43c133d0ff2018dcbbc15795d1c0962fa86f79c1e8d956e53ce771eb141",
+  "keep_note": "1.7.2 星空版交付包（V11）：官方 dex 零改动（classes/2/3/4/5/6 与底包逐项同 md5）+ 新增 classes7.dex（657,712 B）+ libstarry_magic.so（201,576 B，md5 fb3fcba9a5fd3715374410e2967f9a58）+ libc++_shared.so + Manifest 注入 StarryInitProvider/MenuService；签名 CN=StarryMagic（证书 MD5 161fca32a36d3df274458682a44cb774，与 1.6.4 同钥 ⇒ 可覆盖安装），vc71。L2 机器预检 + L3 用户终审通过，四功能可用；登录走 TapTap 网页登录回退。判据与复现命令见 10_docs/终末地/交付_1.7.2_20261126.md。",
+  "mode": "--apply",
+  "removed": [],
+  "removed_count": 0
+}
