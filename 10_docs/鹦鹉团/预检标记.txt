@@ -1,0 +1,23 @@
+# 鹦鹉团（com.jinsaina.auditionsgo.gw）装机预检标记
+# 格式：类别|ERE 正则（每行一条，# 开头为注释）
+# 用途：post_install_precheck.sh 的机器预检关（L2）。人工终审仍是用户实测（L3）。
+
+pkg|com\.jinsaina\.auditionsgo\.gw
+
+# 菜单 so 加载标记（星光框架 TAG）
+menu_load|StarryMagic
+
+# 菜单弹出标记
+menu_shown|native menu shown
+
+# 游戏级 hook 命中标记（ywtMod.cpp 全部日志带 [Ywt] 前缀）
+hook_hit|\[Ywt\]
+
+# 授权墙标记（过不去只发操作请求卡，不诊断服务端）
+auth_fail|renew auth fail
+auth_ok|auth game_id synced from native
+
+# 崩溃排除追加项（2026-11-25 实测）：框架 CrashReport-Native 解析 maps 时会打
+#   `Parsing line: … /system/lib64/libtombstoned_client.so`，含裸 tombstone 关键字 ⇒ 误判运行中崩溃。
+# 默认 RE_CRASH 其余排除项保持脚本内置（本行是追加语义，不覆盖默认）。
+crash_ignore|libtombstoned_client\.so
