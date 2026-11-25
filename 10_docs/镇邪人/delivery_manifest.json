@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-11-25T16:53:47+00:00",
+  "generated_at": "2026-11-25T17:14:10+00:00",
   "game": "镇邪人",
   "version": "1.0.3-cb9dc-menu-star",
   "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
@@ -26,8 +26,8 @@
     "48572_origbase_build": "done",
     "48572_origbase_install": "done"
   },
-  "source_commit": "31543d9af34a4867ee2d3bacf80b97ed98746efc",
-  "source_tree": "fb63300fcfc8cce9cb691e1572a17c17735d6185",
+  "source_commit": "cb440ebe758b9743e34029f9dd409e3ccc07a853",
+  "source_tree": "26580d6d1b2626cf4c88f6d89e86b8588972aa1f",
   "apk": {
     "path": "08_output/镇邪人/镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk",
     "available": true,
