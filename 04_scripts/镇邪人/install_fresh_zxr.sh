@@ -14,8 +14,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SERIAL="${SERIAL:-f9a116a2}"
 PKG="com.zxr.dlxmz.zxrwz37zgx10.gg9b"
-APK="${1:-$ROOT/08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk}"
+APK="${1:-$ROOT/08_output/镇邪人/镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk}"
 REMOTE="/data/local/tmp/zxr_star_fresh.apk"
+# Git Bash/MSYS 会把 adb 的 "/data/local/tmp/..." 参数改写成 "C:/Program Files/Git/data/..."
+# （实测：remote secure_mkdirs failed）⇒ 关掉参数路径转换，只在本脚本内生效。
+export MSYS2_ARG_CONV_EXCL='*'
 
 [[ -f "$APK" ]] || { echo "ERROR: APK missing: $APK" >&2; exit 1; }
 adb -s "$SERIAL" get-state >/dev/null 2>&1 || { echo "ERROR: device $SERIAL not online" >&2; exit 1; }
@@ -38,11 +41,12 @@ if adb -s "$SERIAL" shell pm list packages | tr -d '\r' | grep -Fq "package:${PK
 fi
 echo "  已卸载"
 
-echo "[3/5] 全新安装星空包"
-adb -s "$SERIAL" push "$APK" "$REMOTE" >/dev/null
-INSTALL_OUT="$(adb -s "$SERIAL" shell "su -c 'pm install --user 0 ${REMOTE}'" 2>&1 | tr -d '\r')"
+echo "[3/5] 全新安装星空包（流式 adb install）"
+# 2026-11-26 Windows 实测：push 到 /data/local/tmp 后 pm install 报
+#   Failure [INSTALL_FAILED_MEDIA_UNAVAILABLE: Failed to restorecon]
+# （雷电 SELinux 上下文问题）⇒ 改用流式 adb install（不落 /data/local/tmp）。
+INSTALL_OUT="$(adb -s "$SERIAL" install -r "$APK" 2>&1 | tr -d '\r')"
 printf '%s\n' "$INSTALL_OUT"
-adb -s "$SERIAL" shell rm -f "$REMOTE" >/dev/null 2>&1 || true
 printf '%s\n' "$INSTALL_OUT" | grep -Fq 'Success' || { echo "ERROR: pm install 失败" >&2; exit 1; }
 
 echo "[4/5] 装机完整性校验（设备包 md5 == 本地 APK）"

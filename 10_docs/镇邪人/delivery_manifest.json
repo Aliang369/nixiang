@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated_by": "04_scripts/_common/delivery_manifest.py",
-  "generated_at": "2026-10-24T16:36:43+00:00",
+  "generated_at": "2026-11-25T16:53:47+00:00",
   "game": "镇邪人",
   "version": "1.0.3-cb9dc-menu-star",
   "package": "com.zxr.dlxmz.zxrwz37zgx10.gg9b",
@@ -22,16 +22,18 @@
     "cb9dc_origbase_install": "done",
     "cb9dc_origbase_closeout": "done",
     "cb9dc_hotfix_derive_20261025": "done",
-    "cb9dc_menu_head_rebuild_20261025": "done"
+    "cb9dc_menu_head_rebuild_20261025": "done",
+    "48572_origbase_build": "done",
+    "48572_origbase_install": "done"
   },
-  "source_commit": "a37480248092ee099612a72d259b51917b1722e8",
-  "source_tree": "ef575087c7cc30d80e3f79cf2a5bde427c988f73",
+  "source_commit": "31543d9af34a4867ee2d3bacf80b97ed98746efc",
+  "source_tree": "fb63300fcfc8cce9cb691e1572a17c17735d6185",
   "apk": {
-    "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk",
+    "path": "08_output/镇邪人/镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk",
     "available": true,
-    "size": 106331297,
-    "md5": "4a7e4431ddbf452f048cae42d97287c5",
-    "sha256": "1953fd7108064f722796925a9906010245a602bba1d43bb5dd67740de46f36a5"
+    "size": 105081945,
+    "md5": "b96a53ad5ece6ef9fad1b568ce7922af",
+    "sha256": "7f491b98da33c597c6566da6768a798ef5b8b6875af365a87d7c227253e5b7e2"
   },
   "artifacts": [
     {
@@ -74,10 +76,7 @@
       "stage": "archive",
       "path": "10_docs/镇邪人/镇邪人_1.0.3_ca0d4_星空菜单收尾_20260923.md",
       "recorded_md5": "5537ae070cde3e970031fe86509003f3",
-      "available": true,
-      "current_md5": "5537ae070cde3e970031fe86509003f3",
-      "current_sha256": "2fc8aa2dcc8e46f9f07ae91009446abb4ad9ec337090449bbaaf6cbfbc75f8da",
-      "matches_recorded_md5": true
+      "available": false
     },
     {
       "stage": "e4278_hotfix_closeout",
@@ -107,19 +106,13 @@
       "stage": "0d1ae_menu_latest_closeout",
       "path": "07_patched/镇邪人/0d1ae/index.0d1ae.jsc",
       "recorded_md5": null,
-      "available": true,
-      "current_md5": "6b0820c40307e84c6a78046c6766d565",
-      "current_sha256": "6392402f4bc5ebe67910793c07404c123b8dfb224768560f1aee5e41f521950d",
-      "matches_recorded_md5": false
+      "available": false
     },
     {
       "stage": "0d1ae_menu_latest_closeout",
       "path": "07_patched/镇邪人/menu_latest/classes8.dex",
       "recorded_md5": "69bcfff79e9dfc206e3ba5b369a30751",
-      "available": true,
-      "current_md5": "36271dd7eaac531bfd51b388b930629a",
-      "current_sha256": "ade3263b63f16f0f7d0bdfc6bc11e4c75a417f09ea1e6ff03a4180537b9f139a",
-      "matches_recorded_md5": false
+      "available": false
     },
     {
       "stage": "cb9dc_origbase_build",
@@ -131,19 +124,13 @@
       "stage": "cb9dc_origbase_closeout",
       "path": "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_原版底包复刻_20261024.md",
       "recorded_md5": "cad3dcb1d59bfeb8d08d5e446bdb9d85",
-      "available": true,
-      "current_md5": "fbe11cba03f21ee03b9b5da373c0f6af",
-      "current_sha256": "878546980dbe6cf0907b7329916a639e983db490ecd3e10cc1907e6f5f2fb832",
-      "matches_recorded_md5": false
+      "available": false
     },
     {
       "stage": "cb9dc_origbase_closeout",
       "path": "10_docs/镇邪人/正式包裁剪清单_1.0.3_cb9dc_20261024.json",
       "recorded_md5": "f548ac1d6e7472eb25a46e7d63d5ae31",
-      "available": true,
-      "current_md5": "f548ac1d6e7472eb25a46e7d63d5ae31",
-      "current_sha256": "a628d04542a2e8b6d6950f78b84ff9f9c49842d299a1a8f681b51e9c9eecf3d0",
-      "matches_recorded_md5": true
+      "available": false
     },
     {
       "stage": "cb9dc_origbase_closeout",
@@ -161,18 +148,30 @@
       "stage": "cb9dc_hotfix_derive_20261025",
       "path": "10_docs/镇邪人/镇邪人_1.0.3_cb9dc_hotfix结构派生_20261025.md",
       "recorded_md5": "84acd3eabb23195d1642cc3d3d8a05db",
-      "available": true,
-      "current_md5": "8f8a5cd4cb895c15889ee4ec12e25783",
-      "current_sha256": "1e2ee4e9ee1efdb3c857d0a4652bb7ea44ca10cc334e5cdb63b622f8c9e5c371",
-      "matches_recorded_md5": false
+      "available": false
     },
     {
       "stage": "cb9dc_menu_head_rebuild_20261025",
       "path": "08_output/镇邪人/镇邪人_1.0.3_cb9dc_menu_20261025-releaseSigned.apk",
       "recorded_md5": "4a7e4431ddbf452f048cae42d97287c5",
+      "available": false
+    },
+    {
+      "stage": "48572_origbase_build",
+      "path": "08_output/镇邪人/镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk",
+      "recorded_md5": "b96a53ad5ece6ef9fad1b568ce7922af",
       "available": true,
-      "current_md5": "4a7e4431ddbf452f048cae42d97287c5",
-      "current_sha256": "1953fd7108064f722796925a9906010245a602bba1d43bb5dd67740de46f36a5",
+      "current_md5": "b96a53ad5ece6ef9fad1b568ce7922af",
+      "current_sha256": "7f491b98da33c597c6566da6768a798ef5b8b6875af365a87d7c227253e5b7e2",
+      "matches_recorded_md5": true
+    },
+    {
+      "stage": "48572_origbase_install",
+      "path": "08_output/镇邪人/镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk",
+      "recorded_md5": "b96a53ad5ece6ef9fad1b568ce7922af",
+      "available": true,
+      "current_md5": "b96a53ad5ece6ef9fad1b568ce7922af",
+      "current_sha256": "7f491b98da33c597c6566da6768a798ef5b8b6875af365a87d7c227253e5b7e2",
       "matches_recorded_md5": true
     }
   ],

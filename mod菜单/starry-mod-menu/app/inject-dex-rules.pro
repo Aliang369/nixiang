@@ -69,6 +69,19 @@
 # 2026-11-25：Cocos 游戏 mod 的 JS 注入桥，native FindClass 全名 + evalOnGLThread。
 # 与 proguard-rules.pro 的 ② 节必须保持一致；缺失时 EvalJs 恒 false（install=0）。
 -keep class com.starry.magic.cocos.CocosJsBridge { *; }
+# 2026-11-26（镇邪人 48572 出包实测）：注入进 games/classes7.dex 的 smali 按全名调
+# Lcom/starry/magic/cocos/ZxrHooks;->getRet(I)Z / setRet(IZ)V / shouldSkipAd()Z，JS 侧还用
+# jsb.reflection.callStaticMethod("com.starry.magic.cocos.ZxrHooks", ...)。缺本规则时 R8 把它改名
+# （实测 mapping: com.starry.magic.cocos.ZxrHooks -> com.starry.magic.o.V0）⇒ 运行时 ClassNotFound，
+# 免广告与开关读取静默读 false。必须全名 keep（不带 allowobfuscation）。
+-keep class com.starry.magic.cocos.ZxrHooks { *; }
+
+# 2026-11-26（镇邪人 48572 出包）：仅为让 clearFeaturePrefsIfListChanged 可作为「开关保存修复」的静态探针
+# 存在（verify/静态验收按字节找该串）；Preferences 无任何外部按名调用（注入 smali 只按名引用 MenuService / ZxrHooks），
+# R8 更名对运行时行为无害。故只保这一个方法名，不保类名。
+-keepclassmembers class com.starry.magic.menu.Preferences {
+    public static void clearFeaturePrefsIfListChanged(java.lang.String);
+}
 
 # ---- 2b. 单游戏 SPI：框架用 Class.forName("...games.<game_id>.GameHookImpl") 反射装载 ----
 #      2026-11-11 新增。这两个包名/类名是「按约定名找进来」的又一类，必须保原名保结构，

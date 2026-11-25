@@ -64,6 +64,19 @@
 # com.starry.magic.o.X ⇒ EvalJs 恒 false，日志只有「[Haly] JS sync deferred (install=0)」，
 # 所有 JS 侧功能静默不装（dex 里搜 com/starry/magic/cocos/CocosJsBridge 命中 0）。必须全名 keep。
 -keep class com.starry.magic.cocos.CocosJsBridge { *; }
+# 2026-11-26（镇邪人 48572 出包实测）：注入进 games/classes7.dex 的 smali 按全名调
+# Lcom/starry/magic/cocos/ZxrHooks;->getRet(I)Z / setRet(IZ)V / shouldSkipAd()Z，JS 侧还用
+# jsb.reflection.callStaticMethod("com.starry.magic.cocos.ZxrHooks", ...)。缺本规则时 R8 把它改名
+# （实测 mapping: com.starry.magic.cocos.ZxrHooks -> com.starry.magic.o.V0）⇒ 运行时 ClassNotFound，
+# 免广告与开关读取静默读 false。必须全名 keep（不带 allowobfuscation）。
+-keep class com.starry.magic.cocos.ZxrHooks { *; }
+
+# 2026-11-26（镇邪人 48572 出包）：仅为让 clearFeaturePrefsIfListChanged 可作为「开关保存修复」的静态探针
+# 存在（verify/静态验收按字节找该串）；Preferences 无任何外部按名调用（注入 smali 只按名引用 MenuService / ZxrHooks），
+# R8 更名对运行时行为无害。故只保这一个方法名，不保类名。
+-keepclassmembers class com.starry.magic.menu.Preferences {
+    public static void clearFeaturePrefsIfListChanged(java.lang.String);
+}
 
 # ---- ③ 构建脚本按名引用：刷新链要往 BuildConfig 注入 MENU_STAMP（starry-menu:<commit>）
 #       被 allowobfuscation+repackageclasses 改名成 com.starry.magic.o.a 后，注入脚本按名找不到 ⇒ 出包失败

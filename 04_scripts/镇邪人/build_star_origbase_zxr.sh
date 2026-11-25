@@ -26,11 +26,11 @@ BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
 BASE_APK="${ZXR_BASE_APK:-}"
 OUT="$NIXIANG/08_output/镇邪人"
 MENU_DIR="${ZXR_MENU_DIR:-$NIXIANG/07_patched/镇邪人/menu_latest}"
-PIN_VERS="${ZXR_PIN_VERS:-d5507 cb9dc}"
+PIN_VERS="${ZXR_PIN_VERS:-d5507 48572}"
 ORIG_CERT_MD5="${ZXR_ORIG_CERT_MD5:-8fa00ae1397609e5e09ff34cc43030e3}"
 EXPECT_BASE_MD5="${ZXR_EXPECT_BASE_MD5:-0dab73812162a2cab8541431fb972af5}"
 PKG="com.zxr.dlxmz.zxrwz37zgx10.gg9b"
-OUT_NAME="${ZXR_OUTPUT_NAME:-镇邪人_1.0.3_cb9dc_star-releaseSigned.apk}"
+OUT_NAME="${ZXR_OUTPUT_NAME:-镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk}"
 SIGNED="$OUT/$OUT_NAME"
 MF_CACHE_DIR="$NIXIANG/07_patched/镇邪人/manifest_origbase_vc11"
 MF_CACHE="$MF_CACHE_DIR/AndroidManifest.xml"
@@ -44,19 +44,49 @@ if [[ "${ZXR_USE_RELEASE_KS:-1}" == "1" ]]; then
   KS_PASS="${STARRY_KS_PASS:-starry2026}"
 fi
 
+# build-tools 探测：mac 路径优先（保持原行为），其后 Windows 回退（照 04_scripts/黑暗领域/haly_pack_win.sh）
+# 可用 ZXR_BUILD_TOOLS=<dir> 直接指定，绕过探测。
 BT=""
-for v in 36.0.0 35.0.0 34.0.0; do
-  if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then BT="$HOME/Library/Android/sdk/build-tools/$v"; break; fi
+for c in "${ZXR_BUILD_TOOLS:-}" \
+         "$HOME/Library/Android/sdk/build-tools/36.0.0" \
+         "$HOME/Library/Android/sdk/build-tools/35.0.0" \
+         "$HOME/Library/Android/sdk/build-tools/34.0.0" \
+         "$HOME/AppData/Local/Android/Sdk/build-tools/36.1.0" \
+         "$HOME/AppData/Local/Android/Sdk/build-tools/35.0.0" \
+         "$HOME/AppData/Local/Android/Sdk/build-tools/34.0.0" \
+         "$NIXIANG/01_tools/android-sdk/build-tools/android-15"; do
+  if [[ -n "$c" && -x "$c/zipalign" ]]; then BT="$c"; break; fi
 done
+if [[ -z "$BT" ]]; then
+  for d in "$HOME"/AppData/Local/Android/Sdk/build-tools/*; do
+    if [[ -x "$d/zipalign" ]]; then BT="$d"; fi
+  done
+fi
 [[ -n "$BT" ]] || { echo "ERROR: build-tools with zipalign not found"; exit 1; }
 
-export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
+# JAVA_HOME 探测：env 优先 → mac java_home → Windows JDK 17（/usr/libexec/java_home 在 Windows 无效）
+if [[ -z "${JAVA_HOME:-}" ]]; then
+  JAVA_HOME="$(/usr/libexec/java_home -v 17 2>/dev/null || true)"
+fi
+if [[ -z "${JAVA_HOME:-}" ]]; then
+  for d in "/c/Program Files/Microsoft/jdk-17.0.20.101-hotspot" \
+           "/c/Program Files/Microsoft/jdk-17"* \
+           "$HOME"/AppData/Local/Programs/Microsoft/jdk-17* \
+           "/c/Program Files/Java/jdk-17"*; do
+    if [[ -x "$d/bin/java" ]]; then JAVA_HOME="$d"; break; fi
+  done
+fi
+export JAVA_HOME
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
 [[ -n "$BASE_APK" ]] || { echo "ERROR: 必须指定 ZXR_BASE_APK（官方原版底包，APK 不留本地）" >&2; exit 1; }
 for f in "$BASE_APK" "$KS" "$SMALI_BIN" "$BAKSMALI_BIN" "$MENU_DIR/classes8.dex" "$MENU_DIR/libstarry_magic.so"; do
   [[ -e "$f" ]] || { echo "ERROR: missing input $f" >&2; exit 1; }
 done
+# apktool：PATH 里没有就用仓内 01_tools/apktool（Windows 未装全局 apktool 时必需）
+if ! command -v apktool >/dev/null && [[ -x "$NIXIANG/01_tools/apktool/apktool" ]]; then
+  export PATH="$NIXIANG/01_tools/apktool:$PATH"
+fi
 command -v apktool >/dev/null || { echo "ERROR: apktool not in PATH" >&2; exit 1; }
 
 LOCK_DIR="/tmp/zxr_origbase_build.lockdir"

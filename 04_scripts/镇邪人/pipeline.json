@@ -528,6 +528,64 @@
           "md5": "4a7e4431ddbf452f048cae42d97287c5"
         }
       }
+    },
+    {
+      "id": "48572_origbase_build",
+      "name": "48572 热更轮：官方原版 vc11 外科重建星光包（菜单 HEAD 重编 + d5507/48572 双 pin + ZxrHooks R8 keep）",
+      "requires": [
+        "cb9dc_menu_head_rebuild_20261025"
+      ],
+      "command": "ZXR_BASE_APK=02_apks/镇邪人/镇邪人_1.0.3_vc11_taptap_原版_20261125.apk ZXR_PIN_VERS='d5507 48572' ZXR_MENU_DIR=07_patched/镇邪人/menu_48572 ZXR_OUTPUT_NAME='镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk' bash 04_scripts/镇邪人/build_star_origbase_zxr.sh",
+      "preflight": [
+        "04_scripts/镇邪人/build_star_origbase_zxr.sh",
+        "04_scripts/镇邪人/menu_rebuild_zxr.sh",
+        "04_scripts/镇邪人/menu_dex_win_zxr.sh",
+        "04_scripts/镇邪人/verify_apk_48572_zxr.sh"
+      ],
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/镇邪人/镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "note": "服务端热更 src 漂到 48572（17956220996623.jsc 4,479,332B）⇒ 新 spec zxr_patch_spec_48572.json（node 回归 7/7）+ 变体表 4 条 full_screen_kill。菜单 classes8.dex 走 javac+R8（Windows，menu_dex_win_zxr.sh）：gradle/apktool smali 路线在 R8 混淆后必然 ERROR。R8 实测把 cocos.ZxrHooks 改名（-> com.starry.magic.o.V0）⇒ 两个规则文件补 -keep（功能必需）+ -keepclassmembers Preferences.clearFeaturePrefsIfListChanged（仅静态探针）。so 用 NDK 27 经 cmd.exe 调 ndk-build.cmd 编（Windows NDK 无 ndk-build 脚本），wxsj prebuilt 缺货模块只在副本注释 + APP_ALLOW_MISSING_DEPS。",
+      "done_at": "2026-11-26 00:28:00",
+      "artifacts": {
+        "08_output/镇邪人/镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk": {
+          "md5": "b96a53ad5ece6ef9fad1b568ce7922af",
+          "sha256": "7f491b98da33c597c6566da6768a798ef5b8b6875af365a87d7c227253e5b7e2",
+          "size": 105081945
+        }
+      }
+    },
+    {
+      "id": "48572_origbase_install",
+      "name": "卸载官方原版 → 全新安装 48572 星光包 → 装机完整性校验 + 预检",
+      "requires": [
+        "48572_origbase_build"
+      ],
+      "command": "CONFIRM_UNINSTALL=1 SERIAL=emulator-5554 bash 04_scripts/镇邪人/install_fresh_zxr.sh 08_output/镇邪人/镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk && bash 04_scripts/_common/post_install_precheck.sh --game 镇邪人 --serial emulator-5554",
+      "preflight": [
+        "04_scripts/镇邪人/install_fresh_zxr.sh"
+      ],
+      "verify": [
+        {
+          "type": "shell_contains",
+          "command": "adb -s emulator-5554 shell pm list packages",
+          "expect": "com.zxr.dlxmz.zxrwz37zgx10.gg9b"
+        }
+      ],
+      "status": "done",
+      "note": "签名变更（官方 8fa00ae1… → StarryMagic 83c5cc0b…）⇒ 必须卸载重装，用户已授权。Windows 实测 push+/data/local/tmp+pm install 报 INSTALL_FAILED_MEDIA_UNAVAILABLE: Failed to restorecon ⇒ 改流式 adb install；adb 参数路径被 MSYS 改写 ⇒ 脚本内 export MSYS2_ARG_CONV_EXCL='*'。装机核：base.apk md5 b96a53ad… == 本地、so md5 b1a8cb00… == 本地、firstInstallTime 2026-11-26 00:30:31。预检 PASS_TO_HUMAN：RegisterNatives 20/20、native menu shown、[Zxr] init ok se=1 splice=0 hot=0、gamecaches/src 为空（pin 命中）。",
+      "done_at": "2026-11-26 00:36:00",
+      "artifacts": {
+        "08_output/镇邪人/镇邪人_1.0.3_48572_star_20261126-releaseSigned.apk": {
+          "md5": "b96a53ad5ece6ef9fad1b568ce7922af",
+          "sha256": "7f491b98da33c597c6566da6768a798ef5b8b6875af365a87d7c227253e5b7e2",
+          "size": 105081945
+        }
+      }
     }
   ]
 }

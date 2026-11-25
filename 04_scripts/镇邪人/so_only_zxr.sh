@@ -13,12 +13,22 @@
 set -euo pipefail
 
 NIXIANG="${NIXIANG:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+# Git Bash 非登录 shell 里 /usr/local/bin（rsync 所在）可能不在 PATH ⇒ 补一次
+case ":$PATH:" in *":/usr/local/bin:"*) ;; *) [[ -d /usr/local/bin ]] && export PATH="$PATH:/usr/local/bin" ;; esac
 STARRY="$NIXIANG/mod菜单/starry-mod-menu"
 BASE_APK="${ZXR_BASE_APK:-$NIXIANG/08_output/镇邪人/镇邪人_1.0.3_cb9dc_star-releaseSigned.apk}"
 OUT="$NIXIANG/08_output/镇邪人"
 OUT_NAME="${ZXR_OUTPUT_NAME:-镇邪人_1.0.3_cb9dc_so_only_$(date +%Y%m%d)-releaseSigned.apk}"
 SIGNED="$OUT/$OUT_NAME"
-NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
+# NDK 探测：ANDROID_NDK_HOME 优先 → mac 路径 → Windows 路径（NDK 27 口径）
+NDK="${ANDROID_NDK_HOME:-}"
+if [[ -z "$NDK" ]]; then
+  for d in "$HOME/Library/Android/sdk/ndk/27.0.12077973" \
+           "$HOME/AppData/Local/Android/Sdk/ndk/27.0.12077973" \
+           "$HOME/AppData/Local/Android/Sdk/ndk/29.0.14033849"; do
+    if [[ -x "$d/ndk-build" || -x "$d/build/ndk-build" ]]; then NDK="$d"; break; fi
+  done
+fi
 PY="${NIXIANG_PYTHON:-/opt/homebrew/bin/python3.11}"
 [[ -x "$PY" ]] || PY="$(command -v python3)"
 SERIAL="${SERIAL:-f9a116a2}"
@@ -28,16 +38,44 @@ KS="$NIXIANG/01_tools/starry_release.jks"; KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
 if [[ "${ZXR_USE_RELEASE_KS:-1}" != "1" ]]; then
   KS="$NIXIANG/01_tools/uber-debug.keystore"; KS_ALIAS="androiddebugkey"; KS_PASS="android"
 fi
-export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
+# JAVA_HOME 探测：env 优先 → mac java_home → Windows JDK 17（/usr/libexec/java_home 在 Windows 无效）
+if [[ -z "${JAVA_HOME:-}" ]]; then
+  JAVA_HOME="$(/usr/libexec/java_home -v 17 2>/dev/null || true)"
+fi
+if [[ -z "${JAVA_HOME:-}" ]]; then
+  for d in "/c/Program Files/Microsoft/jdk-17.0.20.101-hotspot" \
+           "/c/Program Files/Microsoft/jdk-17"* \
+           "$HOME"/AppData/Local/Programs/Microsoft/jdk-17* \
+           "/c/Program Files/Java/jdk-17"*; do
+    if [[ -x "$d/bin/java" ]]; then JAVA_HOME="$d"; break; fi
+  done
+fi
+export JAVA_HOME
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
+# build-tools 探测：mac 路径优先（保持原行为），其后 Windows 回退（照 04_scripts/黑暗领域/haly_pack_win.sh）
+# 可用 ZXR_BUILD_TOOLS=<dir> 直接指定，绕过探测。
 BT=""
-for v in 36.0.0 35.0.0 34.0.0; do
-  if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then BT="$HOME/Library/Android/sdk/build-tools/$v"; break; fi
+for c in "${ZXR_BUILD_TOOLS:-}" \
+         "$HOME/Library/Android/sdk/build-tools/36.0.0" \
+         "$HOME/Library/Android/sdk/build-tools/35.0.0" \
+         "$HOME/Library/Android/sdk/build-tools/34.0.0" \
+         "$HOME/AppData/Local/Android/Sdk/build-tools/36.1.0" \
+         "$HOME/AppData/Local/Android/Sdk/build-tools/35.0.0" \
+         "$HOME/AppData/Local/Android/Sdk/build-tools/34.0.0" \
+         "$NIXIANG/01_tools/android-sdk/build-tools/android-15"; do
+  if [[ -n "$c" && -x "$c/zipalign" ]]; then BT="$c"; break; fi
 done
+if [[ -z "$BT" ]]; then
+  for d in "$HOME"/AppData/Local/Android/Sdk/build-tools/*; do
+    if [[ -x "$d/zipalign" ]]; then BT="$d"; fi
+  done
+fi
 [[ -n "$BT" ]] || { echo "ERROR: build-tools with zipalign not found" >&2; exit 1; }
 [[ -f "$BASE_APK" ]] || { echo "ERROR: base apk missing: $BASE_APK" >&2; exit 1; }
-[[ -x "$NDK/ndk-build" ]] || { echo "ERROR: ndk-build missing: $NDK" >&2; exit 1; }
+if [[ -x "$NDK/ndk-build" ]]; then NDK_BUILD="$NDK/ndk-build"
+elif [[ -x "$NDK/build/ndk-build" ]]; then NDK_BUILD="$NDK/build/ndk-build"
+else echo "ERROR: ndk-build missing: $NDK" >&2; exit 1; fi
 [[ -f "$KS" ]] || { echo "ERROR: keystore missing: $KS" >&2; exit 1; }
 
 LOCK_DIR="/tmp/zxr_so_only.lockdir"
@@ -80,6 +118,30 @@ assert re.findall(r'^LOCAL_SRC_FILES\s*(?::=|\+=)\s*Main\.cpp\s+Games/(\w+Mod)\.
 print(f"  Android.mk: 关掉 {deact} 行、L{pair_at + 1} 启用 ZXR 相邻对")
 PY
 
+# Windows checkout 里 Games/*.a（gitignore 的大静态库）可能缺货：ndk-build 会因 PREBUILT_STATIC_LIBRARY
+# 的 LOCAL_SRC_FILES 缺失直接 Abort（实测 ./Games/WxsjPatchedDll_hf2.a）。这里只在**副本**里
+# 注释掉「引用了不存在的 .a」的 prebuilt 模块——它们与本轮 ZXR 构建无关（不进 LOCAL_STATIC_LIBRARIES）。
+"$PY" - "$WORK/starry/app/src/main/jni/Android.mk" <<'PY'
+import os, sys
+p = sys.argv[1]; root = os.path.dirname(p)
+lines = open(p, encoding="utf-8").read().split("\n")
+out, i, disabled = [], 0, []
+while i < len(lines):
+    if lines[i].strip() == "include $(PREBUILT_STATIC_LIBRARY)":
+        start = len(out)
+        while start > 0 and out[start - 1].strip() != "include $(CLEAR_VARS)":
+            start -= 1
+        blk = out[start:] + [lines[i]]
+        mod = next((l.split(":=", 1)[1].strip() for l in blk if l.strip().startswith("LOCAL_MODULE")), "?")
+        src = next((l.split(":=", 1)[1].strip() for l in blk if l.strip().startswith("LOCAL_SRC_FILES")), None)
+        if src and "$(TARGET_ARCH_ABI)" not in src and not os.path.exists(os.path.join(root, src)):
+            out[start:] = ["# " + l for l in out[start:]]
+            out.append("# " + lines[i]); disabled.append(mod); i += 1; continue
+    out.append(lines[i]); i += 1
+open(p, "w", encoding="utf-8").write("\n".join(out))
+print(f"  禁用缺货 prebuilt 模块: {disabled or '无'}")
+PY
+
 echo "[2/5] ndk-build（ZxrMod.cpp + ZxrDerive.h + ZxrPatchJs.h 变体表）"
 # OTA stamp：源码副本在 /tmp 不是 git 仓库，Application.mk 会回退到远古 epoch，
 # 导致「包内 so 比设备已 OTA 的 so 旧」⇒ 玩家继续跑旧 so。这里显式给当前时间。
@@ -89,8 +151,20 @@ fi
 echo "  STARRY_BUILD_EPOCH=${STARRY_BUILD_EPOCH}"
 (cd "$WORK/starry/app/src/main/jni" && \
   STARRY_BUILD_EPOCH="$STARRY_BUILD_EPOCH" \
-  "$NDK/ndk-build" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android.mk \
-    NDK_APPLICATION_MK=./Application.mk -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)")
+# Windows checkout 缺 Games/*.a（gitignore 的他人游戏静态库）⇒ 被禁用的 prebuilt 仍挂在
+# starry_magic 的 LOCAL_STATIC_LIBRARIES 里，ndk-build 默认会中止。ZXR 不引用它们，且 [6/8]
+# 会断言 so 内标记齐全，故放行缺依赖（仅本副本构建）。
+export APP_ALLOW_MISSING_DEPS=true
+JOBS="$(sysctl -n hw.ncpu 2>/dev/null || nproc 2>/dev/null || echo 4)"
+echo "  JOBS=$JOBS"
+  NDK_ARGS=(NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk -j"$JOBS")
+  if [[ "${NDK_BUILD_VIA_CMD:-auto}" != "0" ]] && command -v cygpath >/dev/null; then
+    # Windows NDK：ndk-build 的 recipe 是 cmd 语法（rem/if exist），Git Bash 的 sh 跑不了
+    # ⇒ 必须经 cmd.exe 调 ndk-build.cmd
+    cmd.exe //c "$(cygpath -w "$NDK/ndk-build.cmd")" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk -j"$JOBS"
+  else
+    "$NDK_BUILD" "${NDK_ARGS[@]}"
+  fi)
 SO_BUILT="$WORK/starry/app/src/libs/arm64-v8a/libstarry_magic.so"
 [[ -f "$SO_BUILT" ]] || { echo "ERROR: missing $SO_BUILT" >&2; exit 1; }
 

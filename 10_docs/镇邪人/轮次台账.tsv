@@ -1,0 +1,4 @@
+# 轮次台账 — 同一功能「改代码 → 装机 → 用户实测」逐轮结果（pipeline.sh <游戏> round 追加）
+# 门禁规则：同一功能连续 3 轮「无效」⇒ 拒绝装机，先填假设矩阵（pipeline.sh <游戏> rounds）
+日期	功能#	轮次	改动摘要	装机结果	用户结果
+2026-11-26 00:39	17	1	48572 origbase 星光包：菜单 javac+R8 重编 + d5507/48572 双 pin + ZxrHooks R8 keep；verify=pass；装机预检 PASS_TO_HUMAN（RegisterNatives 20/20, [Zxr] init ok se=1 splice=0 hot=0, gamecaches/src 空）	pipeline.log	有效
