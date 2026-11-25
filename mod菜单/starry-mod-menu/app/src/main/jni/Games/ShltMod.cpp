@@ -35,6 +35,9 @@ static std::atomic<bool> g_hooked{false};
 static std::atomic<bool> g_chapter{false};
 static std::atomic<bool> g_skin{false};
 static std::atomic<int> g_patched{0};
+static std::atomic<bool> g_chapterDone{false};
+static std::atomic<bool> g_skinDone{false};
+static std::atomic<bool> g_dllSeen{false};
 
 typedef void (*LoadAssembly_t)(void* thiz, void* stream, void* symbol, void* provider,
                                void* method);
@@ -89,6 +92,13 @@ static int PatchSkinTuple(uint8_t* hay, int hlen) {
 
 static void PatchHotfixDll(uint8_t* data, int len) {
     if (!data || len < 0x400 || data[0] != 'M' || data[1] != 'Z') return;
+    g_dllSeen.store(true);
+    const bool chapter = g_chapter.load();
+    const bool skin = g_skin.load();
+    if (!chapter && !skin) {
+        LOGI("[Shlt] hotfix IL patch skipped (both OFF) len=%d", len);
+        return;
+    }
     int n = 0;
     static const uint8_t kChapter[] = {0x00, 0x00, 0x03, 0x72, 0xA1, 0x0E, 0x00, 0x70,
                                        0x6F, 0xC7, 0x00, 0x00, 0x0A, 0x0A, 0x06, 0x2C};
@@ -98,15 +108,23 @@ static void PatchHotfixDll(uint8_t* data, int len) {
                                        0x0A, 0x06, 0x2C, 0x12};
     static const uint8_t kStage[] = {0x00, 0x03, 0x72, 0xA1, 0x0E, 0x00, 0x70, 0x6F,
                                      0xC7, 0x00, 0x00, 0x0A, 0x2C, 0x0D};
-    n += PatchOne(data, len, kChapter, (int)sizeof(kChapter), 0x17, 0x2A, "IsChapterPurchased");
-    n += PatchOne(data, len, kLimited, (int)sizeof(kLimited), 0x16, 0x2A, "IsActivityLimitedSkin");
-    n += PatchOne(data, len, kAchieve, (int)sizeof(kAchieve), 0x17, 0x2A, "GetAchievementUnLock");
-    n += PatchOne(data, len, kStage, (int)sizeof(kStage), 0x17, 0x2A, "CheckChapterStageIsUnlocked");
-    n += PatchSkinTuple(data, len);
-    if (n > 0) {
-        g_patched.store(n);
-        LOGI("[Shlt] hotfix IL patched %d sites len=%d", n, len);
+    if (chapter) {
+        n += PatchOne(data, len, kChapter, (int)sizeof(kChapter), 0x17, 0x2A, "IsChapterPurchased");
+        n += PatchOne(data, len, kStage, (int)sizeof(kStage), 0x17, 0x2A,
+                      "CheckChapterStageIsUnlocked");
     }
+    if (skin) {
+        n += PatchOne(data, len, kLimited, (int)sizeof(kLimited), 0x16, 0x2A,
+                      "IsActivityLimitedSkin");
+        n += PatchOne(data, len, kAchieve, (int)sizeof(kAchieve), 0x17, 0x2A,
+                      "GetAchievementUnLock");
+        n += PatchSkinTuple(data, len);
+    }
+    g_patched.store(n);
+    if (chapter) g_chapterDone.store(true);
+    if (skin) g_skinDone.store(true);
+    LOGI("[Shlt] hotfix IL patched %d sites (chapter=%d skin=%d) len=%d", n, chapter ? 1 : 0,
+         skin ? 1 : 0, len);
 }
 
 static void PatchFromStream(void* stream) {
@@ -186,11 +204,13 @@ bool Shlt_IsReady() { return g_ready.load(); }
 void Shlt_OnFeatureChanged(int featNum, bool enabled) {
     if (featNum == SHLT_FEAT_CHAPTER) {
         g_chapter.store(enabled);
-        LOGI("[Shlt] 解锁所有章节 %s（LoadAssembly IL / 热更缓存）", enabled ? "ON" : "OFF");
+        LOGI("[Shlt] 解锁所有章节 %s（LoadAssembly IL / 热更缓存）%s", enabled ? "ON" : "OFF",
+             (enabled && g_dllSeen.load() && !g_chapterDone.load()) ? "（需重启游戏生效）" : "");
     }
     if (featNum == SHLT_FEAT_SKIN) {
         g_skin.store(enabled);
-        LOGI("[Shlt] 解锁所有服饰 %s（LoadAssembly IL / 热更缓存）", enabled ? "ON" : "OFF");
+        LOGI("[Shlt] 解锁所有服饰 %s（LoadAssembly IL / 热更缓存）%s", enabled ? "ON" : "OFF",
+             (enabled && g_dllSeen.load() && !g_skinDone.load()) ? "（需重启游戏生效）" : "");
     }
 }
 

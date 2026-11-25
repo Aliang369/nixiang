@@ -5,7 +5,7 @@
 > **本文件是生成物**：手工修改会在下次生成时被覆盖（`preflight` 用 `--check` 校验）。
 > 真源＝`10_docs/_state/games/*.md` 头部的 frontmatter（`game`/`status`/`updated`/`one_line`）。
 > 只放**当前工作集**：`status: active|blocked`（且未超 --stale-days 挂起闸），或近 14 天有更新，最多 50 行。
-> 全量索引见 [`archive_index.md`](archive_index.md)（共 107 个游戏），逐个详情见 `games/{游戏}.md`。
+> 全量索引见 [`archive_index.md`](archive_index.md)（共 108 个游戏），逐个详情见 `games/{游戏}.md`。
 > 改状态＝改对应 `games/{游戏}.md` 的 frontmatter，然后跑：`python3 04_scripts/_common/gen_state_index.py`
 
 ## 当前工作集
@@ -15,6 +15,7 @@
 | [阿比斯少年冒险团](games/阿比斯少年冒险团.md) | 2026-11-16 | 🟡 v2.1 三问题修复已交付并用户实测通过（倍率只对玩家来源生效 / 无敌改为伤害同帧拦截+属性兜底 / 无限技能两桩补开关透传）⇒ 唯一正式包 abssnmxt_2.36_v1.1.apk md5 33551ecb…(1,133,647,158 B) |
 | [农场守护者](games/农场守护者.md) | 2026-11-11 | 🟡 2.1.21 星光包四项全通（md5 3a92930e / sha256 20124872）：百倍伤害=给怪补扣99Δ、无敌=回填curHp、无限技能=清CD、解锁加速=插Cid3月卡；四开战斗胜利+结算正常 |
 | [动物大联盟](games/动物大联盟.md) | 2026-11-08 | 🟡 壳已过（c2 证书指纹修正），改包仍卡「数据检查」：点同意不发起资源请求。apksecurefile 已全解（MDXZ+zstd+AES，3 dex 可反编译），但 0x66210 哈希是壳必需材料，改容器须重算 KEY（派生未逆出）… |
+| [山河旅探](games/山河旅探.md) | 2026-11-25 | ✅ 1.4.38 星光版交付并 L3 通过（用户原话「功能都没有问题」）：章节/服饰解锁 + 开关受控 + 菜单宿主修正；正式包 sha256 76bf0bfd… |
 | [旷野征途](games/旷野征途.md) | 2026-11-25 | ✅ 3.3/vc33 星光版已交付（2026-11-25）：真机 96f0d883 装机、killer 过 C# 反篡改、7 项功能 + Tap 网页登录 |
 | [迷雾大陆](games/迷雾大陆.md) | 2026-11-25 | ✅ 16.0.0/vc21 热更 19218 已交付（2026-11-25 用户 L3「功能都没问题」）：功能零改动、仅重编 so；正式包 94c422a9…（42,478,642 B）；雷电模拟器 splice 7050288→7051877 命中 |
 | [黑暗领域](games/黑暗领域.md) | 2026-11-25 | ✅ 1.0 复刻交付并 L3 通过（2026-11-25 用户「功能都没问题」）：四项功能 + Tap 网页登录；正式包 combo_v3 md5 c4a0b1ba…；顺带修掉两处框架缺陷（CocosJsBridge 未 keep、native FindClass 走 bootstrap classloader） |
