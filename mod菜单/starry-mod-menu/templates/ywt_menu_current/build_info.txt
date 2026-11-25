@@ -1,0 +1,15 @@
+game            : 鹦鹉团 (ywt) 1.0.7 — 菜单 dex 重编（2026-11-25）
+dex             : classes.dex
+built_at        : 2026-11-25 22:25:47 +0800
+gradle_task     : assembleRelease
+source_commit   : 45c80c643bfd
+source          : /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java
+sha256          : 75cb3c1569d96382745b92ff74e48198fc417f2d3c07abb51735f46f42f61ea0
+source_tree_cmd : cd mod菜单/starry-mod-menu/app/src/main && tar -cf - --exclude .DS_Store java | shasum -a 256
+dex_md5         : 4979e004a581137c5a83466b8834d80f
+dex_sha256      : 9e1287b8953ca4ee95e6c939541a2655aca2f43af1e2c5682506abc6c25e56af
+dex_size        : 590072
+apk             : mod菜单/starry-mod-menu/app/build/outputs/apk/release/app-release.apk
+apk_md5         : 83801cf991e411d56c755d61b8ff0c1e
+apk_size        : 877842
+note            : gradle release 直出 dex；未做 apktool 重编、未注入 starry-menu 构建戳（menu_tpl_gate 对 gradle 管线按 source_commit 判定，缺戳仅 WARN）

@@ -1,0 +1,15 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/鹦鹉团",
+  "keep": "鹦鹉团_1.0.7_starry-full-20261125.apk",
+  "keep_size": 2056768854,
+  "keep_md5": "8fa2068d4f57192e5cc33f75e8037361",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "鹦鹉团_1.0.7_starry-full-20261125.apk.idsig",
+      "size": 16201243,
+      "md5": "03ab22e7aa1d21d7eb091afbe2bbacb4"
+    }
+  ],
+  "removed_count": 1
+}

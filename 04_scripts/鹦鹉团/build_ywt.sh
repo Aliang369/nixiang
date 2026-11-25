@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# script-policy: {"purpose": "鹦鹉团 1.0.7 星光菜单组包：官方 APK 底包 + 外科 zip 组装（登录补丁 3 个 dex 可选、菜单 dex、libstarry_magic.so、可选 libil2cpp.so/global-metadata）+ 二进制 Manifest 补丁 + zipalign + apksigner(v1/v2/v3) + 成品自检 + 可选装机；两档 --stage inject|full", "inputs": "02_apks/鹦鹉团_1.0.7_orig.apk（md5 aabf023083b46284a425e3b07c9ddcf0）；菜单 APK（gradle assembleRelease 产物）；libstarry_magic.so（[Ywt] 标签）；本游戏 binary Manifest 补丁脚本；可选 libil2cpp.so + global-metadata.dat（成对）；01_tools/starry_release.jks；--stage full 时另需 patch_taptap_login_ywt.sh 产出的 classes/classes7/classes11.dex", "outputs": "08_output/鹦鹉团/鹦鹉团_1.0.7_starry-{inject|full}-{YYYYMMDD}.apk（--dry-run 只打印计划）+ stdout 的 sha256/大小/证书/自检结论", "boundary": "只做外科 zip 组装/对齐/签名/自检；不用 apktool b 整包重建；不覆盖底包输入；不改 assets 其它条目；不卸载、不清数据；装机必须显式 --install 且走 install_starry_apk.sh；不产出 dex/so/Manifest 补丁本身", "prior_art": "04_scripts/群侠传：幸存者/surgical_qxzxcz_0.2.3.10.sh（外科六段骨架与自检风格）；04_scripts/_common/install_starry_apk.sh；04_scripts/_common/pre_install_gate.sh（查10/查12）；04_scripts/_common/next_free_dex.py；skill/starry-mod/SKILL.md（so+metadata 同源）", "difference": "多 dex 底包（13 个 dex，登录补丁跨 classes/classes7/classes11 三处替换）；新增 --stage inject|full 与 --dry-run；新增 libil2cpp.so + global-metadata.dat 成对替换与压缩方式断言；输出命名 starry-{stage}-{date}；装机走统一入口", "evidence": "10_docs/鹦鹉团/鹦鹉团_组包脚本_20261119.md"}
+# script-policy: {"purpose": "鹦鹉团 1.0.7 星光菜单组包：官方 APK 底包 + 外科 zip 组装（登录补丁 3 个 dex 可选、菜单 dex、libstarry_magic.so、可选 libil2cpp.so/global-metadata）+ 二进制 Manifest 补丁 + zipalign + apksigner(v1/v2/v3) + 成品自检 + 可选装机；两档 --stage inject|full", "inputs": "02_apks/鹦鹉团/鹦鹉团_1.0.7_taptap原版.apk（md5 04069c0aaf23a32e95249f68577a9ff1）；菜单 APK（gradle assembleRelease 产物）；libstarry_magic.so（[Ywt] 标签）；本游戏 binary Manifest 补丁脚本；可选 libil2cpp.so + global-metadata.dat（成对）；01_tools/starry_release.jks；--stage full 时另需 patch_taptap_login_ywt.sh 产出的 classes/classes2/classes7/classes11.dex", "outputs": "08_output/鹦鹉团/鹦鹉团_1.0.7_starry-{inject|full}-{YYYYMMDD}.apk（--dry-run 只打印计划）+ stdout 的 sha256/大小/证书/自检结论", "boundary": "只做外科 zip 组装/对齐/签名/自检；不用 apktool b 整包重建；不覆盖底包输入；不改 assets 其它条目；不卸载、不清数据；装机必须显式 --install 且走 install_starry_apk.sh；不产出 dex/so/Manifest 补丁本身", "prior_art": "04_scripts/群侠传：幸存者/surgical_qxzxcz_0.2.3.10.sh（外科六段骨架与自检风格）；04_scripts/_common/install_starry_apk.sh；04_scripts/_common/pre_install_gate.sh（查10/查12）；04_scripts/_common/next_free_dex.py；skill/starry-mod/SKILL.md（so+metadata 同源）", "difference": "多 dex 底包（13 个 dex，登录补丁跨 classes/classes2/classes7/classes11 四处替换）；新增 --stage inject|full 与 --dry-run；新增 libil2cpp.so + global-metadata.dat 成对替换与压缩方式断言；输出命名 starry-{stage}-{date}；装机走统一入口", "evidence": "10_docs/鹦鹉团/鹦鹉团_组包脚本_20261119.md"}
 # ============================================================================
 # 鹦鹉团 1.0.7（com.jinsaina.auditionsgo.gw，Unity IL2CPP + QGSDK 聚合层 + TapTap 渠道）
 #   -> 星光悬浮菜单版（外科 zip 组装，不整包重建）
@@ -11,7 +11,7 @@
 #                   => 登录也改完的正式包
 #
 # 组装内容：
-#   [full]   classes.dex / classes7.dex / classes11.dex  <- patch_taptap_login_ywt.sh 产物
+#   [full]   classes.dex / classes2.dex / classes7.dex / classes11.dex  <- patch_taptap_login_ywt.sh 产物
 #   [both]   classesN.dex                                <- 菜单 dex（N = 最小空闲下标，现算）
 #   [both]   lib/arm64-v8a/libstarry_magic.so            <- 本游戏 so（Stored）
 #   [both]   AndroidManifest.xml                         <- 二进制 AXML 补丁（StarryInitProvider/MenuService/权限）
@@ -32,7 +32,7 @@ GAME="鹦鹉团"
 VER="1.0.7"
 PKG="com.jinsaina.auditionsgo.gw"
 GAME_ID="ywt"
-SO_TAG="${YWT_SO_TAG:-[ywt]}"
+SO_TAG="${YWT_SO_TAG:-[Ywt]}"
 SERIAL="${SERIAL:-f9a116a2}"
 STAGE=""
 INSTALL=0
@@ -55,8 +55,8 @@ case "$STAGE" in
   *) echo "ERROR: --stage 只能是 inject 或 full（收到 ${STAGE}）" >&2; exit 2 ;;
 esac
 
-BASE_APK="${YWT_BASE_APK:-$NIXIANG/02_apks/${GAME}_${VER}_orig.apk}"
-BASE_MD5_EXPECT="aabf023083b46284a425e3b07c9ddcf0"
+BASE_APK="${YWT_BASE_APK:-$NIXIANG/02_apks/${GAME}/${GAME}_${VER}_taptap原版.apk}"
+BASE_MD5_EXPECT="04069c0aaf23a32e95249f68577a9ff1"
 BASE_SIZE_EXPECT=2055781509
 MENU_APK="${YWT_MENU_APK:-$NIXIANG/mod菜单/starry-mod-menu/app/build/outputs/apk/release/app-release.apk}"
 SO_SRC="${YWT_SO:-$NIXIANG/mod菜单/starry-mod-menu/libs_${GAME_ID}/arm64-v8a/libstarry_magic.so}"

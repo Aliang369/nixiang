@@ -2,7 +2,7 @@
   "template_id": "ywt",
   "name": "鹦鹉团",
   "package": "com.jinsaina.auditionsgo.gw",
-  "source": "Games/ywtMod.h YWT_FEAT_* / Games/ywtEntry.cpp featureList",
+  "source": "Games/ywtEntry.cpp kYwt_Features + Games/ywtMod.h ywtFeat @ 1.0.7（10 槽：0/2 为 Category 占位，功能真实下标 1、3–9）",
   "features": [
     {
       "feat_num": 1,
@@ -14,51 +14,27 @@
     },
     {
       "feat_num": 4,
-      "name": "超完美+(SPPPlusAdd)",
-      "type": "slider",
-      "min": 0,
-      "max": 100,
-      "note": "百分比；对应 SuperPerfectPlusPlusAdd，默认 70"
+      "name": "超完美+"
     },
     {
       "feat_num": 5,
-      "name": "超完美(SPerfectPlus)",
-      "type": "slider",
-      "min": 0,
-      "max": 100,
-      "note": "SuperPerfectPlus，默认 15"
+      "name": "超完美"
     },
     {
       "feat_num": 6,
-      "name": "完美(SPerfect)",
-      "type": "slider",
-      "min": 0,
-      "max": 100,
-      "note": "SuperPerfect，默认 8"
+      "name": "完美"
     },
     {
       "feat_num": 7,
-      "name": "优秀(Perfect)",
-      "type": "slider",
-      "min": 0,
-      "max": 100,
-      "note": "Perfect，默认 4"
+      "name": "优秀"
     },
     {
       "feat_num": 8,
-      "name": "良好(Great)",
-      "type": "slider",
-      "min": 0,
-      "max": 100,
-      "note": "Great，默认 2"
+      "name": "良好"
     },
     {
       "feat_num": 9,
-      "name": "一般(Good)",
-      "type": "slider",
-      "min": 0,
-      "max": 100,
-      "note": "Good，默认 1；全 0 时不做判定改写"
+      "name": "一般"
     }
   ]
 }
