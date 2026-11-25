@@ -38,9 +38,7 @@ static const char* kHalyInstallJs = R"JS(
   function mod(name) {
     if (typeof System === "undefined" || !System.get) return null;
     var paths = [
-      name,
-      "chunks:///_virtual/" + name + ".ts",
-      "chunks:///_virtual/" + name + ".js"
+      "chunks:///_virtual/" + name + ".ts"
     ];
     for (var i = 0; i < paths.length; i++) {
       try {
@@ -118,20 +116,18 @@ static const char* kHalyInstallJs = R"JS(
 
     var Guard = ctor("SdkRewardAdGuard");
     if (Guard) {
-      changed += installFunction(Guard, "showRewardAd", function (orig) {
+      changed += installFunction(Guard, "show", function (orig) {
         return function () {
           if (S.noAd) return Promise.resolve(true);
           return orig.apply(this, arguments);
         };
-      }, "reward-guard-show");
-      if (Guard.prototype) {
-        changed += installMethod(Guard.prototype, "showRewardAd", function (orig) {
-          return function () {
-            if (S.noAd) return Promise.resolve(true);
-            return orig.apply(this, arguments);
-          };
-        }, "reward-guard-proto-show");
-      }
+      }, "reward-guard-static-show");
+      changed += installFunction(Guard, "showBySysAdTimes", function (orig) {
+        return function () {
+          if (S.noAd) return Promise.resolve(true);
+          return orig.apply(this, arguments);
+        };
+      }, "reward-guard-static-sys-times");
     }
 
     var Sdk = ctor("SdkService");
@@ -142,6 +138,14 @@ static const char* kHalyInstallJs = R"JS(
           return orig.apply(this, arguments);
         };
       }, "sdk-show-reward");
+      var interstitial = installMethod(Sdk.prototype, "showInterstitialAd", function (orig) {
+        return function () {
+          if (S.noAd) return Promise.resolve({ success: true });
+          return orig.apply(this, arguments);
+        };
+      }, "sdk-show-interstitial");
+      if (interstitial === 0) warnOnce("sdk-interstitial", "showInterstitialAd not found");
+      changed += interstitial;
     }
     return changed;
   }
@@ -194,14 +198,14 @@ static const char* kHalyInstallJs = R"JS(
       for (var j = 0; j < data.effectData.length; j++) {
         var effect = data.effectData[j];
         if (!effect || String(effect.type || "") !== "summon") continue;
-        effect.summon_count = 3;
-        effect.duration = 20000;
-        effect.inherit_attack = 100000000;
+        effect.summon_count = 6;
+        effect.duration = 100000;
+        effect.inherit_attack = 9999990000;
         effect.share_buff = true;
         hasSummon = true;
       }
       if (!hasSummon) {
-        data.effectData.push({ type: "summon", summon_count: 3, duration: 20000, inherit_attack: 100000000, share_buff: true });
+        data.effectData.push({ type: "summon", summon_count: 6, duration: 100000, inherit_attack: 9999990000, share_buff: true });
       }
     }
 
@@ -240,11 +244,7 @@ static const char* kHalyInstallJs = R"JS(
       return async function (request) {
         try {
           if (request && request.__starryHalyV2 === true) {
-            var forwarded = Object.assign({}, request, {
-              skillId: 0,
-              __starryHalyV2: false
-            });
-            return await orig.call(this, forwarded);
+            return await orig.call(this, request);
           }
           return await orig.apply(this, arguments);
         } catch (error) {
@@ -361,9 +361,9 @@ static const char* kHalyInstallJs = R"JS(
         skillId: 100203,
         effect: {
           type: "summon",
-          summon_count: 3,
-          duration: 20000,
-          inherit_attack: 100000000,
+          summon_count: 6,
+          duration: 100000,
+          inherit_attack: 9999990000,
           share_buff: true
         },
         __starryHalyV2: true

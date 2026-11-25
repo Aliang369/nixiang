@@ -58,6 +58,12 @@
 
 # ---- ② native 按类名找进来（so 里 OBFUSCATE 写死）----
 -keep class com.starry.magic.bridge.ModBridge { *; }
+# 2026-11-25（黑暗领域 1.0 复刻实测）：13 个 Cocos 游戏 mod（HalyMod.cpp / DwctMod.cpp 等）
+# native 侧 FindClass(OBFUSCATE("com/starry/magic/cocos/CocosJsBridge")) + GetStaticMethodID
+# ("evalOnGLThread","(Ljava/lang/String;)V") 注入 JS。缺本规则时 R8 把它 repackage 成
+# com.starry.magic.o.X ⇒ EvalJs 恒 false，日志只有「[Haly] JS sync deferred (install=0)」，
+# 所有 JS 侧功能静默不装（dex 里搜 com/starry/magic/cocos/CocosJsBridge 命中 0）。必须全名 keep。
+-keep class com.starry.magic.cocos.CocosJsBridge { *; }
 
 # ---- ③ 构建脚本按名引用：刷新链要往 BuildConfig 注入 MENU_STAMP（starry-menu:<commit>）
 #       被 allowobfuscation+repackageclasses 改名成 com.starry.magic.o.a 后，注入脚本按名找不到 ⇒ 出包失败

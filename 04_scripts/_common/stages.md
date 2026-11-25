@@ -139,6 +139,30 @@ bash 04_scripts/_common/pre_install_gate.sh --apk <成品APK> --menu-dex <成品
 - 卸载属破坏性操作（连带清 `/sdcard/Android/data/<pkg>` 与 app 私有数据），**须先取得用户同意**。
 - 判定证据：同一包、同设备的预检记录（`09_test/<游戏>/precheck_*`），「干净安装」那条的 pid 与时间戳可核对。
 
+## Windows 执行环境与中文路径硬规则（2026-11-25 定：黑暗领域复刻踩坑后补）
+
+### ① 唯一合法执行环境 = Git Bash
+
+- 所有 `.sh` 一律在 Git Bash 里跑：`"C:\Program Files\Git\bin\bash.exe" -lc "bash 04_scripts/xxx.sh"`。
+- **禁止**用 PowerShell/cmd 直接执行 `.sh`；也**禁止**用 pwsh 直接调 `ndk-build.cmd` / `gradlew.bat` 当构建入口（它们只允许被脚本内部调用）。
+- 出处（原先散落在双机协作文档，未进本入口 → 新会话反复漏读）：`10_docs/双机协作/双机同步方案.md`「`04_scripts/**/*.sh` 的唯一合法执行环境」、`10_docs/双机协作/发给Win端AI的提示词.md`「绝对不要用 PowerShell 或 cmd 执行 `.sh` 脚本」。
+
+### ② 编译/打包的输出目录必须纯 ASCII，且必须在工作区内
+
+- 实测（2026-11-25，三组隔离试验）：ndk-build **读**含中文的源码路径正常；只有**输出绝对路径含中文**时 clang 报 `unable to open output file ".../mod菜单/..."`，因为 GNU Make 4.3(Win32) 把 `mod菜单` 转成 `mod??`。
+- 正确姿势：`NDK_OUT` / `NDK_LIBS_OUT` / apktool 解包目录 / 暂存 dex 一律指向 `13_scratch/<tag>_ndk/`、`13_scratch/<tag>_stage/`（纯 ASCII），编完把产物拷回中文路径。
+- 参考实现：`04_scripts/999秒幸存者/mxcz999_build_so.sh:62-123`（`nonascii()` 自动判定 + ASCII 暂存）、`04_scripts/黑暗领域/haly_build_so.sh`、`04_scripts/黑暗领域/haly_pack_win.sh`。
+- **禁止**把构建目录放到工作区外（如 `E:\nx_build`）：不在清理/交付范围，收尾必漏。
+- gradle 的 `sdk.dir` 坑：仓库里的 `mod菜单/starry-mod-menu/local.properties` 是 mac 路径且被 git 跟踪 ⇒ 脚本应「移走该文件 + 设 `ANDROID_HOME`」，跑完移回；**不要手写 `sdk.dir`**（转义易错，实测写成空值会让 gradle 直接 FAIL）。
+
+### ③ 三条自检（按顺序，任一不过就别往下走）
+
+```bash
+bash -n <脚本>                                    # 语法
+bash 04_scripts/_common/check_win_compat.sh <文件...>  # mac 专有写法
+bash 04_scripts/_common/preflight.sh <文件...>         # 机器关
+```
+
 ## 标准阶段表（新游戏从模板生成后按此裁剪）
 
 | # | stage_id | 名称 | 前置 | 后端命令形态 | 产物与校验 |

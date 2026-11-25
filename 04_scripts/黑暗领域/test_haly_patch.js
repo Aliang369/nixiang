@@ -37,7 +37,6 @@ vm.createContext(context);
 vm.runInContext(code, context, { filename: PATCH });
 
 function register(name, exports) {
-  context.System.values.set(name, exports);
   context.System.values.set(`chunks:///_virtual/${name}.ts`, exports);
 }
 
@@ -111,12 +110,14 @@ register('AdSkipService', {
 });
 register('SdkRewardAdGuard', {
   SdkRewardAdGuard: class {
-    static showRewardAd() { return Promise.resolve(false); }
+    static show() { return Promise.resolve(false); }
+    static showBySysAdTimes() { return Promise.resolve(false); }
   }
 });
 register('SdkService', {
   SdkService: class {
     showRewardAd() { return Promise.resolve({ rewarded: false }); }
+    showInterstitialAd() { return Promise.resolve({ success: false }); }
   }
 });
 register('SkillConfigManager', {
@@ -160,37 +161,43 @@ register('StatusEffectComponent', { StatusEffectComponent, StatusEffectType });
 
 context.__starryHalyV2SetFlags(true, true, true, true);
 
-const pref = new (context.System.get('PlayerPrefService').PlayerPrefService)();
-const ad = new (context.System.get('AdSkipService').AdSkipService)();
-const guard = context.System.get('SdkRewardAdGuard').SdkRewardAdGuard;
-const sdk = new (context.System.get('SdkService').SdkService)();
+const at = name => context.System.get(`chunks:///_virtual/${name}.ts`);
+const pref = new (at('PlayerPrefService').PlayerPrefService)();
+const ad = new (at('AdSkipService').AdSkipService)();
+const guard = at('SdkRewardAdGuard').SdkRewardAdGuard;
+const sdk = new (at('SdkService').SdkService)();
 
 Promise.resolve().then(async () => {
   assert.strictEqual(pref.hasAdPrivilege(), true, 'no-ad privilege query');
   assert.strictEqual(pref.canSkipAd(), true, 'no-ad skip query');
   assert.strictEqual(ad.tryShowSkipPopup().constructor, Promise, 'skip popup remains thenable');
   assert.strictEqual(await ad.tryShowSkipPopup(), true, 'skip popup returns true');
-  assert.strictEqual(await guard.showRewardAd(), true, 'reward guard returns boolean true');
+  assert.strictEqual(await guard.show(), true, 'reward guard static show returns true');
+  assert.strictEqual(await guard.showBySysAdTimes(), true, 'reward guard static showBySysAdTimes returns true');
   const sdkResult = await sdk.showRewardAd();
   assert.strictEqual(sdkResult.rewarded, true, 'sdk reward result shape');
+  const interstitial = await sdk.showInterstitialAd();
+  assert.strictEqual(interstitial.success, true, 'interstitial result shape');
 
   assert(playerStatus.effects.some(e => e.id === 1002 && e.type === StatusEffectType.INVINCIBLE), 'invincible applied');
 
   const summonEvents = events.filter(e => e.name === 'skill_summon_request');
   assert(summonEvents.length >= 1, 'auto summon event emitted');
   const summon = summonEvents[summonEvents.length - 1].payload;
-  assert.strictEqual(summon.effect.summon_count, 3, 'summon count');
-  assert.strictEqual(summon.effect.duration, 20000, 'summon duration');
-  assert.strictEqual(summon.effect.inherit_attack, 100000000, 'summon attack ratio');
+  assert.strictEqual(summon.effect.summon_count, 6, 'summon count');
+  assert.strictEqual(summon.effect.duration, 100000, 'summon duration');
+  assert.strictEqual(summon.effect.inherit_attack, 9999990000, 'summon attack ratio');
   assert.strictEqual(summon.__starryHalyV2, true, 'summon marker');
 
-  const SummonSystem = context.System.get('SkillSummonSystem').SkillSummonSystem;
+  const SummonSystem = at('SkillSummonSystem').SkillSummonSystem;
   const summonSystem = new SummonSystem();
   const forwarded = await summonSystem.handleSummonRequest(summon);
-  assert.strictEqual(forwarded.skillId, 0, 'boosted summon bypasses runtime override');
-  assert.strictEqual(forwarded.effect.summon_count, 3, 'boosted summon effect preserved');
+  assert.strictEqual(forwarded, summon, 'summon payload forwarded unchanged');
+  assert.strictEqual(forwarded.skillId, 100203, 'summon skillId no longer rewritten');
+  assert.strictEqual(forwarded.__starryHalyV2, true, 'summon marker kept');
+  assert.strictEqual(forwarded.effect.summon_count, 6, 'boosted summon effect preserved');
 
-  const PassiveSystem = context.System.get('PassiveSkillTriggerSystem').PassiveSkillTriggerSystem;
+  const PassiveSystem = at('PassiveSkillTriggerSystem').PassiveSkillTriggerSystem;
   const passiveSystem = new PassiveSystem();
   const result = passiveSystem.triggerAttackerPassiveSkills({ sourceId: 1, targetId: 2, skillId: 77 });
   assert.strictEqual(result, 'orig', 'original passive result preserved');
@@ -198,7 +205,7 @@ Promise.resolve().then(async () => {
   assert.strictEqual(thunder.length, 1, 'one thunder trigger per main-player basic hit');
   assert.strictEqual(thunder[0].payload.skillId, 100903, 'thunder skill id');
 
-  const CastSystem = context.System.get('SkillCastSystem').SkillCastSystem;
+  const CastSystem = at('SkillCastSystem').SkillCastSystem;
   CastSystem.prototype.executeSkillEffects = function () { throw new Error('synthetic battle error'); };
   context.__starryHalyV2Install();
   const cast = new CastSystem();
@@ -207,7 +214,9 @@ Promise.resolve().then(async () => {
   context.__starryHalyV2SetFlags(false, false, false, false);
   assert.strictEqual(playerStatus.effects.some(e => e.id === 1002), false, 'invincible removed on OFF');
   assert.strictEqual(pref.hasAdPrivilege(), false, 'original ad query restored on OFF');
-  assert.strictEqual(await guard.showRewardAd(), false, 'original ad flow restored on OFF');
+  assert.strictEqual(await guard.show(), false, 'original reward ad show restored on OFF');
+  assert.strictEqual(await guard.showBySysAdTimes(), false, 'original sys ad times restored on OFF');
+  assert.strictEqual((await sdk.showInterstitialAd()).success, false, 'original interstitial restored on OFF');
 
   assert(typeof intervalTick === 'function', 'retry timer installed');
   console.log('PASS haly patch behavior');

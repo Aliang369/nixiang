@@ -43,6 +43,66 @@ static JNIEnv* GetEnv(bool* needDetach) {
     return env;
 }
 
+// 2026-11-25（黑暗领域 1.0 复刻实测）：MOD 后台线程是 pthread + AttachCurrentThread 的
+// 原生线程，env->FindClass 走 bootstrap classloader，找不到应用类 —— 日志实测
+// 「[Haly] EvalJs: FindClass(CocosJsBridge) failed」，而 classes4.dex 里该类确实存在。
+// 回退：ActivityThread.currentApplication().getClassLoader().loadClass(dotted)。
+static jclass FindAppClass(JNIEnv* env, const char* slashName, const char* dottedName) {
+    jclass cls = env->FindClass(slashName);
+    if (cls) return cls;
+    if (env->ExceptionCheck()) env->ExceptionClear();
+
+    jclass atCls = env->FindClass("android/app/ActivityThread");
+    if (!atCls) {
+        if (env->ExceptionCheck()) env->ExceptionClear();
+        return nullptr;
+    }
+    jmethodID curApp = env->GetStaticMethodID(atCls, "currentApplication",
+                                              "()Landroid/app/Application;");
+    if (!curApp) {
+        env->DeleteLocalRef(atCls);
+        if (env->ExceptionCheck()) env->ExceptionClear();
+        return nullptr;
+    }
+    jobject app = env->CallStaticObjectMethod(atCls, curApp);
+    env->DeleteLocalRef(atCls);
+    if (env->ExceptionCheck()) env->ExceptionClear();
+    if (!app) return nullptr;
+
+    jclass ctxCls = env->FindClass("android/content/Context");
+    jmethodID getCl = ctxCls
+        ? env->GetMethodID(ctxCls, "getClassLoader", "()Ljava/lang/ClassLoader;") : nullptr;
+    if (ctxCls) env->DeleteLocalRef(ctxCls);
+    if (!getCl) {
+        env->DeleteLocalRef(app);
+        if (env->ExceptionCheck()) env->ExceptionClear();
+        return nullptr;
+    }
+    jobject cl = env->CallObjectMethod(app, getCl);
+    env->DeleteLocalRef(app);
+    if (env->ExceptionCheck()) env->ExceptionClear();
+    if (!cl) return nullptr;
+
+    jclass clCls = env->FindClass("java/lang/ClassLoader");
+    jmethodID loadClass = clCls
+        ? env->GetMethodID(clCls, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;") : nullptr;
+    if (clCls) env->DeleteLocalRef(clCls);
+    if (!loadClass) {
+        env->DeleteLocalRef(cl);
+        if (env->ExceptionCheck()) env->ExceptionClear();
+        return nullptr;
+    }
+    jstring jname = env->NewStringUTF(dottedName);
+    jobject loaded = jname ? env->CallObjectMethod(cl, loadClass, jname) : nullptr;
+    if (jname) env->DeleteLocalRef(jname);
+    env->DeleteLocalRef(cl);
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return nullptr;
+    }
+    return loaded ? (jclass)loaded : nullptr;
+}
+
 static bool EvalJs(const char* js) {
     if (!g_jvm || !js || !*js) return false;
 
@@ -51,13 +111,16 @@ static bool EvalJs(const char* js) {
     if (!env) return false;
 
     bool ok = false;
-    jclass cls = env->FindClass(OBFUSCATE("com/starry/magic/cocos/CocosJsBridge"));
+    jclass cls = FindAppClass(env, OBFUSCATE("com/starry/magic/cocos/CocosJsBridge"),
+                              "com.starry.magic.cocos.CocosJsBridge");
     if (!cls) {
         if (env->ExceptionCheck()) env->ExceptionClear();
+        LOGW("[Haly] EvalJs: FindClass(CocosJsBridge) failed");
     } else {
         jmethodID mid = env->GetStaticMethodID(cls, "evalOnGLThread", "(Ljava/lang/String;)V");
         if (!mid) {
             if (env->ExceptionCheck()) env->ExceptionClear();
+            LOGW("[Haly] EvalJs: GetStaticMethodID(evalOnGLThread) failed");
         } else {
             jstring jjs = env->NewStringUTF(js);
             if (jjs) {

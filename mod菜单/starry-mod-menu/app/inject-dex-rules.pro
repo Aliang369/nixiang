@@ -66,6 +66,9 @@
 
 # ---- 2. native 按类名找进来（so 里 OBFUSCATE 写死，不能改） ----
 -keep class com.starry.magic.bridge.ModBridge { *; }
+# 2026-11-25：Cocos 游戏 mod 的 JS 注入桥，native FindClass 全名 + evalOnGLThread。
+# 与 proguard-rules.pro 的 ② 节必须保持一致；缺失时 EvalJs 恒 false（install=0）。
+-keep class com.starry.magic.cocos.CocosJsBridge { *; }
 
 # ---- 2b. 单游戏 SPI：框架用 Class.forName("...games.<game_id>.GameHookImpl") 反射装载 ----
 #      2026-11-11 新增。这两个包名/类名是「按约定名找进来」的又一类，必须保原名保结构，
