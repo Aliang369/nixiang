@@ -1,7 +1,7 @@
 /* ================================================================
  *  明日方舟：终末地 (com.hypergryph.endfield)
  *  feat_num = Main.cpp g_featureList 下标（含 Category）
- *  抓点：10_docs/终末地/抓点_四功能_20260902.md
+ *  功能清单：10_docs/终末地/mrfzzmd_menu_template.json（四项）
  * ================================================================ */
 #ifndef STARRY_ENDFIELD_MOD_H
 #define STARRY_ENDFIELD_MOD_H

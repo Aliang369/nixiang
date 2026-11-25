@@ -1,6 +1,6 @@
 /* ================================================================
  *  明日方舟：终末地 — 百倍伤害 / 无敌 / 无限跳跃 / 无限技能
- *  挂点语义：10_docs/终末地/抓点_四功能_20260902.md（斌哥壳按名实锤）
+ *  挂点语义：10_docs/终末地/交付_1.7.2_20261126.md §二/§七（四功能清单与语义边界）
  *  metadata 加密 → 只走按名；默认懒装（hook-rules §16）
  * ================================================================ */
 
@@ -1000,7 +1000,7 @@ static void InstallSkillHooks() {
     }
 }
 
-// ---- v14.4（2026-10-16 小米真机「第二次打开就闪退」复盘，见 10_docs/终末地/闪退_二次打开_20261016.md）----
+// ---- v14.4（2026-10-16 小米真机「第二次打开就闪退」复盘；现场记录见 git 历史）----
 // 旧实现只在「apply&&jump 装上」或「DobbyHook 失败 3 次」时落定 done；而**按名解析失败**
 // （AbilitySystem/ApplyModifier miss、jump/skillCd/cd/cost 的 class|method miss）**不计数**
 // ⇒ 解析不到时每 300ms 重跑一次「全程序集解析」，il2cpp 调用贯穿整个进程生命周期；
@@ -1057,7 +1057,7 @@ static int EfHooked_Il2cppInit(const char* domainName) {
     return r;
 }
 
-// ★2026-11-25（首启 SIGILL 定案，见 10_docs/终末地/首启闪退_native栈_20261125.md）：
+// ★2026-11-25（首启 SIGILL 定案：ACE 转发桩，处置见 10_docs/终末地/交付_1.7.2_20261126.md §二 第 5 项）：
 //   1.7.2 的 il2cpp_init 导出不是真身，而是 ACE 的 12 字节转发桩：
 //     adrp xN,page ; add xN,xN,#imm ; br xN → 跳到「无 section/pathname 的 RX 注入段」里的派发器，
 //   派发器执行被搬走的函数头、再跳回「桩+12」。任何 ≥12 字节的 inline patch（Dobby 是 16 字节
@@ -1164,7 +1164,7 @@ static void SyncHooks() {
     // （敌我=直调 get_factionIndex 纯字段读）+ g_hookMtx 串行 + 装成即停重试。
     if (g_hookDone.load()) return;
     if (!g_libReady.load()) return;
-    // v14.5（2026-10-16 小米 96f0d883「冷启 ~3 秒必崩」根因，见 10_docs/终末地/闪退_二次打开_20261016.md §8）：
+    // v14.5（2026-10-16 小米 96f0d883「冷启 ~3 秒必崩」根因；现场记录见 git 历史）：
     //  SafeProbe 的 siglongjmp **只在登记过的线程有效**（Il2CppApi.h:220/228 —— PushJmp 失败即
     //  `return false`，根本不执行 fn），而本 MOD 线程**从未登记**（只有 LearnWorker 登记过）⇒
     //   ① 所有 SafeProbe 守卫的读取（如 Api::ImageOf 的「读首字段」）在本线程直接返回 false

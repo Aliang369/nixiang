@@ -9,7 +9,7 @@
  *    · Tick：300ms 节流，`if (!ready) TryInit(); if (ready) Tick(g_features);`
  *    · ForceClear：dead session / 授权失效时关全部 hook 效果
  *  游戏逻辑在 Games/EndfieldMod.cpp（v14.3 四功能，按名解析，本轮零改动）。
- *  抓点：10_docs/终末地/抓点_四功能_20260902.md
+ *  功能清单：10_docs/终末地/mrfzzmd_menu_template.json（四项）
  * ================================================================ */
 #include "ModEntry.h"
 #include "EndfieldMod.h"

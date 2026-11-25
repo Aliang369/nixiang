@@ -10,7 +10,7 @@
 通用政策统一见 `AGENTS.md`；构建细节见 `WORKFLOW.md` §4，Hook 细节见 `skill/re-implement/hook-rules.md`。
 
 - 对照改包是情报而非产品：借用玩法语义，落地用星光框架。
-- 官方 dex 完整性约束的历史案例：终末地 1.5.3 的 ACE/TSS 实验；适用范围须按目标版本验证，参考 `skill/re-analyze/login/` 与 `10_docs/终末地/ACE过检复盘与SOP_20260903.md`。
+- 官方 dex 完整性约束的历史案例：终末地 1.5.3 的 ACE/TSS 实验；适用范围须按目标版本验证，参考 `skill/re-analyze/login/`。
 
 ---
 
