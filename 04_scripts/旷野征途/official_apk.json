@@ -3,17 +3,17 @@
   "game": "旷野征途",
   "channel": "taptap",
   "kind": "official_from_device",
-  "apk_path": "E:/nixiang/02_apks/旷野征途/旷野征途_3.2_taptap_official.apk",
+  "apk_path": "E:/nixiang/02_apks/旷野征途/旷野征途_3.3_taptap_official.apk",
   "apk_exists": true,
-  "version_name": "3.2",
-  "version_code": 32,
+  "version_name": "3.3",
+  "version_code": 33,
   "installer": "com.taptap",
   "primary_cpu_abi": "arm64-v8a",
   "serial": "emulator-5554",
-  "remote_path": "/data/app/~~SDM__s1euuWmDQaxdw0XrA==/com.xf.kyzt-b7uM1iPWuSgAvnrtE49_-g==/base.apk",
-  "size": 198941707,
-  "sha256": "6318a972a599cfa664c1db867b960fc1a5f9b878d9bad3c15b003d28da17df1d",
-  "md5": "0216d1807aba2771fafd9f9530db5e90",
+  "remote_path": "/data/app/~~fWvTIpgGx-Hlb4hFkPsbjg==/com.xf.kyzt-PjZiUDqr9XMBaoBqhxqXLQ==/base.apk",
+  "size": 199384028,
+  "sha256": "8b1fceee40e13e15ff9b6864a89eaeaba1923fc30b281f8b5e6c5368f144303f",
+  "md5": "2eb753c3412e1b13e33cc23fdfdef74b",
   "signer_dn": "O=xiefeng",
   "signer_sha256": "0a3b782591c7895437472a4768a4754e6487fd27cbe1887697ebc38de41a048f",
   "signer_sha1": "9de90671cac0eea12092a81f9f4b0e237b9bf591",
@@ -24,8 +24,8 @@
   "so_count": 28,
   "dex_count": 7,
   "key_entry_sizes": {
-    "lib/arm64-v8a/libil2cpp.so": 66268112,
+    "lib/arm64-v8a/libil2cpp.so": 66297952,
     "lib/arm64-v8a/libunity.so": 25197712,
-    "assets/bin/Data/Managed/Metadata/global-metadata.dat": 11782304
+    "assets/bin/Data/Managed/Metadata/global-metadata.dat": 11785032
   }
 }

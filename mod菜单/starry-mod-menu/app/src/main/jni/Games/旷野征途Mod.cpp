@@ -200,7 +200,7 @@ static void  LogHookDiag(const char* tag, void* target, void* orig, int installe
 static uintptr_t kRvaShowInternal = 0x1C8A9AC;   // 1.8 实测（file）
 static uintptr_t kRvaHandleNative = 0x1C8A724;   // 1.8 实测（file，只调不挂）
 static uintptr_t kRvaEnterInterp  = 0x19876a8;   // 1.8 实测（file）
-static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2 / 24=2.4 / 32=3.2
+static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2 / 24=2.4 / 32=3.2 / 33=3.3
 
 // 3.2 指纹常量（2026-11-24 静态实测；全部 **file offset**，VA = file + 0x4000）
 static const uintptr_t kOff32Show   = 0x1CFC6D0u;  // ShowInternal（VA 0x1D006D0，序言 0xF81E0FFE）
@@ -208,6 +208,13 @@ static const uintptr_t kOff32Interp = 0x19F6364u;  // EnterFrameFromInterpreter�
 static const uintptr_t kOff32Timescale = 0x37B27A8u;    // Time::set_timeScale（VA 0x37B67A8，序言 0xFC1E0FE8）
 static const uint32_t  kInsnTimeScale  = 0xFC1E0FE8u;   // str d8,[sp,#-0x20]! —— 装钩前序言校验字
 static const unsigned long long kSize32Lib = 66268112ull;  // libil2cpp.so 66,268,112 B（sha256 b249a131…332b）
+
+// 3.3 指纹常量（2026-11-25 静态实测；全部 **file offset**，VA = file + 0x4000）
+//   底包 libil2cpp.so 66,297,952 B / sha256 bbf9fc3017eddda6365510c2a8a1fba84e0b236ee411f9a9db3c04875097a004
+static const uintptr_t kOff33Show   = 0x1CFF134u;  // ShowInternal（VA 0x1D03134，序言 0xF81E0FFE）
+static const uintptr_t kOff33Interp = 0x19F8A30u;  // EnterFrameFromInterpreter（VA 0x19FCA30，序言 0xF81D0FFE）
+static const uintptr_t kOff33Timescale = 0x37B9344u;    // Time::set_timeScale（VA 0x37BD344，序言 0xFC1E0FE8）
+static const unsigned long long kSize33Lib = 66297952ull;  // libil2cpp.so 66,297,952 B（sha256 bbf9fc30…97a004）
 
 // 探针：用「首指令是否等于已知序言」判版本，不依赖包名/版本号字符串
 static int DetectLibVersion() {
@@ -217,13 +224,39 @@ static int DetectLibVersion() {
     //   2.4 在 2.2 探针 0x1CA9130 处 = 0xB4000D96（≠0xF81E0FFE，不会误判成 2.2）
     //   2.4 在 1.8 探针 0x1C8A9AC 处 = 0x97F951DD（≠0xF81E0FFE）
     // 3.2 单点序言不足（0xF81E0FFE 在段内多处同构）⇒ 三点取二，见下。
-    static const Probe probes[] = {{32, kOff32Show}, {24, 0x1CCE6CCu}, {22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
+    static const Probe probes[] = {{33, kOff33Show}, {32, kOff32Show}, {24, 0x1CCE6CCu}, {22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
     for (const auto& pr : probes) {
         void* va = FileOffToVa(TPL_TARGET_LIB, pr.off);
         if (!va) continue;
         uint32_t insn = 0;
         const bool prologueOk = ReadU32Guarded("verprobe", va, &insn) && insn == 0xF81E0FFEu;
 
+        if (pr.ver == 33) {
+            // 3.3 判据（三选二，2026-11-25 静态实测）：
+            //   ① file 0x1CFF134 == 0xF81E0FFE（ShowInternal 序言）
+            //   ② file 0x19F8A30 == 0xF81D0FFE（解释器帧入口序言）
+            //   ③ libil2cpp.so 文件大小 == 66,297,952（sha256 bbf9fc30…97a004）
+            // 接受条件：① && (② || ③)  或  ② && ③。
+            // 只中 ①（另两条都不符）⇒ 证据不足，判未知并继续向后探旧版本，不硬套 2.x/3.2 地址。
+            const bool c1 = prologueOk;
+            bool c2 = false, c3 = false;
+            uint32_t insn33 = 0;
+            void* va33 = FileOffToVa(TPL_TARGET_LIB, kOff33Interp);
+            if (va33) c2 = ReadU32Guarded("verprobe", va33, &insn33) && insn33 == 0xF81D0FFEu;
+            unsigned long long fsz33 = 0;
+            c3 = LibFileSize(TPL_TARGET_LIB, &fsz33) && fsz33 == kSize33Lib;
+            LOGI(TPL_LOG " verprobe 3.3 cond show=%d interp=%d size=%d/%llu",
+                 (int)c1, (int)c2, (int)c3, fsz33);
+            DbgLog("verprobe: 3.3 cond show=%d interp=%d size=%d/%llu", (int)c1, (int)c2, (int)c3, fsz33);
+            if (!((c1 && (c2 || c3)) || (c2 && c3))) continue;
+            g_libVer.store(33);
+            kRvaShowInternal = kOff33Show;      // file；VA 0x1D03134
+            kRvaHandleNative = 0x1CFEEACu;      // file；VA 0x1D02EAC（只记录，不挂）
+            kRvaEnterInterp  = kOff33Interp;    // file；VA 0x19FCA30，序言 0xF81D0FFE
+            LOGI(TPL_LOG " lib version probe: 3.3 (ShowInternal file=0x1CFF134, interp=0x19F8A30)");
+            DbgLog("verprobe: 3.3 showInternal=0x1CFF134 interp=0x19F8A30");
+            return 33;
+        }
         if (pr.ver == 32) {
             // 3.2 判据（三选二，2026-11-24 静态实测）：
             //   ① file 0x1CFC6D0 == 0xF81E0FFE（ShowInternal 序言）
@@ -1076,26 +1109,30 @@ static void InitSlotAddrs() {
     const uintptr_t interp = (ver == 18) ? 0x19876a8u
                            : (ver == 22) ? 0x19a5004u          // VA 0x19a9004
                            : (ver == 24) ? 0x19C9A78u          // VA 0x19cda78
+                           : (ver == 33) ? kOff33Interp        // 3.3 VA 0x19FCA30（序言 0xF81D0FFE）
                            : (ver == 32) ? kOff32Interp : 0u;  // 3.2 VA 0x19FA364（序言 0xF81D0FFE）
     const uintptr_t noad   = (ver == 18) ? 0x1C8A9ACu
                            : (ver == 22) ? 0x1CA9130u
                            : (ver == 24) ? 0x1CCE6CCu          // VA 0x1CD26CC
+                           : (ver == 33) ? kOff33Show          // 3.3 VA 0x1D03134
                            : (ver == 32) ? kOff32Show : 0u;    // 3.2 VA 0x1D006D0
     kRvaEnterInterp = interp;
     kRvaShowInternal = noad;
     kRvaHandleNative = (ver == 18) ? 0x1C8A724u
                      : (ver == 22) ? 0x1CA8EA8u
                      : (ver == 24) ? 0x1CCE444u            // 2.4 只记录不挂
+                     : (ver == 33) ? 0x1CFEEACu            // 3.3 VA 0x1D02EAC（只记录不挂）
                      : (ver == 32) ? 0x1CFC448u : 0u;      // 3.2 VA 0x1D00448（只记录不挂）
     // TimeScale 必须走 inline hook（真机实测 2026-11-24）：
     //   UnityEngine.Time::set_timeScale 在游戏 C# 里是 **AOT 直调**（bl 到函数体），
     //   by-name 换 MethodInfo->methodPointer 影响不到直调点 ⇒ 装钩成功但零命中（MODHIT 缺失）。
     //   GameUpdate 之所以 by-name 能命中，是因为它由 Unity 引擎回调（delegate/虚表路径）。
-    const uintptr_t timescale = (ver == 32) ? kOff32Timescale    // 3.2 VA 0x37B67A8，序言 0xFC1E0FE8
+    const uintptr_t timescale = (ver == 33) ? kOff33Timescale    // 3.3 VA 0x37BD344，序言 0xFC1E0FE8
+                              : (ver == 32) ? kOff32Timescale    // 3.2 VA 0x37B67A8，序言 0xFC1E0FE8
                               : (ver == 24) ? 0x37541A0u          // 2.4 VA 0x37581A0（同一序言，静态文档 §2c）
                               : 0u;                               // 其它版本/未知 ⇒ 0，退回按名（已知无效，仅兜底）
     for (auto& sl : kSlots) {
-        // EnterInterp 只在 1.8 由 kSlots 装；2.2/2.4/3.2 由 InstallBattleHooks 单点显式装
+        // EnterInterp 只在 1.8 由 kSlots 装；2.2/2.4/3.2/3.3 由 InstallBattleHooks 单点显式装
         // （同址双 Dobby 叠钩会 SIGSEGV ⇒ 这里绝不能重复填 rva）
         if (std::strcmp(sl.tag, "EnterInterp") == 0) sl.rva = (ver == 18) ? interp : 0u;
         else if (std::strcmp(sl.tag, "NoAd") == 0)   sl.rva = noad;
@@ -1127,6 +1164,13 @@ static void InitSlotAddrs() {
 //    落血语义未变：ldloc.0 = dmgInfo.get_intDmg()（get_intDmg = ceil(dmg) + 下界钳位），
 //                  set_curHp(curHp + intDmg) ⇒ dmg 为负即扣血 ⇒ 写 dmgInfo.dmg 就能左右结果
 //    this = 挨打方（HP 主人）；atker 可能是召唤物（ldarg.1 后续会取 get_SummonOwner）
+//  【3.3 合同（2026-11-25 从 HotUpdate.decrypted.dll 反推，sha256 3c21663c…34280）】
+//    sig 未变：params = 4（不含 this）；argBase 五槽 +0/+8/+16/+24/+32 顺序与语义逐槽复现
+//          rva 0x104200 / body 1610 B / fat / metadata Param 行 = 4（atker/atkSeatNum/dmgInfo/OnDie）
+//    IL 锚点全体 +2：isGod 取用 @IL_021E（本文件仍**不调用**该属性）；首次 set_curHp @IL_024B
+//              （第二处 IL_0265）；get_curHp @IL_0210/0244/0251/02AE；早退 ret @IL_000B/0036/0055/0091/0207/0232
+//    落血语义未变：set_curHp(curHp + intDmg)，intDmg = ceil(dmg)（下界钳位 -2.1474835e9）
+//    ⇒ 3.2 的过滤器 / 五槽 / 写 dmgInfo.dmg 逻辑对 3.3 原样成立，只换挂点与版本门（不进 ApplyHp 内部）
 //  【2.4 历史合同（保留作对照，勿删）】
 //    argc=4 / body=1265 B / isGod 取用 @IL_0173 / set_curHp @IL_0197→IL_01A0 / ret @IL_0187
 //
@@ -1321,13 +1365,13 @@ static int InstallBattleHooks() {
         }
     }
 #if KYZT_BATTLE_ENABLE
-    // 帧入口（HybridCLR 解释器，无按名路径）：22 / 24 / 32 都从这里单点装，1.8 走 kSlots。
+    // 帧入口（HybridCLR 解释器，无按名路径）：22 / 24 / 32 / 33 都从这里单点装，1.8 走 kSlots。
     // 注意：HookAtRva 的参数是 **file offset**（内部走 FileOffToVa），不是 VA。
     //   · 2.2：VA 0x19a9004 ⇔ file 0x19a5004（该 VA 处为 0xB4052B20 ⇒ 传 VA 必失败）
     //   · 2.4：VA 0x19cda78 ⇔ file 0x19C9A78（序言 0xF81D0FFE = str x30,[sp,#-0x30]!）
     // 地址一律取 InitSlotAddrs 填好的 kRvaEnterInterp（不在此写版本字面量）。
     const int verHook = g_libVer.load();
-    if (verHook == 22 || verHook == 24 || verHook == 32) {
+    if (verHook == 22 || verHook == 24 || verHook == 32 || verHook == 33) {
         if (HookAtRva("Battle", kRvaEnterInterp, 0xF81D0FFEu,
                       (void*)kb::Hooked_EnterFrame, &kb::g_origEnter)) {
             ++ok;
@@ -1804,7 +1848,8 @@ void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
         if (g_libVer.load() == 0) DetectLibVersion();
         // 2.4 同口径：Economy22 的字段/属性/方法一律 il2cpp_field_get_offset 按名现取
         //（delta24 已核 2.4 HotUpdate.dll 名字齐备）⇒ 字段常量零改动，只放行版本门。
-        if (g_libVer.load() == 22 || g_libVer.load() == 24 || g_libVer.load() == 32) {
+        if (g_libVer.load() == 22 || g_libVer.load() == 24 || g_libVer.load() == 32 ||
+            g_libVer.load() == 33) {
             // 2.2：菜单回调（Java UI 线程）**只入队**，真正调用发生在 ET.GameManagerMono.Update
             // （Unity 线程）里 drain —— 不在 UI 线程直接碰 il2cpp 对象。
             const unsigned long ut = g_unityTid.load();
@@ -1844,6 +1889,9 @@ void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
             // 用户看到「关了还有加速」，最长要等游戏自己下一次 set_timeScale 才恢复）。
             // UI 线程不直接调 orig（跨线程调 Unity API 风险），只置标志，由 Tick 落地。
             const bool was = g_spd.exchange(enabled);
+            // 2026-11-25 诊断：每次切换打一行（频率极低），下次一眼判定 mi 是否为空。
+            LOGI(TPL_LOG " spd toggle=%d was=%d mi=%p orig=%p",
+                 (int)enabled, (int)was, (void*)g_tsMethod.load(), (void*)g_origSetTimeScale);
             if (!enabled && was) g_spdRestore.store(true);
             else if (enabled)    g_spdRestore.store(false);   // 重新开启 ⇒ 撤销待恢复，避免竞态下先写 1.0
             break;
@@ -1913,13 +1961,32 @@ void 旷野征途_Tick(const bool* features, const int* /*values*/) {
     SyncHooks();
 
     // OFF 主动恢复：把 1.0 写回去，不等游戏自己下一次调用 setter。
-    // g_tsMethod 未解析出来时**不吃标志**（保持 pending，下帧再试），否则关掉后再也不会恢复。
+    // 2026-11-25 修复「游戏加速无效」：旧守卫是 `if (m && g_origSetTimeScale)`，而 g_tsMethod 只在
+    //   Hooked_SetTimeScale() 里赋值（= 游戏真的调过一次 setter 才有）。3.3 这局游戏在钩子装上
+    //   （16:07:50）之后再没调 setter（MODHIT tag=TimeScale 0 次 / set_timeScale call# 0 次）
+    //   ⇒ m == nullptr ⇒ 强制与恢复两条路径都被 `m &&` 挡死，加速静默失效（真机 96f0d883）。
+    //   现在 **m 允许为 nullptr**，仍原样作为第二参数转发。
+    //   「传 nullptr 安全」的依据：capstone 复跑 file 0x37B9344（VA 0x37BD344）
+    //     037bd344 str  d8, [sp, #-0x20]!
+    //     037bd348 stp  x30, x19, [sp, #0x10]
+    //     037bd34c adrp x19, #0x3f52000
+    //     037bd350 ldr  x0, [x19, #0xeb8]      ; 缓存的 icall 指针
+    //     037bd354 mov  v8.16b, v0.16b          ; 只用 v0 = float value
+    //     037bd358 cbnz x0, #0x37bd36c
+    //     037bd35c adrp x0, #0xa6b000 / add x0, x0, #0xef / bl #0x1b13b90 / str x0, [x19, #0xeb8]
+    //     037bd36c ldp  x30, x19, [sp, #0x10]
+    //     037bd370 mov  v0.16b, v8.16b
+    //     037bd374 ldr  d8, [sp], #0x20
+    //     037bd378 br   x0                      ; 尾调 icall
+    //   ⇒ **x1（第二参数 MethodInfo*）全程未被读取**（寄存器足迹只有 x0/x19/x30/v0/v8/sp）。
+    // 另一条出口：g_origSetTimeScale 仍为空（inline hook 没装上）时不吃标志，保持 pending 下帧再试。
     if (g_spdRestore.load() && !g_spd.load()) {
         void* m = g_tsMethod.load();
-        if (m && g_origSetTimeScale) {
+        if (g_origSetTimeScale) {
             g_origSetTimeScale(1.0f, m);
             g_spdRestore.store(false);
-            LOGI(TPL_LOG " restore timeScale=1.0 (toggle off) spd=%d", (int)g_spd.load());
+            LOGI(TPL_LOG " restore timeScale=1.0 (toggle off) spd=%d mi=%d",
+                 (int)g_spd.load(), (int)(m != nullptr));
         }
     }
 
@@ -1927,7 +1994,8 @@ void 旷野征途_Tick(const bool* features, const int* /*values*/) {
     // 2026-11-24：从「每帧」改成 **100 ms 一次**（每帧调既浪费又与开关竞态；1.8 时代的正确形态就是 100ms 重置）。
     if (g_spd.load()) {
         void* m = g_tsMethod.load();
-        if (m && g_origSetTimeScale) {
+        // 2026-11-25：同上去掉 `m &&`（m 可能为 nullptr —— capstone 已证 x1 不被读，见 OFF 恢复块注释）。
+        if (g_origSetTimeScale) {
             const long long nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now().time_since_epoch()).count();
             static long long lastForceMs = 0;
@@ -1935,7 +2003,7 @@ void 旷野征途_Tick(const bool* features, const int* /*values*/) {
                 lastForceMs = nowMs;
                 g_origSetTimeScale(1.8f, m);
                 static int tickLog = 0;
-                if (tickLog < 3) { ++tickLog; LOGI(TPL_LOG " force timeScale=1.8 (100ms tick) spd=%d", (int)g_spd.load()); }
+                if (tickLog < 3) { ++tickLog; LOGI(TPL_LOG " force timeScale=1.8 (100ms tick) spd=%d mi=%d", (int)g_spd.load(), (int)(m != nullptr)); }
             }
         }
     }

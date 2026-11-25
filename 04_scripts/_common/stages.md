@@ -284,7 +284,7 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 
 ## 收官口令（用户说「收尾+正式包+清理+git」时，AI 展开此清单）
 
-压缩顺序：**验证正式包 → 裁剪 `08_output` → 清理滚动物（`trash_paths.sh` dry-run→apply）→ 修 pipeline 快照 → 文档状态 → `archive_scoped_git.sh` 提交推送**。每一步先打印实际路径/影响；缺底包、缺正式包或签名校验失败即停止。
+压缩顺序：**验证正式包 → 裁剪 `08_output` → 七处目录全清（`trash_paths.sh` dry-run→apply，权威正文见 `10_docs/tools/05`「收尾清理」）→ 修 pipeline 快照 → 文档状态（`10_docs` 旧版本口径删）→ `archive_scoped_git.sh` 提交推送**。每一步先打印实际路径/影响；缺底包、缺正式包或签名校验失败即停止。
 
 ### 收官脚本参数契约表（2026-10-10 追迹迷城收官复盘 P0-4 落地）
 
@@ -323,16 +323,27 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
      **未获授权时（复盘/分析/纯文档会话）不跑该脚本**，只做定向核验并报告待处理项 —— 本行按 `AGENTS.md` §6 从严口径统一（2026-10-16 消解与「归档正文 D」的冲突）。定向核验示例：
      `adb -s <serial> shell "su -c 'ls -la /data/local/tmp/ | grep -iE \"<pkg>|nxreserve\" || echo 无残留'"`。
 3. 官包归位：`02_apks`（用户手动管理，AI 不探测不整理）；本轮是否有原版以**用户声明**为准。
-4. 滚动物清理：收官游戏删 03/06 大二进制/07 大包（git 有文本；只清理本游戏路径；删前逐项核对再生依据；中文路径先 `git config core.quotepath false`）。
-   优先用 `bash 04_scripts/_common/trash_paths.sh --tag {游戏}_{日期} --path 03_decompiled/{游戏} ...`；默认 dry-run，核对路径/大小/Trash 目标后再加 `--apply`。只清理本游戏可再生路径（03/06 大二进制、07 大包、09_test），中文路径先 `git config core.quotepath false`。
-   - **先看摘要的「本地产物与关键输入」表**：标"不可再生"的输入（设备拉取的官方底包、
-     唯一热更样本、已被用户删除的原包对应的解密产物）**一律保留**。
-   - **旧版本 dump 的生命周期（2026-10-14 补，蛋壳战机 1.1.8 实测）**：接手新版本、要重跑
-     Il2CppDumper 之前先确认「上一版的 `06_dumped/{游戏}/il2cpp_dump_{旧版本}*` / `static_inspect_{旧版本}*`
-     是否还要复用」——不再复用就**别生成第二份**（实测：1.1.7 两份（≈321 MiB）在新版本接手当天生成、
-     当天清理，白跑一轮 Il2CppDumper + 一轮 static 检查）。旧版本的挂点对照写进
-     `10_docs/{游戏}/抓点_锚点_{新版本}.json` 的旧版本字段即可，不必留整份 dump 存档。
-   - **清理后必须同步修正 `{游戏}/pipeline.json` 快照**（2026-09-19 补，弓箭传说2 踩坑；2026-09-20 起脚本化）：`archive` 执行前的 `check_stale` 会遍历**所有祖先阶段**的 `inputs` 快照逐个比对 md5，被清理删掉的中间产物（unsigned APK、`07_patched` 留证、用户手动删除的 `02_apks` 官包）会让它判定「上游链路过期」并拒绝执行——**清理越彻底越跑不过**。先跑 dry-run：
+4. **滚动物清理＝七处零保留（2026-11-25 口径）**：本游戏在 `03_decompiled`/`05_ida`/`06_dumped`/
+   `07_patched`/`09_logs`/`09_test`/`13_scratch` 下的内容**全部删除、零保留**，不设「怕断证据链」
+   「下次还能用」「崩溃现场要留」的例外；`10_docs` 只留当前版本口径，旧版本迭代文档删（git 追溯）。
+   权威正文＝`10_docs/tools/05`「收尾清理」（含理由与 tracked 文件处置），本节只给命令。
+   中文路径先 `git config core.quotepath false`；删除只用显式路径（禁通配）。模板：
+   ```bash
+   bash 04_scripts/_common/trash_paths.sh --tag {游戏}_{日期} \
+     --path 03_decompiled/{游戏} --path 05_ida/{游戏} --path 06_dumped/{游戏} \
+     --path 07_patched/{游戏} --path 09_logs/{游戏} --path 09_test/{游戏} \
+     --path 13_scratch/{游戏}
+   ```
+   默认 dry-run，核对路径/大小/Trash 目标后再加 `--apply`。
+   - **唯一输入先移出**：设备只读拉取的官方底包（`09_test/**/base.apk`）、签名私钥等删了就再也拿不到的
+     对象，收尾前先移到 `02_apks` 或用户指定位置 ——**不留作七处的例外**。
+   - **含已入库(tracked)文件的路径脚本直接拒绝**（如 `06_dumped/**/_复现说明_*.md`、`dynsyms.txt`）：
+     先把内容并入 `10_docs/{游戏}` 当前版本口径，再 `git rm` + 白名单提交；收尾口令即该类删除的授权来源，
+     汇报里须列出删掉的 tracked 文件。
+   - **旧版本 dump 不再留档**：下一版接手直接重跑 Il2CppDumper；旧版挂点对照写进
+     `10_docs/{游戏}/抓点_锚点_{新版本}.json` 的旧版本字段（2026-10-14 蛋壳战机实测：1.1.7 两份 dump
+     ≈321 MiB 当天生成当天清，等于白跑一轮）。
+   - **清理后必须同步修正 `{游戏}/pipeline.json` 快照**（2026-09-19 补，弓箭传说2 踩坑；2026-09-20 起脚本化）：`archive` 执行前的 `check_stale` 会遍历**所有祖先阶段**的 `inputs` 快照逐个比对 md5，被清理删掉的中间产物（unsigned APK、`07_patched` 留证、用户手动删除的 `02_apks` 官包）会让它判定「上游链路过期」并拒绝执行。**七处全清后修快照不是可选项**：旧「清理越彻底越跑不过」已由脚本化修快照消解，**不再以「保留产物」当规避手段**。先跑 dry-run：
 
    ```bash
    python3 04_scripts/_common/pipeline_record_cleanup.py \
@@ -490,7 +501,7 @@ native 自读）、热重载做法、四条验收与可 grep 的日志锚点都�
 - **`pipeline.sh` 指纹锁**：`pipeline.sh` 与 `_common/pipeline.lock` 禁随手改、禁只改一边；改法见本文末节「真要改 `pipeline.sh` 时的跨机姿势」（同一提交改脚本 + 刷新 lock 的 `shasum -a 256` + push）。
 - **审查边界**：改完代码或用户要求「按边界审 / 自查」⇒ 按 `skill/re-implement/code-review-checklist.md` 走一轮；纯文档修改只核对范围/链接/规则冲突/授权。一轮输出结论即停，不借审查扩大任务；仅修已确认问题，修复后复查该问题与直接影响面。
 - **"可测试"装机门禁**：静态·构建检查 + 包结构与签名 + 测试授权 + 证据采集 + 恢复方案，**已知阻断问题不得装机**。「运行验证」以目标版本实际日志、功能开关与回归结果判定；「可交付」须满足对应运行证据，**不以构建成功替代**；缺证据列 CLAIM / VERDICT / EVIDENCE。
-- **产物生命周期**：`02_apks/`、dump、`08_output/`、构建产物、热更样本、JS 解密产物的保留/清理/入库规则正文＝`10_docs/_state/规范变更日志.md` §归档正文 D；裁剪唯一正式包走 `prune_output_final.sh` / `finalize_game_delivery.sh`（**禁手工重造**）；菜单模板照抄 `_templates/menu_template.example.json`，收尾按 `_menu_template` §3 自检字段集严格相等。
+- **产物生命周期**：`02_apks/`、dump、`08_output/`、构建产物、热更样本、JS 解密产物的保留/清理/入库规则正文＝`10_docs/tools/05_…`「收尾清理」（2026-11-25 起七处全清；历史口径见《规范变更日志》§归档正文 D）；裁剪唯一正式包走 `prune_output_final.sh` / `finalize_game_delivery.sh`（**禁手工重造**）；菜单模板照抄 `_templates/menu_template.example.json`，收尾按 `_menu_template` §3 自检字段集严格相等。
 - **状态索引维护**：`current.md` 是生成物，由 `gen_state_index.py` 从 `games/*.md` 头部 frontmatter（`status/updated/one_line`）生成，`preflight --check` 校验。只放当前工作集，全量在 `archive_index.md`。收尾改状态＝改该游戏 frontmatter 再重跑生成器；单游戏摘要 >12 KB 时旧轮次下沉 `history/`。纯评估/文档维护不改游戏状态。
 - **经验生命周期细化**：登记＝`_state/pending_experience.md`，机检＝`audit_experience_registry.py`；「合并」只并入已有唯一权威章节，不新造同类文件；复盘结构见 `_templates/会话复盘模板.md`。
 - **加固停用件清单**：`harden_apk.py` / `harden_gate.sh` / `harden_coverage.py` 与 `pre_install_gate.sh` 查11 已按 2026-10-27 用户裁决撤销强制；脚本暂留因三款已接入游戏的出包脚本仍调用（硬删断包），**新游戏不再要求加固**。

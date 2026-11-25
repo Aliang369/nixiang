@@ -6,6 +6,10 @@
 IL_021C / 首次 set_curHp IL_0249）。2.4 的旧值（body 1265B / IL_0173 / IL_0197）作为历史分支
 必须继续留在注释里 —— 两个版本门限不同，删掉就丢了对照。
 
+3.3（2026-11-25）新增段：挂点常量 show 0x1CFF134 / interp 0x19F8A30 / size 66,297,952、探针表首
+{33, kOff33Show} 与三点取二分支、两处版本门放行 33、ApplyHp 3.3 锚点（rva 0x104200 / body 1610B /
+get_isGod IL_021E / 首次 set_curHp IL_024B）、argBase 五槽不变；3.2 与 2.4 的旧值整段保留作历史分支。
+
 注意边界：①是静态文本约束（防"改一处忘一处"），②是规则级 fixture；
 两者都**不能**替代运行时验证（真机未测）。
 """
@@ -26,6 +30,17 @@ checks = [
   ("Instance 静态字段", 'class_get_field(mgr, "Instance")' in t),
   ("hook 用 file offset", "0x19a5004u" in t and "0x19a9004u" not in t),
   ("审计/特权未调用", "CombatDamageAudit::" not in t and "PrivilegeService::" not in t and "get_isGod" not in t),
+  # ---- 3.3 合同（2026-11-25；底包 libil2cpp 66,297,952 B / HotUpdate sha256 3c21663c…34280）----
+  ("3.3 挂点常量", "kOff33Show   = 0x1CFF134u" in t and "kOff33Interp = 0x19F8A30u" in t
+                   and "kSize33Lib = 66297952ull" in t),
+  ("3.3 探针表首 + 分支", "{{33, kOff33Show}" in t and "if (pr.ver == 33) {" in t
+                          and "verprobe 3.3 cond" in t),
+  ("3.3 版本门放行", "verHook == 33" in t and "g_libVer.load() == 33" in t
+                    and "(ver == 33) ? kOff33Timescale" in t),
+  ("3.3 ApplyHp 合同锚点", "0x104200" in t and "body 1610 B" in t
+                           and "IL_021E" in t and "IL_024B" in t),
+  ("3.3 argBase 五槽不变", "argBase 五槽 +0/+8/+16/+24/+32" in t),
+  ("3.2 历史分支保留", "body 1594 B" in t and "IL_021C" in t and "IL_0249" in t),
   # ---- 3.2 合同（2026-11-24 从 HotUpdate.decrypted.dll 反推；sha256 812e6563…d551b0）----
   ("3.2 argBase 五槽", "constexpr int kSlotSeat = 16;" in t and "constexpr int kSlotOnDie= 32;" in t),
   ("3.2 argc 双口径放行", "constexpr int kApplyHpArgc = 4;" in t
