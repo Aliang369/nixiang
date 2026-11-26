@@ -54,10 +54,14 @@
 #                     可用 `--expect-so-sha256/--expect-metadata-sha256` 做精确断言。
 #                     逃生门：SO_META_CHECK=0（须在装机报告写明理由）。
 #    查12 TapTap 方案关（2026-10-28 补；蛋壳战机 1.2.1 误用旧伪装后落地）：`--apk` 时
-#                     ① manifest 仍挂 `StarryAppComponentFactory` ⇒ FAIL（运行时签名伪装已停用）；
-#                     ② 底包含 TapSDK 门闩类 `.../initializer/repository/GatekeeperRepository` 而
-#                        成品包同名 dex 与底包**逐字节相同** ⇒ FAIL（该游戏根本没改包）。
-#                     判据来源：10_docs/_state/规范变更日志.md「2026-10-28 · TapTap 改包法」。
+#                     ① manifest 仍挂**已删除的** `SignSpoofAppComponentFactory` ⇒ FAIL
+#                        （该类随签名伪装一起删除，装上必 ClassNotFoundException）。
+#                        `StarryAppComponentFactory` 是合法入口（需 early Application 时用），**不判它**。
+#                     ② 底包含 TapSDK 门闩类 `.../initializer/repository/GatekeeperRepository` 时：
+#                        门闩 dex 逐字节未变 ⇒ **WARN**（provider-only 形态 / SPI 路线本来就不改官方 dex，
+#                        旧版一律 FAIL 属误报，2026-11-27 修）；整包相对底包**实质无差异**
+#                        （除 META-INF 重签）⇒ FAIL（确实没改包）。
+#                     判据来源：规范变更日志「2026-10-28 · TapTap 改包法」+「2026-11-27 · 查12 误报」。
 #                     逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）。
 #
 #  退出码: 0=通过/WARN-only；1=存在 FAIL（禁止装机）
@@ -578,10 +582,35 @@ def dexes(z):
     return sorted(n for n in z.namelist() if n.startswith('classes') and n.endswith('.dex'))
 
 
+def fingerprint(z):
+    # 整包指纹：条目名 → (CRC32, 未压缩大小)。只读 central directory，不读内容（大包也快）。
+    # META-INF/ 是重签必然变的，不算「改包证据」。
+    return {i.filename: (i.CRC, i.file_size)
+            for i in z.infolist() if not i.filename.startswith('META-INF/')}
+
+
+def pack_diff(a, b):
+    # a=成品、b=底包；返回人可读的差异摘要；无实质差异返回 ''
+    only_a = sorted(set(a) - set(b))
+    only_b = sorted(set(b) - set(a))
+    chg = sorted(n for n in set(a) & set(b) if a[n] != b[n])
+    if not (only_a or only_b or chg):
+        return ''
+    parts = []
+    if only_a:
+        parts.append(f'新增 {len(only_a)} 条（如 {", ".join(only_a[:3])}）')
+    if only_b:
+        parts.append(f'删除 {len(only_b)} 条（如 {", ".join(only_b[:3])}）')
+    if chg:
+        parts.append(f'内容变化 {len(chg)} 条（如 {", ".join(chg[:3])}）')
+    return '；'.join(parts)
+
+
 with zipfile.ZipFile(apk) as z:
     man = z.read('AndroidManifest.xml')
     targets = dexes(z)
     tgt = {n: z.read(n) for n in targets}
+    fp = fingerprint(z)
 
 if OLD in man:
     print('   ✗ 成品包 manifest 仍挂 SignSpoofAppComponentFactory —— 该类已于 2026-10-28 删除，装上必 ClassNotFoundException')
@@ -606,27 +635,45 @@ if not base:
 
 with zipfile.ZipFile(base) as zb:
     bdex = {n: zb.read(n) for n in dexes(zb)}
-bad = []
+    bfp = fingerprint(zb)
+
+same = []
 for n in tap_hits:
     if n not in bdex:
-        print(f'   ⚠ 底包没有 {n}（dex 布局变化）⇒ 该条人工确认')
+        print(f'   · 底包没有 {n}（dex 布局变化）⇒ 门闩 dex 无法逐字节比对')
         continue
     a = hashlib.md5(bdex[n]).hexdigest()
     b = hashlib.md5(tgt[n]).hexdigest()
     if a == b:
-        bad.append((n, a))
+        same.append((n, a))
     else:
         print(f'   ✓ {n} 已改包（底包 {a[:12]}… → 成品 {b[:12]}…）')
-if bad:
-    for n, a in bad:
-        print(f'   ✗ {n} 与底包逐字节相同 ⇒ TapTap 门闩/网页登录**未改包**（md5 {a[:12]}…）')
-    sys.exit(1)
-sys.exit(0)
+
+if not same:
+    sys.exit(0)
+
+# 门闩 dex 未变，本身**不足以**判「没改包」：provider-only 形态官方 dex 原样透传、
+# TapTap 走运行时 SPI（GameHookImpl）时也本来就不改门闩 dex。旧版一律 FAIL ⇒ provider-only 包
+# 必被误拦（2026-11-27 修）。改为看整包：除 META-INF 重签外有任何差异 ⇒ WARN；完全一样才 FAIL。
+diff = pack_diff(fp, bfp)
+if diff:
+    for n, a in same:
+        print(f'   ⚠ {n} 与底包逐字节相同（md5 {a[:12]}…）：门闩 dex 未改')
+    print(f'   但整包已改（{diff}）⇒ 按 WARN 处理：确认该游戏是走 SPI 路线（GameHookImpl）还是漏改门闩 dex')
+    sys.exit(3)
+
+print('   ✗ 门闩 dex 未变，且整包相对底包无任何实质差异（除 META-INF 重签）')
+for n, a in same:
+    print(f'     {n} md5 {a[:12]}… 与底包一致')
+print('     ⇒ TapTap 门闩/网页登录**确实没改包**，装上必复现「弹窗/点了没反应」')
+sys.exit(1)
 PY
       case "$TAP_RC" in
-        0) echo "✓ PASS  [TapTap方案] 无旧签名伪装，且 TapSDK dex 已按改包法修补"; pass=$((pass + 1)) ;;
+        0) echo "✓ PASS  [TapTap方案] 无旧签名伪装，且门闩 dex 已按改包法修补"; pass=$((pass + 1)) ;;
         2) echo "- SKIP  [TapTap方案] 非 TapTap/TapSDK 包"; skip=$((skip + 1)) ;;
-        *) echo "        逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）"; fail=$((fail + 1)) ;;
+        3) echo "⚠ WARN  [TapTap方案] 门闩 dex 未改、整包已改（provider-only / SPI 形态属正常）——装机报告写明该游戏走的哪条路线"; warn=$((warn + 1)) ;;
+        *) echo "✗ FAIL  [TapTap方案] 见上（整包未改 / manifest 仍挂已删除的工厂类）"
+           echo "        逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）"; fail=$((fail + 1)) ;;
       esac
     fi
   fi
