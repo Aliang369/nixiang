@@ -75,6 +75,8 @@
 # （实测 mapping: com.starry.magic.cocos.ZxrHooks -> com.starry.magic.o.V0）⇒ 运行时 ClassNotFound，
 # 免广告与开关读取静默读 false。必须全名 keep（不带 allowobfuscation）。
 -keep class com.starry.magic.cocos.ZxrHooks { *; }
+# 魔法奇录：JS 侧 jsb.reflection.callStaticMethod("com.starry.magic.cocos.MfqlHooks", ...) 全名调用
+-keep class com.starry.magic.cocos.MfqlHooks { *; }
 
 # 2026-11-26（镇邪人 48572 出包）：仅为让 clearFeaturePrefsIfListChanged 可作为「开关保存修复」的静态探针
 # 存在（verify/静态验收按字节找该串）；Preferences 无任何外部按名调用（注入 smali 只按名引用 MenuService / ZxrHooks），

@@ -1,0 +1,12 @@
+{
+  "template_id": "mfql",
+  "name": "魔法奇录",
+  "package": "com.shw.mfqlm1",
+  "source": "Games/MfqlEntry.cpp kMfql_Features + Games/MfqlMod.h MfqlFeat",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "免广告"
+    }
+  ]
+}
