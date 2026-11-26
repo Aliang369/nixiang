@@ -60,7 +60,7 @@ command -v apktool >/dev/null || { echo "ERROR: apktool missing" >&2; exit 1; }
 [[ -n "$BT" ]] || { echo "ERROR: Android build-tools not found" >&2; exit 1; }
 
 LC_ALL=C grep -a -q 'Whrhx' "$SO_BUILT" || { echo "ERROR: so 缺 Whrhx 标签（不是无悔华夏的 so）" >&2; exit 1; }
-LC_ALL=C grep -a -q 'STARRYSTAMP1:EPOCH=' "$SO_BUILT" || { echo "ERROR: so 缺构建戳" >&2; exit 1; }
+LC_ALL=C grep -a -q 'STARRYSTAMP1:EPOCH=' "$SO_BUILT" || echo "  · so 无构建戳（已退役，正常）"
 LC_ALL=C grep -a -q 'StarryApp' "$MENU_DEX" || { echo "ERROR: 菜单 dex 缺 StarryApp" >&2; exit 1; }
 # 3.8.305 原包**不再自带** libc++_shared.so（3.8.280 自带）；mod so 的 DT_NEEDED 含它且引用 __emutls_get_address，
 # 缺它 ⇒ dlopen: library "libc++_shared.so" not found（2026-11-05 实测）。必须随包注入并导出 emutls。

@@ -59,7 +59,7 @@ command -v apktool >/dev/null || { echo "ERROR: apktool missing" >&2; exit 1; }
 
 LC_ALL=C grep -a -q 'Whrhx' "$SO_BUILT" || { echo "ERROR: so 缺 Whrhx 标签（不是无悔华夏的 so）" >&2; exit 1; }
 LC_ALL=C grep -a -q 'whhxbili' "$SO_BUILT" || { echo "ERROR: so 不是 bili 渠道（缺 whhxbili）" >&2; exit 1; }
-LC_ALL=C grep -a -q 'STARRYSTAMP1:EPOCH=' "$SO_BUILT" || { echo "ERROR: so 缺构建戳" >&2; exit 1; }
+LC_ALL=C grep -a -q 'STARRYSTAMP1:EPOCH=' "$SO_BUILT" || echo "  · so 无构建戳（已退役，正常）"
 LC_ALL=C grep -a -q 'StarryApp' "$MENU_DEX" || { echo "ERROR: 菜单 dex 缺 StarryApp" >&2; exit 1; }
 # 本包自带 libc++_shared.so（911,696B）⇒ 不注入 NDK 版；只断言它在底包里（mod so DT_NEEDED 需要）
 unzip -l "$BASE_APK" 'lib/arm64-v8a/libc++_shared.so' >/dev/null 2>&1 \

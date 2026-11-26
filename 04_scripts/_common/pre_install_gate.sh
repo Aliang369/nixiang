@@ -53,15 +53,15 @@
 #                     旧机因 `files/update/current` 有配套副本（运行时根本不加载包内 so）才一直正常。
 #                     可用 `--expect-so-sha256/--expect-metadata-sha256` 做精确断言。
 #                     逃生门：SO_META_CHECK=0（须在装机报告写明理由）。
-#    查12 TapTap 方案关（2026-10-28 补；蛋壳战机 1.2.1 误用旧伪装后落地）：`--apk` 时
-#                     ① manifest 仍挂**已删除的** `SignSpoofAppComponentFactory` ⇒ FAIL
-#                        （该类随签名伪装一起删除，装上必 ClassNotFoundException）。
-#                        `StarryAppComponentFactory` 是合法入口（需 early Application 时用），**不判它**。
-#                     ② 底包含 TapSDK 门闩类 `.../initializer/repository/GatekeeperRepository` 时：
-#                        门闩 dex 逐字节未变 ⇒ **WARN**（provider-only 形态 / SPI 路线本来就不改官方 dex，
-#                        旧版一律 FAIL 属误报，2026-11-27 修）；整包相对底包**实质无差异**
-#                        （除 META-INF 重签）⇒ FAIL（确实没改包）。
-#                     判据来源：规范变更日志「2026-10-28 · TapTap 改包法」+「2026-11-27 · 查12 误报」。
+#    查12 TapTap 落地关（2026-10-28 建；2026-11-27 随签名伪装下线重写判据）：`--apk` 时
+#                     探针＝dex 内 TapTap 登录/验签强信号（GatekeeperRepository / com/taptap/sdk/kit /
+#                     com/taptap/sdk/login），全不命中 ⇒ SKIP。
+#                     ① manifest 仍挂**已删除的** `SignSpoofAppComponentFactory` ⇒ FAIL（UTF-8 / UTF-16LE 双编码匹配；
+#                        `StarryAppComponentFactory` 是合法入口，**不判它**）。
+#                     ② 落地证据：框架 dex 内含本包名（SPI）⇒ PASS；传 `--base-apk` 时链路 dex 任一与底包不同
+#                        （改包法）⇒ PASS；有 base 却全同且无 SPI ⇒ FAIL；无 base ⇒ WARN。
+#                     判据来源：规范变更日志「2026-10-28 · TapTap 改包法」「2026-11-11 · 单轨」；
+#                     起因＝蛋壳战机 1.2.1 首版沿用旧伪装、验签/登录没落地却无机器关能发现。
 #                     逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）。
 #
 #  退出码: 0=通过/WARN-only；1=存在 FAIL（禁止装机）
@@ -81,7 +81,7 @@ fail=0; pass=0; warn=0; skip=0
 # ---------- 参数收集 ----------
 js_files=""; cpp_files=""; dex_files=""; so_file=""; pinvoke_json=""; menu_json=""
 runtime_menu_json=""; apk_file=""; base_apk=""; expect_so=""; expect_md=""; menu_dex=""; menu_dex_name=""
-game=""; rounds_threshold=2; allow_rounds=""; allow_no_harden=""; harden_reason="${HARDEN_REASON:-}"
+game=""; rounds_threshold=2; allow_rounds=""
 NEEDLES="$TMPDIR_PF/needles.txt"; : > "$NEEDLES"
 
 while [ $# -gt 0 ]; do
@@ -102,8 +102,6 @@ while [ $# -gt 0 ]; do
     --game)        game="$2"; shift 2 ;;
     --rounds-threshold) rounds_threshold="$2"; shift 2 ;;
     --allow-rounds) allow_rounds="1"; shift ;;
-    --allow-no-harden) allow_no_harden="1"; shift ;;
-    --harden-reason)  harden_reason="$2"; shift 2 ;;
     --needle)      printf '%s\n' "$2" >> "$NEEDLES"; shift 2 ;;
     --needle-file)
       if [ ! -f "$2" ]; then echo "✗ 门禁串清单缺失: $2"; exit 1; fi
@@ -544,75 +542,81 @@ if [ -n "$menu_dex" ]; then
   esac
 fi
 
-# ---------- 查11 加固凭证关：**2026-10-27 已下线**（用户裁决撤销加固强制）----------
-# 原实现：装机前必须有与当前 APK md5 对应的加固凭证（09_test/<游戏>/harden/<md5>.stamp），
-# 由 `harden_apk.py check` PASS 后写入；缺失即 FAIL 拦装机（逃生门 --allow-no-harden + --harden-reason）。
-# 撤销理由与影响面见 AGENTS.md §6「加固门禁已下线」与 10_docs/_state/规范变更日志.md。
-# 脚本参数 --allow-no-harden / --harden-reason 仍被解析（兼容旧命令），但不再产生任何判定。
+# ---------- 查11 加固凭证关：已删除（2026-10-27 下线 → 2026-11-27 连同参数与停用件一并移除） ----------
+# 原判据：装机前必须有 09_test/<游戏>/harden/<apk_md5>.stamp（harden_apk.py check PASS 后写入），缺失即 FAIL。
+# 2026-11-27 用户：已换 mod 框架，后续全部无加固 ⇒ 段落、--allow-no-harden/--harden-reason 参数、harden_gate.sh
+# 与 harden_coverage.py 一并删除（定义留 10_docs/_state/规范变更日志.md 同日条目）。
 
-# ---------- 查12 TapTap 方案关（2026-10-28 补；蛋壳战机 1.2.1 误用旧伪装后落地） ----------
+# ---------- 查12 TapTap 落地关（2026-10-28 建；2026-11-27 重写为落地证据判据） ----------
 # 依据：用户 2026-10-28 定案「TapTap 签名校验/网页强制登录一律改包法，不再用运行时签名伪装」
 #      （10_docs/_state/规范变更日志.md 同名条目 + _templates/经验_TapTap改包法_验签弹窗与网页登录_20261028.md）
-# 判据（任一命中即 FAIL，拦装机）：
-#   ① 成品包 manifest 仍挂**已删除的** `com.starry.magic.sign.SignSpoofAppComponentFactory`
-#      （该类 2026-10-28 随签名伪装一起删除 ⇒ 装上必 ClassNotFoundException）；
-#   ② 底包含 TapSDK 门闩类 `.../initializer/repository/GatekeeperRepository`，而**成品包同名 dex 与底包逐字节相同**
-#      ⇒ 该游戏根本没改包（验签门闩/网页登录都没落），必然复现「弹窗/点了没反应」。
-# 非 TapTap/TapSDK 包 ⇒ SKIP。逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）。
+# 判据（2026-11-27 重写为「落地关」；原「方案关」已随签名伪装下线而失效）：
+#   背景：2026-10-28 蛋壳战机 1.2.1 首版沿用已废弃的运行时签名伪装，装机后 TapTap 验签/登录没落地，
+#        靠用户验收才发现 ⇒ 当时加本查，② 判「门闩 dex 与底包逐字节相同 ⇒ FAIL」。
+#        但 ① 判的类已删除，②「门闩 dex 必须变」与现行两条落地路线冲突：
+#          · 改包法（2026-10-28 定案）：改 dex 的门闩 / TapSignKit 回灌官方证书指纹 / 登录入口改 Web；
+#          · 运行时 SPI（2026-11-11 单轨）：`games/<id>/GameHookImpl` 调 TapLoginForceWeb，官方 dex 一字节不动。
+#        加 provider-only 形态官方 dex 原样透传 ⇒「门闩 dex 没变」既可能是没干活，也可能是正常形态。
+#        查1–查11 无一覆盖这两条落地（查5 只能查「某字面量必须存在」，表达不了「门闩恒 true」「登录入口改跳转」
+#        这类不产生新字面量的改动）⇒ 本查保留，判据换成「落地证据」。
+#   0) 探针：dex 内出现任一 TapTap **登录/验签强信号**才纳入（斜杠形式；框架里的是点号常量，不污染）：
+#        GatekeeperRepository | com/taptap/sdk/kit（TapSignKit） | com/taptap/sdk/login
+#      全不命中 ⇒ SKIP（非 TapTap 登录包）。旧式 `com/taptap/sdk/ui/TapTapActivity` 只作弱信号打印、不纳入。
+#   1) 落地证据 A：框架 dex（含 com/starry/magic/games 的那个）内出现**本包名** ⇒ SPI 落地 ⇒ PASS
+#   2) 落地证据 B：传了 --base-apk ⇒ 强信号 dex 逐一与底包比对，任一不同 ⇒ 改包法落地 ⇒ PASS
+#   3) 有 base、强信号 dex 全同、且无 SPI 证据 ⇒ FAIL（蛋壳事故形态：门闩在，却什么都没做）
+#   4) 无 --base-apk ⇒ WARN（无法核实，装机报告写明；建议补 --base-apk）
+#   5) 另：manifest 仍挂已删除的 SignSpoofAppComponentFactory ⇒ FAIL（不论其它）
+#      ⚠ manifest 字符串池有 UTF-8 / UTF-16LE 两种编码（实测明日方舟 2.7.91、魔法奇录 1.0.1 是 utf16），
+#        必须双编码匹配，否则挂该类的包装上照过。
+# 逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）。
 if [ -n "$apk_file" ] && [ "${TAP_MODE_CHECK:-1}" = "1" ]; then
   if [ ! -f "$apk_file" ]; then
-    echo "✗ FAIL  [TapTap方案] 目标 APK 不存在: $apk_file"; fail=$((fail + 1))
+    echo "✗ FAIL  [TapTap落地] 目标 APK 不存在: $apk_file"; fail=$((fail + 1))
   else
     PY_G="$(command -v python3 || command -v python || true)"
     if [ -z "$PY_G" ]; then
-      echo "- SKIP  [TapTap方案] 无 python，无法读包内 dex/manifest"; skip=$((skip + 1))
+      echo "- SKIP  [TapTap落地] 无 python，无法读包内 dex/manifest"; skip=$((skip + 1))
     else
+      # 包名交给现成 axml_inspect.py（它已处理 UTF-8/UTF-16 两种字符串池），取 manifest 元素的 package 属性
+      TAP_PKG=""; TAP_MF="$TMPDIR_PF/tap_manifest.xml"
+      if unzip -p "$apk_file" AndroidManifest.xml > "$TAP_MF" 2>/dev/null && [ -s "$TAP_MF" ] && [ -f "$SCRIPT_DIR/axml_inspect.py" ]; then
+        TAP_PKG="$(PYTHONUTF8=1 PYTHONIOENCODING=utf-8 "$PY_G" "$SCRIPT_DIR/axml_inspect.py" "$TAP_MF" --filter manifest 2>/dev/null \
+                   | awk -F'"' '/^ *package *= *"/{print $2; exit}')"
+      fi
       TAP_RC=0
       # Windows 控制台默认 GBK：本段 python 会打印 ⇒/✓ 等非 GBK 字符，必须强制 UTF-8 输出
-      PYTHONUTF8=1 PYTHONIOENCODING=utf-8 "$PY_G" - "$apk_file" "${base_apk:-}" <<'PY' || TAP_RC=$?
+      PYTHONUTF8=1 PYTHONIOENCODING=utf-8 "$PY_G" - "$apk_file" "${base_apk:-}" "$TAP_PKG" <<'PY' || TAP_RC=$?
 import hashlib, sys, zipfile
 
-apk, base = sys.argv[1], (sys.argv[2] or "")
-GATE = b'com/taptap/sdk/initializer/repository/GatekeeperRepository'
-OLD = b'SignSpoofAppComponentFactory'      # 已删除的旧工厂（2026-10-28）
+apk = sys.argv[1]
+base = sys.argv[2] if len(sys.argv) > 2 else ""
+pkg = sys.argv[3] if len(sys.argv) > 3 else ""
+
+# 强信号＝TapTap 登录/验签链路（斜杠形式；框架里全是点号常量 "com.taptap.sdk.…"，不污染）
+CHAIN = [
+    b'com/taptap/sdk/initializer/repository/GatekeeperRepository',   # 验签门闩
+    b'com/taptap/sdk/kit',                                           # TapSignKit（官方证书指纹回灌点）
+    b'com/taptap/sdk/login',                                        # 登录模块
+]
+WEAK = b'com/taptap/sdk/ui/TapTapActivity'                           # 旧式登录活动：只提示，不纳入判定
+OLD = 'SignSpoofAppComponentFactory'                                 # 已删除的旧工厂（2026-10-28）
 SPOOF_CLS = b'Lcom/starry/magic/sign/SignSpoof;'
+FW = b'com/starry/magic/games'                                       # 框架 dex 标记
 
 
 def dexes(z):
-    return sorted(n for n in z.namelist() if n.startswith('classes') and n.endswith('.dex'))
-
-
-def fingerprint(z):
-    # 整包指纹：条目名 → (CRC32, 未压缩大小)。只读 central directory，不读内容（大包也快）。
-    # META-INF/ 是重签必然变的，不算「改包证据」。
-    return {i.filename: (i.CRC, i.file_size)
-            for i in z.infolist() if not i.filename.startswith('META-INF/')}
-
-
-def pack_diff(a, b):
-    # a=成品、b=底包；返回人可读的差异摘要；无实质差异返回 ''
-    only_a = sorted(set(a) - set(b))
-    only_b = sorted(set(b) - set(a))
-    chg = sorted(n for n in set(a) & set(b) if a[n] != b[n])
-    if not (only_a or only_b or chg):
-        return ''
-    parts = []
-    if only_a:
-        parts.append(f'新增 {len(only_a)} 条（如 {", ".join(only_a[:3])}）')
-    if only_b:
-        parts.append(f'删除 {len(only_b)} 条（如 {", ".join(only_b[:3])}）')
-    if chg:
-        parts.append(f'内容变化 {len(chg)} 条（如 {", ".join(chg[:3])}）')
-    return '；'.join(parts)
+    return sorted((n for n in z.namelist() if n.startswith('classes') and n.endswith('.dex')),
+                  key=lambda n: (len(n), n))
 
 
 with zipfile.ZipFile(apk) as z:
     man = z.read('AndroidManifest.xml')
     targets = dexes(z)
     tgt = {n: z.read(n) for n in targets}
-    fp = fingerprint(z)
 
-if OLD in man:
+# ① manifest 挂着已删除的工厂类 ⇒ 装上必 ClassNotFoundException。池编码可能 UTF-8，也可能 UTF-16LE。
+if OLD.encode() in man or OLD.encode('utf-16-le') in man:
     print('   ✗ 成品包 manifest 仍挂 SignSpoofAppComponentFactory —— 该类已于 2026-10-28 删除，装上必 ClassNotFoundException')
     print('     改法：manifest 恢复官方 androidx.core.app.CoreComponentFactory，入口只用 StarryInitProvider')
     print('           （如需早于 Application，用 com.starry.magic.sign.StarryAppComponentFactory）；')
@@ -623,56 +627,65 @@ spoof_hits = [n for n in targets if SPOOF_CLS in tgt[n]]
 if spoof_hits:
     print(f'   ⚠ 包内仍含 Lcom/starry/magic/sign/SignSpoof;（{", ".join(spoof_hits)}）：历史产物，源码已删除，重打 dex 即消失')
 
-tap_hits = [n for n in targets if GATE in tgt[n]]
-if not tap_hits:
-    print('   （该包不含 TapSDK 门闩类 ⇒ 非 TapTap/TapSDK 包，跳过）')
+chain = {}
+for n in targets:
+    hit = [c.decode() for c in CHAIN if c in tgt[n]]
+    if hit:
+        chain[n] = hit
+if not chain:
+    weak = [n for n in targets if WEAK in tgt[n]]
+    if weak:
+        print(f'   （仅命中旧式 com/taptap/sdk/ui/TapTapActivity（{", ".join(weak)}），无登录/验签强信号 ⇒ 不纳入；'
+              f'该游戏若走 TapTap 登录请人工确认）')
+    else:
+        print('   （dex 内无 TapTap 登录/验签链路 ⇒ 非 TapTap 包，跳过）')
     sys.exit(2)
 
-print(f'   TapSDK 门闩类出现在 {", ".join(tap_hits)}')
+print('   TapTap 链路命中：' + ', '.join(f'{n}({len(v)})' for n, v in sorted(chain.items())))
+
+# 落地证据 A：SPI —— 框架 dex 内出现本包名（GameHookImpl.PKG 常量）
+if pkg:
+    for n in targets:
+        if FW in tgt[n] and pkg.encode() in tgt[n]:
+            print(f'   ✓ SPI 落地：框架 dex {n} 内含本包名 {pkg}（GameHookImpl → TapLoginForceWeb）')
+            sys.exit(0)
+    print(f'   · 框架 dex 内未见本包名 {pkg} ⇒ 无 SPI 落地证据')
+else:
+    print('   ⚠ 取不到包名（axml_inspect 未产出）⇒ 无法核实 SPI 落地，按无证据处理')
+
+# 落地证据 B：改包法 —— 强信号 dex 与底包逐字节比对
 if not base:
-    print('   ⚠ 未传 --base-apk ⇒ 无法核对「是否真的改过包」（建议补 --base-apk 复核）')
-    sys.exit(0)
+    print('   ⚠ 未传 --base-apk ⇒ 无法核实改包法落地（建议补 --base-apk 复核）')
+    sys.exit(3)
 
 with zipfile.ZipFile(base) as zb:
     bdex = {n: zb.read(n) for n in dexes(zb)}
-    bfp = fingerprint(zb)
 
-same = []
-for n in tap_hits:
+changed, same, missing = [], [], []
+for n in sorted(chain):
     if n not in bdex:
-        print(f'   · 底包没有 {n}（dex 布局变化）⇒ 门闩 dex 无法逐字节比对')
-        continue
+        missing.append(n); continue
     a = hashlib.md5(bdex[n]).hexdigest()
     b = hashlib.md5(tgt[n]).hexdigest()
-    if a == b:
-        same.append((n, a))
-    else:
-        print(f'   ✓ {n} 已改包（底包 {a[:12]}… → 成品 {b[:12]}…）')
+    (changed if a != b else same).append((n, a, b))
 
-if not same:
+for n, a, b in changed:
+    print(f'   ✓ {n} 已改包（底包 {a[:12]}… → 成品 {b[:12]}…）：改包法落地')
+if changed:
     sys.exit(0)
-
-# 门闩 dex 未变，本身**不足以**判「没改包」：provider-only 形态官方 dex 原样透传、
-# TapTap 走运行时 SPI（GameHookImpl）时也本来就不改门闩 dex。旧版一律 FAIL ⇒ provider-only 包
-# 必被误拦（2026-11-27 修）。改为看整包：除 META-INF 重签外有任何差异 ⇒ WARN；完全一样才 FAIL。
-diff = pack_diff(fp, bfp)
-if diff:
-    for n, a in same:
-        print(f'   ⚠ {n} 与底包逐字节相同（md5 {a[:12]}…）：门闩 dex 未改')
-    print(f'   但整包已改（{diff}）⇒ 按 WARN 处理：确认该游戏是走 SPI 路线（GameHookImpl）还是漏改门闩 dex')
-    sys.exit(3)
-
-print('   ✗ 门闩 dex 未变，且整包相对底包无任何实质差异（除 META-INF 重签）')
-for n, a in same:
-    print(f'     {n} md5 {a[:12]}… 与底包一致')
-print('     ⇒ TapTap 门闩/网页登录**确实没改包**，装上必复现「弹窗/点了没反应」')
+if missing:
+    print(f'   ✓ 底包无同名 dex（{", ".join(missing)}，dex 布局变化）⇒ 视为已改包')
+    sys.exit(0)
+for n, a, b in same:
+    print(f'   ✗ {n} 与底包逐字节相同（md5 {a[:12]}…）')
+print('   ⇒ 无 SPI 证据、链路 dex 也一个没改：TapTap 验签/网页登录**确实没落地**，装上必复现「弹窗/点了没反应」')
 sys.exit(1)
 PY
       case "$TAP_RC" in
-        0) echo "✓ PASS  [TapTap方案] 无旧签名伪装，且门闩 dex 已按改包法修补"; pass=$((pass + 1)) ;;
-        2) echo "- SKIP  [TapTap方案] 非 TapTap/TapSDK 包"; skip=$((skip + 1)) ;;
-        3) echo "⚠ WARN  [TapTap方案] 门闩 dex 未改、整包已改（provider-only / SPI 形态属正常）——装机报告写明该游戏走的哪条路线"; warn=$((warn + 1)) ;;
-        *) echo "✗ FAIL  [TapTap方案] 见上（整包未改 / manifest 仍挂已删除的工厂类）"
+        0) echo "✓ PASS  [TapTap落地] 无已删除工厂类，且落地证据成立（SPI 或改包法）"; pass=$((pass + 1)) ;;
+        2) echo "- SKIP  [TapTap落地] dex 内无 TapTap 登录/验签链路"; skip=$((skip + 1)) ;;
+        3) echo "⚠ WARN  [TapTap落地] 未传 --base-apk，只排除了已删工厂类；落地未核实（报告写明，建议补 --base-apk）"; warn=$((warn + 1)) ;;
+        *) echo "✗ FAIL  [TapTap落地] 见上（manifest 仍挂已删工厂类 / 无 SPI 且链路 dex 未改）"
            echo "        逃生门：TAP_MODE_CHECK=0（须在装机报告写明理由）"; fail=$((fail + 1)) ;;
       esac
     fi

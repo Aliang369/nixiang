@@ -16,8 +16,6 @@ MENU_TEMPLATE=""
 DATE="$(date +%Y%m%d)"
 MODE="dry-run"
 PRUNE=0
-ALLOW_NO_HARDEN=0   # 加固门禁逃生门：必须同时给 --harden-reason（机器强制，2026-10-27 第六轮）
-HARDEN_REASON="${HARDEN_REASON:-}"
 SYNC_DOC=0
 ALLOW_LEGACY_TEMPLATE=0
 REQUIRE_CARD=1   # 验收卡门禁：默认开（卡存在但 §3 空即 rc=1）；逃生门 --allow-empty-card（2026-11-04）
@@ -85,8 +83,6 @@ while [[ $# -gt 0 ]]; do
     --expect-menu-template) EXPECT_MENU_TEMPLATE=1; shift ;;
     --allow-empty-card) REQUIRE_CARD=0; shift ;;
     --require-acceptance-card) REQUIRE_CARD=1; shift ;;
-    --allow-no-harden) ALLOW_NO_HARDEN=1; shift ;;
-    --harden-reason)   HARDEN_REASON="$2"; shift 2 ;;
     --apply) MODE="apply"; shift ;;
     -h|--help) usage ;;
     *) echo "ERROR: 未知参数 $1" >&2; usage ;;
@@ -96,9 +92,8 @@ done
 [[ -n "$GAME" ]] || usage
 [[ "$DATE" =~ ^[0-9]{8}$ ]] || { echo "ERROR: --date 需为 YYYYMMDD" >&2; exit 2; }
 GAME_DIR="$ROOT/08_output/$GAME"
-# ── 加固门禁：**2026-10-27 已下线**（用户裁决撤销加固强制；脚本与凭证体系保留为停用件）──
-# 原行为：交付前必须过 harden_apk.py check（C1–C9），FAIL 即 exit 4，逃生门 --allow-no-harden + --harden-reason。
-# 现在：不再调用、不再拦截；参数仍解析（兼容旧命令）。见 AGENTS.md §6 与 10_docs/_state/规范变更日志.md。
+# ── 加固检查：已整体移除（2026-10-27 下线 → 2026-11-27 连参数与停用件一并删除）──
+# 2026-11-27 用户：已换 mod 框架，后续全部无加固 ⇒ 本脚本不再有 --allow-no-harden/--harden-reason。
 
 
 # 2026-10-28 修：下方 echo 行用到 md5_of/sha256_of，而函数原先定义在其后 ⇒

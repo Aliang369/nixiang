@@ -281,9 +281,7 @@ h=hashlib.sha256(open(sys.argv[1],'rb').read())
 print('sha256 %s' % h.hexdigest())
 " "${FINAL}"
 
-echo "[6/7] 加固门禁（所有游戏默认强制，见 AGENTS.md §6）"
-bash "${NIXIANG}/04_scripts/_common/harden_gate.sh" "${FINAL}" --game 冒险与征途 || die "加固门禁未过 ⇒ 拒绝交付该包"
-echo "      ↑ 凭证：09_test/冒险与征途/harden/<apk_md5>.stamp（装机闸门查11 认这个）"
+# [6/7] 加固门禁：已于 2026-11-27 移除（已换 mod 框架，后续全部无加固；harden_gate.sh 已删除）
 
 if [[ "${STARRY_INSTALL:-0}" == "1" ]]; then
   echo "[7/7] install -> ${SERIAL}（同签 -r 覆盖保数据；官方签必须先卸载并会清数据）"

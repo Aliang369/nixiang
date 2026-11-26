@@ -109,7 +109,7 @@ cp -f "$MENU_DIR/YsxzMod.cpp"   "$JNIW/Games/YsxzMod.cpp"
 # ⇒ 这里在编译前**强制**按本脚本刚拷贝的那份重新生成密文，物理上不可能再错源头。
 # C9：把"该游戏 + 构建机 key"交给出包门禁，让 harden 直接问服务端
 # 「这个游戏的载荷 sha 登记了吗」——不一致就 FAIL 并打出后台操作步骤。
-# 2026-11-04 加固下线：不再生成载荷密文（gen_payload_enc.py 停用），
+# 2026-11-04 加固下线：不再生成载荷密文（gen_payload_enc.py 已于 2026-11-27 删除），
 # YsxzPatchJs.h 里的明文常量直接随 so 进包。C9 载荷 sha 登记也随之取消。
 echo "[103] patch js = $(wc -c < "$JNIW/Games/YsxzPatchJs.h") B（明文常量，无加密/无诱饵）"
 

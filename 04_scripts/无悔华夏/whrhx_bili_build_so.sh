@@ -94,8 +94,10 @@ fi
 
 MD5="$(md5 -q "$SO")"
 SIZE="$(stat -f %z "$SO")"
+# 构建戳只作信息展示：STARRYSTAMP1 烘焙已于 2026-11-21 随 OTA 下线移除（pre_install_gate 查8 已退役），
+# 无戳属正常，不再拦构建（2026-11-27）。
 EPOCH="$(LC_ALL=C grep -a -o 'STARRYSTAMP1:EPOCH=[0-9]*;' "$SO" | head -1 || true)"
-[[ -n "$EPOCH" ]] || { echo "ERROR: so missing STARRYSTAMP1 build stamp" >&2; exit 1; }
+[[ -n "$EPOCH" ]] || EPOCH="none"
 BUILDID="unknown"
 if [[ -n "$LLVM_BIN" && -x "$LLVM_BIN/llvm-readelf" ]]; then
   BUILDID="$("$LLVM_BIN/llvm-readelf" -n "$SO" 2>/dev/null | awk '/Build ID:/{print $3; exit}')"

@@ -41,6 +41,7 @@ set -euo pipefail
 LIB_NAME="libstarry_magic.so"
 DEF_SERIAL="f9a116a2"
 DEF_PKG="com.yhhy.whrhx.aligames"
+# 构建戳仅用于开发换 so 时打印（STARRYSTAMP1 烘焙 2026-11-21 随 OTA 下线移除；查8 已退役，不再判定）
 STAMP_MARK="STARRYSTAMP1:EPOCH="
 DEV_TMP_DIR="/data/local/tmp"
 REMOTE_PREFIX="libsm_"
@@ -107,7 +108,8 @@ md5_of() {
 size_of_file() { wc -c < "$1" | tr -d '[:space:]'; }
 
 stamp_scan() {
-  # 在文件字节里找 ASCII 串 "STARRYSTAMP1:EPOCH=<数字>"（构建戳，仓库发布的必要门禁）。
+  # 在文件字节里找 ASCII 串 "STARRYSTAMP1:EPOCH=<数字>"。仅用于日志展示：该烘焙已于 2026-11-21 移除，
+  # 新 so 无此戳属正常（pre_install_gate 查8 已退役），不要据此判失败。
   # macOS 的 BSD grep 在多字节 locale 下对二进制文件不可靠 ⇒ 必须 LC_ALL=C；
   # 首选 `grep -a -o`，失败再退回 `strings` 管道。
   local f="$1" out=""

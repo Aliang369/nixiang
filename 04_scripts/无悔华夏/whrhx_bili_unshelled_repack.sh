@@ -47,10 +47,10 @@ done
 command -v apktool >/dev/null || { echo "ERROR: apktool missing" >&2; exit 1; }
 [[ -n "$BT" ]] || { echo "ERROR: Android build-tools (zipalign/apksigner) not found" >&2; exit 1; }
 
-# so 身份门禁：必须是 whhxbili 渠道、带构建戳
+# so 身份门禁：必须是 whhxbili 渠道（构建戳不判：STARRYSTAMP1 烘焙 2026-11-21 随 OTA 下线移除，查8 已退役）
 LC_ALL=C grep -a -q 'whhxbili' "$SO_BUILT" || { echo "ERROR: so 不是 whhxbili 渠道" >&2; exit 1; }
 LC_ALL=C grep -a -q 'target=bilibili' "$SO_BUILT" || { echo "ERROR: so 缺 target=bilibili 标签" >&2; exit 1; }
-LC_ALL=C grep -a -q 'STARRYSTAMP1:EPOCH=' "$SO_BUILT" || { echo "ERROR: so 缺构建戳" >&2; exit 1; }
+LC_ALL=C grep -a -q 'STARRYSTAMP1:EPOCH=' "$SO_BUILT" || echo "  · so 无构建戳（已退役，正常）"
 
 WORK="$(mktemp -d /tmp/whrhx_bili_repack.XXXXXX)"
 trap 'rm -rf "$WORK"' EXIT

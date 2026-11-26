@@ -31,7 +31,7 @@ bash 04_scripts/pipeline.sh <游戏> next            # 执行下一阶段（自�
 bash 04_scripts/pipeline.sh <游戏> next --loop 4   # 连跑最多 4 个阶段（逐次回显日志尾 40 行；失败即停）
 bash 04_scripts/pipeline.sh <游戏> run <stage_id>  # 显式重跑某阶段（重跑前建议先 reset）
 bash 04_scripts/_common/preflight.sh <文件...>     # 改完任何文件必跑的机器关
-bash 04_scripts/_common/pre_install_gate.sh ...    # 装机前产物门禁（现 11 查生效：查1–查10 + 查12 TapTap 方案关；查11 加固凭证已下线）
+bash 04_scripts/_common/pre_install_gate.sh ...    # 装机前产物门禁（现 11 查生效：查1–查10 + 查12 TapTap 落地关；查11 加固凭证已下线）
 ```
 
 辅助：`reset <stage_id>`（状态回退 pending）、`verify <stage_id>`（只校验产物不执行）、
@@ -71,7 +71,7 @@ bash 04_scripts/_common/pre_install_gate.sh \
 
 - 各查独立可选（传了才查），有 FAIL 即禁止装机（exit 1）
 
-**查项总表（2026-10-28 现状：11 查生效〔查1–查10 + 查12〕；查11「加固凭证」已于 2026-10-27 按用户裁决下线；「四查」是 2026-09-17 的旧称，别再用）**
+**查项总表（2026-11-27 现状：查1–查10 + 查12 共 11 个编号，其中查8 恒 SKIP（已退役）、查11 已删除；「四查」是 2026-09-17 的旧称，别再用）**
 
 | # | 管什么 | 起始 | 逃生门 |
 |---|---|---|---|
@@ -85,12 +85,13 @@ bash 04_scripts/_common/pre_install_gate.sh \
 | 查8 | ~~包内 so 构建戳 `STARRYSTAMP1:EPOCH=`~~ **已于 2026-11-21 退役**（OTA 下线 → 戳无读者）；门禁保留编号、恒 SKIP | 2026-10-16 | 无 |
 | 查9 | so / metadata 配套（IL2CPP 直装包：只换一边 = 混搭 ⇒ FAIL） | 2026-10-19 | `SO_META_CHECK=0` |
 | 查10 | 菜单 dex 新鲜度（dex 内 `starry-menu:<commit>` 必须等于当前 Java 源码 HEAD） | 2026-10-26 | 见下方「菜单 dex 新鲜度门禁」 |
-| ~~查11~~ | ~~**加固凭证**：`09_test/<游戏>/harden/<apk_md5>.stamp` 必须与当前 APK md5 对应~~ | 2026-10-27 起 · **已下线（用户裁决）** | 不再判定；`harden_gate.sh`/`harden_apk.py` 默认跳过（需真跑给 `HARDEN_GATE_ENABLED=1`） |
-| 查12 | **TapTap 方案关**：① manifest 不得挂 `SignSpoofAppComponentFactory`（该类 2026-10-28 已删，挂着必崩；`StarryAppComponentFactory` 是合法入口，不判）；② 底包含 `.../initializer/repository/GatekeeperRepository` 时：门闩 dex 与底包逐字节相同 ⇒ **WARN**（provider-only 形态 / 运行时 SPI 本就不改官方 dex，2026-11-27 修正误报）；整包除 `META-INF/` 重签外与底包**无任何差异** ⇒ FAIL（确实没改包）；无该门闩类 ⇒ SKIP | 2026-10-28<br>2026-11-27 | `TAP_MODE_CHECK=0`（须在装机报告写明理由） |
+| ~~查11~~ | ~~**加固凭证**：`09_test/<游戏>/harden/<apk_md5>.stamp` 与 APK md5 对应~~ **已删除**（2026-10-27 下线 → 2026-11-27 连同参数与停用件一并移除） | 2026-10-27 下线<br>2026-11-27 删除 | 无（`--allow-no-harden/--harden-reason` 已不认；`harden_gate.sh`/`harden_coverage.py` 已删） |
+| 查12 | **TapTap 落地关**：探针＝dex 内 TapTap 登录/验签强信号（`GatekeeperRepository` / `com/taptap/sdk/kit` / `com/taptap/sdk/login`；斜杠形式，不误命中框架的点号常量），全不命中 ⇒ SKIP。① manifest 不得挂 `SignSpoofAppComponentFactory`（UTF-8 与 UTF-16LE 双编码匹配；挂着必崩；`StarryAppComponentFactory` 是合法入口，不判）⇒ FAIL。② 落地证据：框架 dex（含 `com/starry/magic/games`）内出现本包名 ⇒ SPI 落地 PASS；传 `--base-apk` 时链路 dex 任一与底包不同 ⇒ 改包法落地 PASS；有 base 却全同且无 SPI ⇒ FAIL；无 `--base-apk` ⇒ WARN | 2026-10-28<br>2026-11-27 重写 | `TAP_MODE_CHECK=0`（须在装机报告写明理由） |
 
-> 查11 已下线：加固门禁不再被任何规则/装机门禁要求，详见 `AGENTS.md` §6「加固门禁已下线」与 `_state/规范变更日志.md`（2026-10-27）。三款已接入游戏的去加固步骤见各游戏 `去加固_待办_20261027.md`。
+> 查11 已删除（2026-11-27）：加固体系整体移除（用户：已换 mod 框架，后续全部无加固），详见 `AGENTS.md` §6 与 `_state/规范变更日志.md`。三款历史待办（冒险与征途/勇士之心/无限升级 `去加固_待办_20261027.md`）保留为历史记录，不再作为任务。
 > 查12 依据 = 用户 2026-10-28 定案「TapTap 验签/网页登录一律改包法，不再用签名伪装」（`_state/规范变更日志.md` 同名条目）；落地起因＝蛋壳战机 1.2.1 首版误沿用旧伪装且当时没有任何机器关能发现「没改包」。
-> 2026-11-27 修正：旧版②「门闩 dex 必须变」对 provider-only 包（官方 dex 原样透传、注入只加新 dex）与 SPI 路线（`GameHookImpl` 不改门闩）一律 FAIL ⇒ 误拦。现改为「门闩 dex 未变」只 WARN，另以整包指纹（条目名+CRC32+size，跳过 `META-INF/`）判「真没改包」才 FAIL。
+> 2026-11-27 重写（当日两次）：① 上午先把「门闩 dex 必须变 ⇒ FAIL」降为 WARN、改用整包指纹判「真没改包」——随即发现这会让 FAIL 永不触发（我们的包必然注入过，整包永远有差异），等于废掉本查；② 下午定稿为「落地证据关」：证据只有两种——框架 dex 内有本包名（SPI 落地）或链路 dex 与底包有差异（改包法落地），两者皆无且包内确有 TapTap 登录/验签链路才 FAIL。
+> 查1–查11 无任何一查覆盖这两条落地（查5 只能查「某字面量必须存在」，表达不了「门闩恒 true」「登录入口改跳转」这类不产生新字面量的改动），故本查保留而不是删。manifest 池编码实测：明日方舟 2.7.91、魔法奇录 1.0.1 为 UTF-16LE，旧版只做 UTF-8 字节匹配 ⇒ 挂旧工厂的包装上照过，本次一并修。
 
 - 查4 局限：只抓字面量索引调用（`getRet(4)` 形式）；变量传参（`getRet(n)`）靠人工核对
 - **查9 是什么（2026-10-19 补，我的勇者 7.6.3 首装闪退）**：包内 `lib/arm64-v8a/libil2cpp.so` 与

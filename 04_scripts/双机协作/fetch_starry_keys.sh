@@ -22,7 +22,6 @@
 #   SG_SERVER_DIR  服务端 auth-server 目录  默认 /www/wwwroot/starlight-mod-auth
 #   SG_GAME        用于自证的 game_id       默认 starry_self（星光自测）
 #   SG_EXPECT_FP   期望公钥指纹             默认 25ba10e0faca3500
-#   SG_EXPECT_KFP  期望 K_build 指纹        默认 d63013cd39692ddd（仅本机自算比对）
 #
 # 退出码：0 = 自证全 PASS / 1 = 有 FAIL / 2 = 只 WARN（未取齐但没硬错）
 #
@@ -35,7 +34,6 @@ SERVER_DIR="${SG_SERVER_DIR:-/www/wwwroot/starlight-mod-auth}"
 GAME="${SG_GAME:-starry_self}"
 API_BASE="${SG_API_BASE:-https://auth.xgmfyx.cn}"
 EXPECT_FP="${SG_EXPECT_FP:-25ba10e0faca3500}"
-EXPECT_KFP="${SG_EXPECT_KFP:-d63013cd39692ddd}"
 
 DO_FETCH=1
 FORCE=0
@@ -86,7 +84,7 @@ printf '宿主=%s  仓库=%s\n密钥目录=%s\n自证目标 game_id=%s\n' "$OS" 
 # ---------------------------------------------------------------------------
 # 1) 取：SSH 直连授权服务器
 # ---------------------------------------------------------------------------
-sect "1/4 取密钥（SSH 直连，走 git 一律禁止）"
+sect "1/3 取密钥（SSH 直连，走 git 一律禁止）"
 
 need_fetch=0
 for f in rsa2048.txt payload_master.txt build_key.txt; do
@@ -157,12 +155,17 @@ fi
 # ---------------------------------------------------------------------------
 # 2) 自证 A：公钥指纹与仓内 sg_pubkey.h 一致
 # ---------------------------------------------------------------------------
-sect "2/4 自证 A — 公钥指纹 == 仓内 kSgPubFp"
+sect "2/3 自证 A — 公钥指纹 == 仓内 kSgPubFp"
 
 if [ ! -f "$KD/rsa2048.txt" ]; then
   fail "缺 $KD/rsa2048.txt"
 else
-  PUB_OUT="$(python3 "$ROOT/04_scripts/_common/sg_pki/gen_pubkey_header.py" --check 2>&1)"
+  # 显式传私钥路径：gen_pubkey_header.py 的默认值走 os.path.expanduser("~")，在 Windows 的
+  # 某些 shell 环境下 "~" 不展开（实测报 FileNotFoundError: '~\.starry-keys\rsa2048.txt'），
+  # 直接传已解析的绝对路径，两平台一致。
+  _KEYF="$KD/rsa2048.txt"
+  command -v cygpath >/dev/null 2>&1 && _KEYF="$(cygpath -m "$_KEYF")"
+  PUB_OUT="$(python3 "$ROOT/04_scripts/_common/sg_pki/gen_pubkey_header.py" --key "$_KEYF" --check 2>&1)"
   PUB_RC=$?
   printf '%s\n' "$PUB_OUT" | sed 's/^/       /'
   if [ "$PUB_RC" -eq 0 ]; then
@@ -176,57 +179,12 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 3) 自证 B：自算 K_build 指纹
+# 3) 载荷体系：已删除（2026-11-27）
 # ---------------------------------------------------------------------------
-sect "3/4 自证 B — 自算 $GAME 的 K_build"
-
-PAYLOAD_SHA=""
-KFP=""
-if [ ! -f "$KD/payload_master.txt" ]; then
-  fail "缺 $KD/payload_master.txt ⇒ 算不出 K_build"
-else
-  KB_OUT="$(python3 - "$ROOT" <<'PY' 2>&1
-import importlib.util, os, sys
-root = sys.argv[1]
-path = os.path.join(root, "04_scripts", "勇士之心", "gen_payload_enc.py")
-spec = importlib.util.spec_from_file_location("gpe", path)
-m = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(m)
-payload = m.extract_payload()
-master = m.load_master(create=False)
-key, digest = m.build_key(master, payload)
-print("payload_sha=%s" % digest.hex())
-print("k_build_fp=%s" % key.hex()[:16])
-PY
-)"
-  printf '%s\n' "$KB_OUT" | sed 's/^/       /'
-  PAYLOAD_SHA="$(printf '%s\n' "$KB_OUT" | sed -n 's/^payload_sha=//p' | head -1)"
-  KFP="$(printf '%s\n' "$KB_OUT" | sed -n 's/^k_build_fp=//p' | head -1)"
-  if [ -z "$KFP" ]; then
-    fail "算不出 K_build（主密钥格式不对？应是 64 位 hex）"
-  elif [ "$KFP" = "$EXPECT_KFP" ]; then
-    pass "K_build 指纹 = ${KFP}（与服务端登记值一致）"
-  else
-    fail "K_build 指纹 = ${KFP}，与预期 $EXPECT_KFP 不符 ⇒ 主密钥不是同一份，或该游戏载荷已改动"
-    info "若本轮确实改过载荷/重新加密，预期值应为新值：先看 sg_payload_enc.h 里的 sha 再对后台"
-  fi
-
-  CHK_OUT="$(python3 "$ROOT/04_scripts/勇士之心/gen_payload_enc.py" --check 2>&1)"
-  CHK_RC=$?
-  printf '%s\n' "$CHK_OUT" | sed 's/^/       /'
-  if [ "$CHK_RC" -eq 0 ]; then
-    pass "密文头与当前明文一致"
-  else
-    warn "密文头与当前载荷不一致（要先跑 gen_payload_enc.py 重新加密，不是密钥问题）"
-  fi
-fi
-
-# ---------------------------------------------------------------------------
-# 4) 自证 C：已下线（2026-11-22）
-# ---------------------------------------------------------------------------
-sect "4/4 自证 C — 服务端 payload-status（已下线）"
-info "2026-11-22：v3 票退役，后台 payload_sha 与 /v1/build/payload-status 一并删除"
-info "本步不再联网校验；K_build 指纹以第 3 步本机自算为准（不报 FAIL、不占 PASS 名额）"
+sect "3/3 载荷加密/密文校验（已删除）"
+info "2026-11-22：v3 票退役，后台 payload_sha 与 /v1/build/payload-status 删除"
+info "2026-11-27：载荷加密体系整体移除（gen_payload_enc.py / harden_apk.py 已删，sha 载荷已清理）"
+info "⇒ 本脚本不再自算 K_build、不再校验密文头；只剩「取密钥 + 公钥指纹自证」两件事"
 
 # ---------------------------------------------------------------------------
 # 汇总
@@ -251,5 +209,5 @@ if [ "$WARN_N" -gt 0 ]; then
   printf '\n结论：无硬错但有 WARN，出包前自行确认上面几条。\n'
   exit 2
 fi
-printf '\n结论：三项自证全 PASS，本机可出包（K_build / 公钥与服务器同源）。\n'
+printf '\n结论：两项自证全 PASS，本机可出包（公钥与服务端同源）。\n'
 exit 0
