@@ -1,0 +1,41 @@
+{
+  "package": "com.shangyoo.neon",
+  "version": "3.2.860",
+  "version_code": 104,
+  "channel": "TapTap",
+  "generated": "2026-11-26",
+  "base_apk_md5": "2657022f2f0fd9758c0960d526671316",
+  "signature": {
+    "keystore": "01_tools/starry_release.jks",
+    "alias": "starry",
+    "cert_md5": "161fca32a36d3df274458682a44cb774",
+    "cert_sha1": "821c92e404ab5fdac8dbf157c2e467e71440917d",
+    "cn": "StarryMagic"
+  },
+  "features": 12,
+  "variants": {
+    "surgical": {
+      "file": "霓虹深渊_3.2.860_surgical-releaseSigned.apk",
+      "game_id": "neon",
+      "size": 1348911301,
+      "md5": "363066bfa7f427f124d119b3e2b45138",
+      "sha256": "eab67d8a922127cf6cbea4bd6e6b1c2fe1d53bd86bbdf2ec4ac2b9974126d41f",
+      "entries": 8051,
+      "so_md5": "416717e6a6f341d79fef2728afebe1e0"
+    },
+    "nhsy_dz": {
+      "file": "霓虹深渊_3.2.860_nhsy-dz-releaseSigned.apk",
+      "game_id": "nhsy-dz",
+      "size": 1348911301,
+      "md5": "d4364302864c00f8b4bc7bfcf4fa009f",
+      "sha256": "0fa5fbaef24690cfe4e186e3e4f34d1e4c1d3052b638b00f7bb77cac24e9f1bb",
+      "entries": 8051,
+      "installed_on_device": "f9a116a2"
+    }
+  },
+  "trimmed": [
+    ".idsig（apksigner 校验签名附属文件，安装不需要）",
+    "同尺寸别名 _starry-releaseSigned.apk（与 surgical 逐字节相同）",
+    "旧正式包 _neon-releaseSigned.apk（md5 19a69b31…，仅 11 项）"
+  ]
+}

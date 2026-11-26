@@ -56,6 +56,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <ctime>
 #include <unwind.h>
 #include <utility>
 
@@ -63,6 +64,7 @@
 #include "Includes/Logger.h"
 #include "Includes/SecStrings.hpp"
 #include "Includes/Utils.hpp"
+#include "xdl.h"
 
 // 目标库名（注册表模式不依赖 GameConfig.h）
 #define NEON_LIB sec_lib_il2cpp()
@@ -128,6 +130,28 @@ enum : uintptr_t {
     RVA_ARMOR_FIRST      = 0x35475EC, // Hearts::DeductArmorFirst(DamageInfo*)
     RVA_HEART_APPORTION  = 0x3547824, // Hearts::DeductHeart_ApplyApportion(DamageInfo*)
     RVA_FORCE_DIE        = 0x3547AFC, // Hearts::ForceDie()（死亡入口，不死兜底）
+
+    // ＝＝ 2026-11-26 第七轮新增：⑫全屏攻击（dump.cs 逐条核对）＝＝
+    // ⑫ 全屏攻击：挂点就是上面的 RVA_HITPOINTS_DEDUCT（0x346D8C4 = HitPoints.DeductHP，
+    //    即任务书里的 RVA_DEDUCTHP_HP）。已有钩子，不新建第二个。
+    RVA_ROOM_GET           = 0x3369A64, // NPActor.get_actorCurRoomMB() -> RoomMB*（实测恒返回 0：父链上没有 RoomMB）
+    // 2026-11-26 第二版：RoomMB 改由「进/离房间回调」捕获。NPActor.get_actorCurRoomMB 是
+    // GetComponentInParent<RoomMB>()，真机实测返回 0（怪物不在 RoomMB 的父子链上）⇒ 用不了。
+    // YiHai.OnEnterRoom(RoomMB) / OnLeaveRoom(RoomMB) 是静态回调，x0 就是当前房间。
+    RVA_ROOM_ENTER         = 0x26BC52C, // YiHai.OnEnterRoom(RoomMB rmb)（真机未触发：很少走这条路）
+    RVA_ROOM_LEAVE         = 0x26BD268, // YiHai.OnLeaveRoom(RoomMB rmb)
+    RVA_ROOM_BATTLE        = 0x26BD324, // YiHai.OnEnterBattle(RoomMB rmb)
+    RVA_ROOM_CLEANUP       = 0x32F2A34, // RoomMB.MonsterListCleanup()（this=RoomMB，怪死亡时调）
+    RVA_ROOM_ACTIVE_CNT    = 0x32F2E90, // RoomMB.get_ActiveMonsterCount() -> int（this=RoomMB，高频）
+    // ★2026-11-26 定案路径：MapManager（MonoBehaviour）每帧 LateUpdate，它自己持有 curRoom。
+    //   dump.cs 1400445 字段表：public static MapManager Instance; // 0x0
+    //                           private RoomMB curRoom;          // 0x20   ← 就在这里
+    //   ⇒ hook LateUpdate，this 就是 MapManager，读 [this+0x20] 必得当前房间（不在房间时为 null）。
+    RVA_MAP_LATE_UPDATE    = 0x2CBE5D0, // MapManager.LateUpdate()
+    RVA_MAP_REFRESH_ROOM   = 0x2CBE7CC, // MapManager.RefreshRoom(RoomMB)（备用：参数即房间）
+    // EhiEntity.getCurrentRoomMb()：拿任意 EhiEntity（MonsterActor 就是）调一下，内部会
+    // GetComponentsInParent 找 RoomMB 并回写 [this+0x48] 缓存（反汇编 0x3E77648–0x3E776F8）。
+    RVA_EHI_GET_ROOM       = 0x3E77580,
 };
 
 // 技能可用性门：dump.cs 里 CanUseSkill 共 35 个实现，全部派生自 SecSkillPowerUp
@@ -201,11 +225,39 @@ enum : size_t {
     OFF_GRAPH_NETPLAYER = 0x28,  // GunGraphBase.netPlayer（NetPlayerActor；非空＝玩家自己的枪）
     OFF_GRAPH_SHADOW    = 0x68,  // GunGraph.isActorShadow（技能复制出来的影子枪，不算）
     OFF_GRAPH_OUTPUT    = 0x80,  // GunGraph.output
-    OFF_GRAPH_FIRING    = 0x90,  // GunGraph.firing
+    OFF_GRAPH_FIRING    = 0x90,
+    OFF_GRAPH_LATEST_INST = 0xA0, // GunGraph.LatestInstigator（dump.cs 1484445）  // GunGraph.firing
 
     // SecSkillPowerUp 冷却字段（35 个门共用同一基类布局）
     OFF_SEC_COOLING_TIME = 0x25C,
     OFF_SEC_LAST_COOL    = 0x260,
+
+    // ＝＝ 2026-11-26 第七轮：⑫全屏攻击（dump.cs 核对）＝＝
+    OFF_DMG_OP_ID        = 0x04,   // DamageInfo.damageOpId（同一次攻击的多段结算共用）
+    OFF_DMG_INSTIGATOR   = 0x70,   // DamageInfo._instigater（Component）
+    OFF_DMG_REAL_INST    = 0x90,   // DamageInfo.RealInstigator
+    OFF_DMG_PLAYER_HIT   = 0x78,   // DamageInfo.instigaterIsPlayer（死字段：全 so 无写入，仅诊断）
+    OFF_DMG_TARGET_FLT   = 0x98,   // DamageInfo.targetFilter（Factions flags：Player=1/Monster=2/Environment=4/All=7）
+    OFF_DMG_SRC_TYPE     = 0x64,   // DamageInfo.SourceType（DamageSourceType，诊断用）
+    OFF_KILLABLE_FACTION = 0x68,   // Killable.faction（2＝怪物）
+    OFF_HP_MON_ACTOR     = 0x1B0,  // HitPoints._monsterActor（受害者 MonsterActor）
+    OFF_KILLABLE_MON_OWN = 0xF0,   // Killable._monsterActorOwner（备用取法）
+    OFF_MON_HP           = 0x180,  // MonsterActor.hp（HitPoints）
+    OFF_MAP_CURROOM      = 0x20,   // MapManager.curRoom（dump.cs 1400445 字段表）
+    OFF_EHI_CURROOM      = 0x48,   // EhiEntity._currentRoomMb（反汇编 0x3E77580 内 ldr [this+0x48]）
+    OFF_ROOM_ENTERED     = 0x109,  // RoomMB.roomIsEnteren（反汇编 0x32F2788: ldrb w0,[x19,#0x109]）
+    OFF_ROOM_BUFFMONS    = 0x80,   // RoomMB._buffSpawnMons（反汇编 0x32F2BD8: ldr x20,[x19,#0x80]）
+    OFF_ARRAY_LEN        = 0x18,   // T[].max_length（反汇编 List.Add: ldr w10,[x9,#0x18]）
+    // Il2CppClass 布局（反汇编 0x2C6A054–0x2C6A084 与 0x31B7EB8 两处一致）
+    OFF_KLASS_DEPTH      = 0x12C,  // uint8 typeHierarchyDepth
+    OFF_KLASS_TYPEH      = 0xC8,   // Il2CppClass** typeHierarchy
+    // 类型槽（so 内 .got/.data.rel.ro 里的 Il2CppClass* 引用，运行时 = *(void**)(base + RVA)）
+    RVA_SLOT_PLAYER_KLASS    = 0x9E99068,  // PlayerActor
+    RVA_SLOT_NETPLAYER_KLASS = 0x9EBC1F8,  // NetPlayerActor
+    OFF_ROOM_MONS        = 0x78,   // RoomMB.mons（List<MonsterActor>）
+    OFF_LIST_ITEMS       = 0x10,   // List<T>._items
+    OFF_LIST_SIZE        = 0x18,   // List<T>._size
+    OFF_ARRAY_FIRST      = 0x20,   // T[] 元素数组起点
 };
 
 static std::atomic<bool> g_ready{false};
@@ -232,6 +284,87 @@ static std::atomic<bool> g_infGkey{false};  // 彩色钥匙使用不减（Gamepl
 static std::atomic<bool> g_noJumpLimit{false};  // ⑨ 无限跳跃（get_multipleJumpCount 恒返回负数）
 static std::atomic<int>  g_dmgMul{1};           // ⑩ 伤害倍率 1..50（1 = 关）
 static std::atomic<bool> g_lastHeart{false};    // ⑪ 丝血无敌（致命一击不结算，锁血到 1）
+
+// ＝＝ 2026-11-26 第七轮新增：⑫全屏攻击 ＝＝
+static std::atomic<bool> g_fullAtk{false};        // ⑫ 全屏攻击（一次玩家伤害镜像到同房间所有怪物）
+// ⑫ 玩家攻击时间窗：d__45（玩家枪图攻击协程）每次迭代刷新。真机上 DamageInfo.instigaterIsPlayer
+// （+0x78）恒 0、targetFilter（+0x98）也不专属于玩家（实测 filter=6=Monster|Environment 是怪物互伤），
+// 所以「这次伤害是不是玩家打出来的」改用时间窗判定：玩家攻击后 800ms 内的怪物受伤视为玩家的。
+static std::atomic<uint64_t> g_lastPlayerAtkMs{0};
+// ⑫ 当前房间缓存：由 YiHai.OnEnterRoom 写入、OnLeaveRoom 清空。
+// 全屏攻击要枚举「同房间所有怪」，RoomMB.mons(List<MonsterActor>) 在 RoomMB+0x78。
+static std::atomic<void*> g_curRoom{nullptr};
+
+// libil2cpp 映射范围：base 由已解析的钩子地址反推，end 由 /proc/self/maps 周期重扫得到
+static uintptr_t g_libBase = 0;
+static uintptr_t g_libEnd  = 0;
+
+// ⑫ 玩家伤害归属（2026-11-26 定案，全静态可证）：
+//   真机实测 instigaterIsPlayer(+0x78) 恒 0 —— 全 so 里 STRB [.,#0x78] 命中 0 次，是死字段；
+//   targetFilter(+0x98) 是「受击侧过滤」（能命中哪些阵营），与施放者无关，怪物互伤同样含 Monster 位。
+//   游戏自己判玩家的唯一写法 = ToolCommon.IsMatchInstigaterType(Player, di.instigator)
+//     = il2cpp 的 instigator is PlayerActor（沿 typeHierarchy 判，非裸 klass 比较）。
+//   ⇒ 照它的语义自实现 NeonInstOf，并额外缓存「玩家枪当前 instigator」覆盖枪/子弹路径。
+static void* g_playerKlass    = nullptr;   // PlayerActor
+static void* g_netPlayerKlass = nullptr;   // NetPlayerActor
+
+static uint64_t NeonNowMs();                  // 前置声明（实现位于下方工具区）
+
+struct NeonRecentInst { void* ptr; uint64_t ms; };
+static NeonRecentInst g_recentInst[8] = {};
+static std::atomic<unsigned> g_recentInstIdx{0};
+
+static bool NeonInstOf(void* obj, void* klass) {
+    if (!obj || !klass) return false;
+    void* k = *reinterpret_cast<void**>(obj);
+    if (!k) return false;
+    const uint8_t dk = *reinterpret_cast<uint8_t*>(reinterpret_cast<uintptr_t>(k) + OFF_KLASS_DEPTH);
+    const uint8_t dt = *reinterpret_cast<uint8_t*>(reinterpret_cast<uintptr_t>(klass) + OFF_KLASS_DEPTH);
+    if (dt == 0 || dk < dt) return false;
+    void** th = *reinterpret_cast<void***>(reinterpret_cast<uintptr_t>(k) + OFF_KLASS_TYPEH);
+    return th && th[dt - 1] == klass;
+}
+
+static bool NeonIsPlayerInstigator(void* inst) {
+    if (!inst) return false;
+    if (NeonInstOf(inst, g_playerKlass)) return true;
+    if (NeonInstOf(inst, g_netPlayerKlass)) return true;
+    // 类名兜底：沿 typeHierarchy 逐级比类名（类型槽地址一旦读错也不会失灵）
+    void* k = *reinterpret_cast<void**>(inst);
+    if (k) {
+        const uintptr_t kp = reinterpret_cast<uintptr_t>(k);
+        const uint8_t depth = *reinterpret_cast<uint8_t*>(kp + OFF_KLASS_DEPTH);
+        void** th = *reinterpret_cast<void***>(kp + OFF_KLASS_TYPEH);
+        if (th) {
+            for (uint8_t i = 0; i < depth && i < 16; ++i) {
+                void* c = th[i];
+                if (!c) continue;
+                const char* nm = *reinterpret_cast<const char**>(reinterpret_cast<uintptr_t>(c) + 0x10);
+                if (!nm) continue;
+                if (strcmp(nm, "PlayerActor") == 0 || strcmp(nm, "NetPlayerActor") == 0)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
+static void NeonRememberPlayerInstigator(void* inst) {
+    if (!inst) return;
+    const unsigned i = g_recentInstIdx.fetch_add(1) % 8u;
+    g_recentInst[i].ptr = inst;
+    g_recentInst[i].ms  = NeonNowMs();
+}
+
+static bool NeonIsRecentPlayerInstigator(void* inst) {
+    if (!inst) return false;
+    const uint64_t now = NeonNowMs();
+    for (int i = 0; i < 8; ++i) {
+        if (g_recentInst[i].ptr == inst && now >= g_recentInst[i].ms && (now - g_recentInst[i].ms) <= 3000ull)
+            return true;
+    }
+    return false;
+}
 
 typedef bool (*DeductHP_t)(void* thiz, void* damage, int32_t count, void* method);
 typedef void (*DoDeduct_t)(void* thiz, void* damage, void* method);
@@ -311,6 +444,12 @@ static void     (*g_origForceDie)(void* thiz, void* method) = nullptr;
 static IntFn_t    g_fnGetArmor       = nullptr;
 static IntFn_t    g_fnGetSane        = nullptr;
 
+// ＝＝ 第七轮：⑫ 只做「直调」（不新增 Dobby 钩子，全部复用已有钩子）＝＝
+typedef void* (*RoomGet_t)(void* thiz, void* method);                            // NPActor.get_actorCurRoomMB
+
+static RoomGet_t     g_fnRoomGet     = nullptr;
+static RoomGet_t     g_fnEhiGetRoom  = nullptr;   // EhiEntity.getCurrentRoomMb（0x3E77580，自愈+回写缓存）
+
 static void* Abs(uintptr_t rva) {
     char buf[32];
     snprintf(buf, sizeof(buf), "0x%lX", (unsigned long)rva);
@@ -359,8 +498,7 @@ static float AtkMul()  { return LvlMul(g_atkLvl.load()); }   // 攻速统一倍�
 //  （get_FireDelay 被玩家枪图协程、炮塔、仆从、短剑 RPM 共用，
 //    不能全局改；只能看栈里有没有玩家那条协程）
 // ==================================================================
-static uintptr_t g_libBase = 0;   // libil2cpp 基址（由已解析的钩子地址反推）
-static uintptr_t g_libEnd  = 0;
+// （g_libBase / g_libEnd 的声明已前移到工具区之前，供 NeonInstOf / 类名判定使用）
 
 struct NeonStack {
     uintptr_t pc[24];
@@ -403,6 +541,74 @@ static void NeonLogStack(const char* tag, const NeonStack* s) {
     LOGI("[Neon][stk] %s%s", tag, buf);
 }
 #endif
+
+// ＝＝ 第七轮公共小件：⑫ 用 ＝＝
+// 托管对象体检：klass 指针必须落在 libil2cpp 映射内，否则一律当「不是可用对象」。
+// 用途：快照里的目标指针复核（⑫ 全屏攻击）。
+// ★2026-11-26 修正：旧实现 g_libEnd = base + 0x8000000（128MB）判「klass 是否落在
+//  libil2cpp 内」是错的。实测该 so（llvm-objdump -h，md5 61c2eecb…）段布局：
+//    .text 0x170db00 / .rodata 0x7823aa0 / .data.rel.ro 0x99B1060–0x9E5A408
+//    .data 0x9F74888–0xA42CC00 / .bss 0xA42CC00–0xA66AA18
+//  ⇒ Il2CppClass 元数据全在 ≥0x99B1060（≈154MB），恒 > 0x8000000 ⇒ 本函数恒 false，
+//  ⇒ 全屏攻击链路的第一句守卫全部静默 return（真机日志零命中、零崩溃）。
+//  ⇒ 改为从 /proc/self/maps 取实测 [最小 start, 最大 end)。
+// ★2026-11-26 定案：删掉「klass 必须落在 libil2cpp 映射内」这个自造校验。
+//   它害了三轮：libil2cpp 是分段 mmap 的，[min,max) 永远只能覆盖一部分，
+//   于是把游戏自己传进来的合法对象（RoomMB / MonsterActor / instigator）全判成野指针。
+//   而这些指针的来源全是游戏维护的数据结构（HitPoints._monsterActor、DamageInfo.instigator、
+//   RoomMB.mons 元素），本来就必然有效 —— 校验纯属多余，且是唯一失败点。
+//   ⇒ 只判空。读 klass 对合法对象永远安全。
+static bool NeonLooksLikeManaged(void* obj) {
+    return obj != nullptr;
+}
+
+// libil2cpp 实测映射范围（g_libEnd 的权威来源）。成功=最小 start/最大 end；
+// 失败=base+0xB000000（176MB，覆盖 .bss 末 0xA66AA18）。幂等：同值不重复打日志。
+static uintptr_t g_rangeLoggedBase = 0;
+static uintptr_t g_rangeLoggedEnd  = 0;
+
+static void NeonRefreshLibRangeFromMaps() {
+    const char* soname = NEON_LIB;
+    uintptr_t lo = 0, hi = 0;
+    if (soname && *soname) {
+        FILE* f = fopen("/proc/self/maps", "r");
+        if (f) {
+            char line[512];
+            while (fgets(line, sizeof(line), f)) {
+                unsigned long a = 0, b = 0;
+                if (sscanf(line, "%lx-%lx", &a, &b) != 2) continue;
+                if (!strstr(line, soname)) continue;
+                if (!lo || (uintptr_t)a < lo) lo = (uintptr_t)a;
+                if ((uintptr_t)b > hi) hi = (uintptr_t)b;
+            }
+            fclose(f);
+        }
+    }
+    if (lo && hi > lo) {
+        // 钩子反推的 base 更小时以更小者为准（只扩不缩，避免漏判低地址段）
+        if (!g_libBase || lo < g_libBase) g_libBase = lo;
+        g_libEnd = hi;
+    } else {
+        if (!g_libBase) return;                  // 连 base 都还没有：等下一次
+        g_libEnd = g_libBase + 0xB000000UL;      // 兜底 176MB
+        LOGI("[Neon] libRange fallback end=+0x%lx (maps 无 %s)",
+             (unsigned long)(g_libEnd - g_libBase), soname ? soname : "?");
+    }
+    if (g_libBase != g_rangeLoggedBase || g_libEnd != g_rangeLoggedEnd) {
+        g_rangeLoggedBase = g_libBase;
+        g_rangeLoggedEnd  = g_libEnd;
+        LOGI("[Neon] libRange base=0x%lx end=0x%lx size=0x%lx",
+             (unsigned long)g_libBase, (unsigned long)g_libEnd,
+             (unsigned long)(g_libEnd - g_libBase));
+    }
+}
+
+static uint64_t NeonNowMs() {
+    struct timespec ts;
+    if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) return 0;
+    return static_cast<uint64_t>(ts.tv_sec) * 1000ull +
+           static_cast<uint64_t>(ts.tv_nsec / 1000000L);
+}
 
 // 玩家枪械协程地址带：Gun.<MeleeCheck>d__85 / <shootingInterval>d__96 /
 // GunGraph.<AttackRoutine>d__45 / <AttackRoutineWithEvents>d__46 / <ChargeRoutine>d__47
@@ -588,6 +794,282 @@ static bool Hooked_CanMultipleJump(void* thiz, void* method) {
     return g_origCanMultiJump ? g_origCanMultiJump(thiz, method) : false;
 }
 
+// ==================================================================
+//  ⑫ 全屏攻击（2026-11-26 第七轮）
+//
+//  挂点：**扩展现有 Hooked_HitPoints_DeductHP**（RVA 0x346D8C4 = HitPoints.DeductHP），
+//        不新建第二个钩子（同一个函数上挂两次 Dobby 会互相踩）。
+//  触发：g_fullAtk 开 && 不在镜像递归里 && 受害者 faction==2（怪物）
+//        && DamageInfo+0x18(finalDamage) > 0 && 攻击者是玩家。
+//        玩家判据：先看 DamageInfo+0x78(instigaterIsPlayer)；为假再退判
+//        DamageInfo+0x98(targetFilter)==2 —— 这份伤害本身就是冲着怪物阵营做的，
+//        造它的一方只能是玩家侧（怪物打怪物用的是别的 filter）。
+//  动作：受害者 MonsterActor → NPActor.get_actorCurRoomMB(0x3369A64) 取 RoomMB*
+//        → RoomMB.mons(List<MonsterActor>) → **先把元素指针快照到本地数组**
+//          （扣血过程会从 mons 里移除死亡项，边遍历边用原表必炸）
+//        → 逐个跳过「自己」「CurrentHp<=0」→ memcpy 0xD0 字节 DamageInfo 副本
+//        → 直调原 DeductHP 打一下。
+//  闸门：t_mirrorDepth 用 RAII 严格成对（任何 early return 都不会漏减）；
+//        单次最多 32 个目标；同一 damageOpId 在 80ms 内只镜像一次。
+// ==================================================================
+static thread_local int t_mirrorDepth = 0;
+
+namespace {
+struct NeonMirrorScope {                       // 递归闸：构造 ++ / 析构 --，异常路径也成对
+    NeonMirrorScope() { ++t_mirrorDepth; }
+    ~NeonMirrorScope() { --t_mirrorDepth; }
+};
+}  // namespace
+
+static int32_t  g_fsLastOpId = 0;
+static uint64_t g_fsLastMs   = 0;
+
+// ⑫ 当前房间捕获：静态回调 YiHai.OnEnterRoom/OnLeaveRoom(RoomMB)，x0 = RoomMB*
+typedef void (*RoomCb_t)(void* rmb, void* method);
+static RoomCb_t g_origRoomEnter = nullptr;
+static RoomCb_t g_origRoomLeave = nullptr;
+
+// 读 Il2CppClass.name（类名字符串落在 .rodata，属 libil2cpp 映射，但不是托管对象——
+// 不能拿 NeonLooksLikeManaged 判它）。返回是否读到可打印串。
+static bool NeonClassNameOf(void* obj, char* out, size_t outsz) {
+    if (!out || outsz < 8) return false;
+    out[0] = 0;
+    if (!obj) return false;
+    void* klass = *reinterpret_cast<void**>(obj);
+    if (!klass) return false;
+    const char* nm = *reinterpret_cast<const char**>(reinterpret_cast<uintptr_t>(klass) + 0x10);
+    if (!nm) return false;
+    size_t i = 0;
+    for (; i + 1 < outsz && nm[i]; ++i) {
+        const unsigned char c = static_cast<unsigned char>(nm[i]);
+        if (c < 0x20 || c > 0x7e) { out[0] = 0; return false; }
+        out[i] = static_cast<char>(c);
+    }
+    out[i] = 0;
+    return i > 0;
+}
+
+// 房间可用性：不按类名判（真机 OnEnterRoom 的候选被 name 校验误杀过），只按形态——
+//   ① room 是托管对象 ② room+0x78 是合法 List（_items 托管、_size 0..512）
+static bool NeonRoomUsable(void* room) {
+    if (!NeonLooksLikeManaged(room)) return false;
+    void* list = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(room) + OFF_ROOM_MONS);
+    if (!NeonLooksLikeManaged(list)) return false;
+    void* items = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(list) + OFF_LIST_ITEMS);
+    const int32_t n = *reinterpret_cast<int32_t*>(reinterpret_cast<uintptr_t>(list) + OFF_LIST_SIZE);
+    return NeonLooksLikeManaged(items) && n >= 0 && n <= 512;
+}
+
+// 房间候选：任何一路钩子拿到 RoomMB 都往这里送。只有第一次（或换房间）才打日志。
+static void NeonOfferRoom(const char* src, void* rmb) {
+    if (!rmb) return;
+    void* cur = g_curRoom.load();
+    if (cur == rmb) return;                     // 同一房间，不重复处理（高频钩子零日志开销）
+    // 校验放宽（2026-11-26 第三版）：真机日志显示 OnEnterRoom 的候选被 NeonLooksLikeRoomMB 拒了，
+    // 而该判定依赖 Il2CppClass.name == "RoomMB"（klass+0x10）。偏移一旦不符就全部误杀。
+    // 改为：① klass 必须落在 libil2cpp 映射内；② [rmb+0x78] 必须像一个 List（_items 合法、
+    // _size 在 0..512）。两者都过即接受，并把 klass/name 打进日志，下一次就能看清真实类型名。
+    if (!NeonLooksLikeManaged(rmb)) {
+        static std::atomic<unsigned> badn0{0};
+        if (badn0.fetch_add(1) < 5u)
+            LOGI("[Neon][fs] 房间候选被拒(非托管) src=%s ptr=%p", src, rmb);
+        return;
+    }
+    char nm[48] = {0};
+    const bool nameOk = NeonClassNameOf(rmb, nm, sizeof(nm));
+    void* list = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(rmb) + OFF_ROOM_MONS);
+    const bool listOk = NeonLooksLikeManaged(list);
+    int32_t sz = -1;
+    if (listOk) {
+        void* items = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(list) + OFF_LIST_ITEMS);
+        const int32_t n = *reinterpret_cast<int32_t*>(reinterpret_cast<uintptr_t>(list) + OFF_LIST_SIZE);
+        sz = (NeonLooksLikeManaged(items) && n >= 0 && n <= 512) ? n : -1;
+    }
+    // 日志：无论接不接受都打（每次换候选一行，不会刷屏），便于一眼确认类型名与列表形态
+    LOGI("[Neon][fs] 房间候选 src=%s rmb=%p klass=%p name=%s list=%p size=%d",
+         src, rmb, *reinterpret_cast<void**>(rmb), nameOk ? nm : "?", list, static_cast<int>(sz));
+    if (sz < 0) return;                         // 不像 RoomMB（+0x78 不是合法 List）⇒ 不当房间用
+    g_curRoom.store(rmb);
+    LOGI("[Neon][fs] 当前房间已捕获 src=%s rmb=%p size=%d", src, rmb, static_cast<int>(sz));
+}
+
+static void Hooked_OnEnterRoom(void* rmb, void* method) {
+    NeonOfferRoom("OnEnterRoom", rmb);
+    if (g_origRoomEnter) g_origRoomEnter(rmb, method);
+}
+
+static void Hooked_OnLeaveRoom(void* rmb, void* method) {
+    void* cur = g_curRoom.load();
+    if (!rmb || rmb == cur) g_curRoom.store(nullptr);
+    if (g_origRoomLeave) g_origRoomLeave(rmb, method);
+}
+
+// 路 2：YiHai.OnEnterBattle(RoomMB) —— 进战斗时一定带 rmb
+typedef void (*RoomCb2_t)(void* rmb, void* method);
+static RoomCb2_t g_origRoomBattle = nullptr;
+static void Hooked_OnEnterBattle(void* rmb, void* method) {
+    NeonOfferRoom("OnEnterBattle", rmb);
+    if (g_origRoomBattle) g_origRoomBattle(rmb, method);
+}
+
+// 路 3：RoomMB.MonsterListCleanup()（this=RoomMB，怪死亡时调）
+typedef void (*RoomThis_t)(void* thiz, void* method);
+static RoomThis_t g_origRoomCleanup = nullptr;
+static void Hooked_MonsterListCleanup(void* thiz, void* method) {
+    NeonOfferRoom("MonsterListCleanup", thiz);
+    if (g_origRoomCleanup) g_origRoomCleanup(thiz, method);
+}
+
+// ★主路：MapManager.LateUpdate()（每帧，this=MapManager）→ 读 [this+0x20] = curRoom
+typedef void (*MapLate_t)(void* thiz, void* method);
+static MapLate_t g_origMapLate = nullptr;
+static void Hooked_MapLateUpdate(void* thiz, void* method) {
+    if (thiz && g_libBase) {
+        void* r = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(thiz) + OFF_MAP_CURROOM);
+        if (r) NeonOfferRoom("MapManager.curRoom", r);
+        else if (g_curRoom.load()) g_curRoom.store(nullptr);   // 不在房间：清空
+    }
+    if (g_origMapLate) g_origMapLate(thiz, method);
+}
+
+// 备用：MapManager.RefreshRoom(RoomMB)（x0=this, x1=RoomMB）
+typedef void (*MapRefresh_t)(void* thiz, void* rmb, void* method);
+static MapRefresh_t g_origMapRefresh = nullptr;
+static void Hooked_MapRefreshRoom(void* thiz, void* rmb, void* method) {
+    NeonOfferRoom("MapManager.RefreshRoom", rmb);
+    if (g_origMapRefresh) g_origMapRefresh(thiz, rmb, method);
+}
+
+// 路 4：RoomMB.get_ActiveMonsterCount()（this=RoomMB，最高频，兜底必中）
+typedef int32_t (*RoomCnt_t)(void* thiz, void* method);
+static RoomCnt_t g_origRoomActiveCnt = nullptr;
+static int32_t Hooked_ActiveMonsterCount(void* thiz, void* method) {
+    NeonOfferRoom("ActiveMonsterCount", thiz);
+    return g_origRoomActiveCnt ? g_origRoomActiveCnt(thiz, method) : 0;
+}
+
+static void FullScreenAtkMirror(void* thiz, void* damage) {
+    if (!thiz || !damage) return;
+    if (t_mirrorDepth != 0) return;             // 已在镜像里：绝不再镜像（防连锁爆炸）
+    if (!g_origHitDeduct) return;
+
+    const uintptr_t di = reinterpret_cast<uintptr_t>(damage);
+    const int32_t opId = *reinterpret_cast<int32_t*>(di + OFF_DMG_OP_ID);
+    const uint64_t now = NeonNowMs();
+    // 同一次攻击的多段结算（damageOpId 相同）在 80ms 内只镜像一次
+    if (opId != 0 && opId == g_fsLastOpId && now >= g_fsLastMs && (now - g_fsLastMs) < 80ull)
+        return;
+    g_fsLastOpId = opId;
+    g_fsLastMs   = now;
+
+    NeonMirrorScope scope;                      // 递归闸：从这一行起算「在了」
+
+    // 受害者 MonsterActor：HitPoints._monsterActor(0x1B0) → Killable._monsterActorOwner(0xF0)
+    const uintptr_t hp = reinterpret_cast<uintptr_t>(thiz);
+    void* mon = *reinterpret_cast<void**>(hp + OFF_HP_MON_ACTOR);
+    if (!mon) mon = *reinterpret_cast<void**>(hp + OFF_KILLABLE_MON_OWN);
+    const bool monOk = NeonLooksLikeManaged(mon);
+
+    // 房间来源优先级：① OnEnterRoom 捕获到的 RoomMB（真机唯一可用路径）
+    //                  ② 回退 NPActor.get_actorCurRoomMB（真机实测返回 0，仅兜底）
+    // 房间解析四级兜底（2026-11-26 定案，每级都有反汇编依据）：
+    //   ① g_curRoom：MapManager.LateUpdate 每帧读 [this+0x20]
+    //   ② EhiEntity._currentRoomMb：直接读 [mon+0x48]（游戏自己缓存的当前房间）
+    //   ③ EhiEntity.getCurrentRoomMb(0x3E77580)：主动调用，内部 GetComponentsInParent 并回写缓存
+    //   ④ NPActor.get_actorCurRoomMB(0x3369A64)：GetComponentInParent，真机常返回 0，仅最后兜底
+    void* room = g_curRoom.load();
+    if (!NeonRoomUsable(room) && monOk)
+        room = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(mon) + OFF_EHI_CURROOM);
+    if (!NeonRoomUsable(room) && monOk && g_fnEhiGetRoom)
+        room = g_fnEhiGetRoom(mon, nullptr);
+    if (!NeonRoomUsable(room) && monOk)
+        room = g_fnRoomGet(mon, nullptr);
+    const bool roomOk = NeonRoomUsable(room);
+    // 两个列表都要：mons(+0x78) 是常规刷怪，_buffSpawnMons(+0x80) 是 buff 召唤出来的怪。
+    const int32_t roomEntered = roomOk
+        ? static_cast<int32_t>(*reinterpret_cast<uint8_t*>(reinterpret_cast<uintptr_t>(room) + OFF_ROOM_ENTERED)) : -1;
+    void* listMain = roomOk ? *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(room) + OFF_ROOM_MONS) : nullptr;
+    void* listBuff = roomOk ? *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(room) + OFF_ROOM_BUFFMONS) : nullptr;
+    auto listSize = [](void* l) -> int32_t {
+        if (!NeonLooksLikeManaged(l)) return -1;
+        void* it = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(l) + OFF_LIST_ITEMS);
+        const int32_t n = *reinterpret_cast<int32_t*>(reinterpret_cast<uintptr_t>(l) + OFF_LIST_SIZE);
+        if (!NeonLooksLikeManaged(it) || n < 0) return -1;
+        const int32_t alen = *reinterpret_cast<int32_t*>(reinterpret_cast<uintptr_t>(it) + OFF_ARRAY_LEN);
+        return (n < alen) ? n : alen;              // 双上限：_size 与数组长度取小，防越界
+    };
+    const int32_t sizeMain = listSize(listMain);
+    const int32_t sizeBuff = listSize(listBuff);
+
+    const uintptr_t dpEarly = reinterpret_cast<uintptr_t>(damage);
+    void* inst  = *reinterpret_cast<void**>(dpEarly + OFF_DMG_INSTIGATOR);
+    void* rinst = *reinterpret_cast<void**>(dpEarly + OFF_DMG_REAL_INST);
+
+    // [Neon][fs] 一次性诊断（默认开，最多 10 行）：卡在哪个判据一眼可见。
+    // 判据顺序：fac==2（受害者是怪物） / filter&2（目标含怪物） / isP（玩家发起） / fin>0
+    {
+        static std::atomic<unsigned> fsn{0};
+        if (fsn.fetch_add(1) < 10u) {
+            const uintptr_t dp = reinterpret_cast<uintptr_t>(damage);
+            LOGI("[Neon][fs] hit fac=%d filter=%d isP=%d fin=%.1f inst=%p pl=%d mon=%p monOk=%d room=%p entered=%d mons=%d buff=%d",
+                 *reinterpret_cast<int32_t*>(hp + OFF_KILLABLE_FACTION),
+                 *reinterpret_cast<int32_t*>(dp + OFF_DMG_TARGET_FLT),
+                 static_cast<int>(*reinterpret_cast<uint8_t*>(dp + OFF_DMG_PLAYER_HIT)),
+                 *reinterpret_cast<float*>(dp + OFF_DMG_FINAL),
+                 inst, (NeonIsPlayerInstigator(inst) ? 1 : 0),
+                 mon, monOk ? 1 : 0, room, static_cast<int>(roomEntered),
+                 static_cast<int>(sizeMain), static_cast<int>(sizeBuff));
+        }
+    }
+    // 不再强制 monOk：房间可用就足够枚举（mon 仅用于「跳过受害者自己」）
+    if (!roomOk) return;
+    if (sizeMain < 0 && sizeBuff < 0) return;
+    // roomIsEnteren(+0x109) 不再作为硬门槛：真机实测战斗中它仍是 0（该字段只表示
+    // 「进入房间的过场是否播完」，不是「玩家此刻在不在这个房间」）。房间本身已经来自
+    // 玩家自己的 EhiEntity._currentRoomMb / MapManager.curRoom，不存在打错房间的问题。
+    (void)roomEntered;
+
+    // ① 先快照：后面每一次 DirectDeduct 都可能改写列表（死亡移除），必须用本地副本
+    void* snap[48];
+    int n = 0;
+    auto drain = [&](void* lst, int32_t lim) {
+        if (!NeonLooksLikeManaged(lst) || lim <= 0) return;
+        void* items = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(lst) + OFF_LIST_ITEMS);
+        if (!NeonLooksLikeManaged(items)) return;
+        if (lim > 48) lim = 48;
+        for (int32_t i = 0; i < lim && n < 48; ++i) {
+            void* m = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(items) +
+                                                OFF_ARRAY_FIRST +
+                                                static_cast<uintptr_t>(i) * sizeof(void*));
+            if (!m || (monOk && m == mon)) continue;
+            bool dup = false;
+            for (int k = 0; k < n; ++k) if (snap[k] == m) { dup = true; break; }
+            if (!dup) snap[n++] = m;
+        }
+    };
+    drain(listMain, sizeMain);
+    drain(listBuff, sizeBuff);
+    if (n <= 0) return;
+
+    // ② 再逐个打
+    int mirrored = 0;
+    for (int i = 0; i < n; ++i) {
+        void* target = snap[i];
+        if (!target) continue;
+        if (monOk && target == mon) continue;    // 跳过受害者自己（它正在被原逻辑结算）
+        void* tHp = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(target) + OFF_MON_HP);
+        if (!NeonLooksLikeManaged(tHp)) continue;  // 读不到＝指针不可用：跳过（不硬读）
+        const float cur = *reinterpret_cast<float*>(reinterpret_cast<uintptr_t>(tHp) + OFF_HP_CUR);
+        if (!(cur > 0.f)) continue;              // 已死（或血量读成 0）的打不动
+        alignas(16) unsigned char copy[0xD0];    // 与 DeductHP 内部复制量一致
+        memcpy(copy, damage, 0xD0);
+        g_origHitDeduct(tHp, copy, 1, nullptr);
+        ++mirrored;
+    }
+    if (mirrored > 0)
+        LOGI("[Neon] 全屏攻击 镜像 n=%d op=%d", mirrored, static_cast<int>(opId));
+}
+
 static bool Hooked_HitPoints_DeductHP(void* thiz, void* damage, int32_t count, void* method) {
     // ⑩ 伤害倍率：DeductHP 会把 DamageInfo 复制 0xD0 字节后交给 DoDeductHP，
     //    DoDeductHP 实际读取的伤害浮点是 DamageInfo+0x18（FINAL）。只在这一处缩放，
@@ -606,6 +1088,9 @@ static bool Hooked_HitPoints_DeductHP(void* thiz, void* damage, int32_t count, v
         AmplifyDamage(damage);
         ForceKillHp(thiz);
     }
+    // ⑫ 全屏攻击**不在这里**做：DeductHP 入口处 DamageInfo+0x18(finalDamage) 尚未计算，
+    //    它由函数内部第 2 步 FixDeductHpValue 才写入（实测 0x346B9C8: str s8,[x20,#0x18]）。
+    //    ⇒ 触发点挪到 Hooked_HitPoints_DoDeduct（那里 +0x18 已是真实扣血量）。
     return g_origHitDeduct ? g_origHitDeduct(thiz, damage, count, method) : false;
 }
 
@@ -618,6 +1103,44 @@ static void Hooked_HitPoints_DoDeduct(void* thiz, void* damage, void* method) {
     if (g_seckill.load()) {
         AmplifyDamage(damage);
         ForceKillHp(thiz);
+    }
+    // ⑫ 全屏攻击：**唯一触发点**（2026-11-26 第二版）
+    //   为什么挂这里而不是 DeductHP：DeductHP 入口的 DamageInfo+0x18 还没算（实测恒 0），
+    //   它由 DeductHP 内部 FixDeductHpValue(0x346B738) 在 0x346B9C8 写入；DoDeductHP 是
+    //   FixDeductHpValue 之后的第一站，此处 +0x18 = 真实扣血量，且每次伤害只调一次。
+    if (g_fullAtk.load() && thiz && damage && t_mirrorDepth == 0) {
+        const uintptr_t dp = reinterpret_cast<uintptr_t>(damage);
+        const int faction = *reinterpret_cast<int32_t*>(reinterpret_cast<uintptr_t>(thiz) +
+                                                       OFF_KILLABLE_FACTION);
+        const int32_t tflt = *reinterpret_cast<int32_t*>(dp + OFF_DMG_TARGET_FLT);
+        const int     isP  = static_cast<int>(*reinterpret_cast<uint8_t*>(dp + OFF_DMG_PLAYER_HIT));
+        const float   dmg  = *reinterpret_cast<float*>(dp + OFF_DMG_DAMAGE);
+        const float   fin  = *reinterpret_cast<float*>(dp + OFF_DMG_FINAL);
+        const float   base = *reinterpret_cast<float*>(dp + OFF_DMG_BASE);
+        const int     src  = *reinterpret_cast<int32_t*>(dp + OFF_DMG_SRC_TYPE);
+        // 玩家判据（2026-11-26 静态定案）：
+        //   ① di.instigator(+0x70)/RealInstigator(+0x90) is PlayerActor / NetPlayerActor
+        //      —— 这与游戏自己的 ToolCommon.IsMatchInstigaterType(Player,…) 逐指令等价
+        //   ② 该 instigator 在「玩家枪最近开火」缓存里（覆盖玩家枪路径上 instigator 是 Gun 的情况）
+        //   ③ 玩家枪图攻击协程 800ms 时间窗
+        //   注：+0x78 instigaterIsPlayer 是死字段（全 so 无写入），targetFilter 与施放者无关，均不作主判据。
+        void* instDo  = *reinterpret_cast<void**>(dp + OFF_DMG_INSTIGATOR);
+        void* rinstDo = *reinterpret_cast<void**>(dp + OFF_DMG_REAL_INST);
+        const uint64_t lastAtk = g_lastPlayerAtkMs.load();
+        const uint64_t nowMs   = NeonNowMs();
+        const bool inWindow = lastAtk != 0 && nowMs >= lastAtk && (nowMs - lastAtk) <= 800ull;
+        const bool playerInst = NeonIsPlayerInstigator(instDo) || NeonIsPlayerInstigator(rinstDo);
+        const bool recentInst = NeonIsRecentPlayerInstigator(instDo) || NeonIsRecentPlayerInstigator(rinstDo);
+        const bool byPlayer = playerInst || recentInst || inWindow;
+        if (faction == 2 && byPlayer && fin > 0.f) {
+            FullScreenAtkMirror(thiz, damage);
+        } else {
+            // 诊断（最多 20 行）：一次打全 fac/filter/isP/三伤害值/src/时间窗，便于定位
+            static std::atomic<unsigned> gn{0};
+            if (gn.fetch_add(1) < 20u)
+                LOGI("[Neon][fs] gate-deny fac=%d filter=%d isP=%d dmg=%.1f fin=%.1f base=%.1f src=%d win=%d",
+                     faction, tflt, isP, dmg, fin, base, src, inWindow ? 1 : 0);
+        }
     }
     if (g_origDoDeduct) g_origDoDeduct(thiz, damage, method);
 }
@@ -976,6 +1499,15 @@ static bool Hooked_Graph45AttackMoveNext(void* self, void* method) {
     void* graph = *reinterpret_cast<void**>(p + OFF_SM45_THIS);
     int dbg = -1;
     const bool playerGun = IsPlayerGunGraph(graph, &dbg);
+    // ⑫ 玩家攻击时间窗：玩家自己这把枪的攻击协程在跑 ⇒ 记一次时间戳（全屏攻击用它判「玩家打出来的伤害」）
+    if (playerGun) {
+        g_lastPlayerAtkMs.store(NeonNowMs());
+        // GunGraph.LatestInstigator(+0xA0) = 这一枪的 instigator（就是 DamageInfo+0x70 的来源）
+        if (graph) {
+            void* inst = *reinterpret_cast<void**>(reinterpret_cast<uintptr_t>(graph) + OFF_GRAPH_LATEST_INST);
+            if (inst) NeonRememberPlayerInstigator(inst);
+        }
+    }
     const float mul = AtkMul();
 #if NEON_DIAG
     {
@@ -1270,8 +1802,9 @@ bool Neon_TryInit(JavaVM* vm) {
         void* anchor = Abs(RVA_GRAPH_ATTACK_MN);
         if (anchor) {
             g_libBase = reinterpret_cast<uintptr_t>(anchor) - RVA_GRAPH_ATTACK_MN;
-            g_libEnd  = g_libBase + 0x8000000UL;   // 128MB 上界，仅用于挡野指针
+            g_libEnd  = g_libBase + 0x8000000UL;   // 临时值，下面立刻用 maps 实测值覆盖
             LOGI("[Neon] libil2cpp base=0x%lx", (unsigned long)g_libBase);
+            NeonRefreshLibRangeFromMaps();         // ★实测 [min start, max end) 覆盖上界
         }
     }
 
@@ -1358,6 +1891,37 @@ bool Neon_TryInit(JavaVM* vm) {
          g_origHeartFirst ? 1 : 0, g_origArmorFirst ? 1 : 0, g_origApportion ? 1 : 0,
          g_origForceDie ? 1 : 0, g_fnGetArmor ? 1 : 0, g_fnGetSane ? 1 : 0);
 
+    // ＝＝ 第七轮新增：⑫全屏攻击 ＝＝
+    //   ⑫ 复用上面的 HitPoints.DeductHP 钩子（不新建第二个钩子，只补直调函数）
+    //   按「挂不上不影响已有 11 项」惯例：解析失败只丢新功能，不 return false。
+    g_fnRoomGet      = reinterpret_cast<RoomGet_t>(Abs(RVA_ROOM_GET));
+    g_fnEhiGetRoom   = reinterpret_cast<RoomGet_t>(Abs(RVA_EHI_GET_ROOM));
+    // 玩家类型槽：so 内 .got 项，运行时值 = Il2CppClass*
+    if (g_libBase) {
+        g_playerKlass    = *reinterpret_cast<void**>(g_libBase + RVA_SLOT_PLAYER_KLASS);
+        g_netPlayerKlass = *reinterpret_cast<void**>(g_libBase + RVA_SLOT_NETPLAYER_KLASS);
+    }
+    LOGI("[Neon][fs] 玩家类型槽 player=%p netPlayer=%p", g_playerKlass, g_netPlayerKlass);
+    // ⑫ 房间捕获钩子：全屏攻击枚举「同房间怪物」必须拿到 RoomMB（真机上
+    //    NPActor.get_actorCurRoomMB 返回 0，只能靠进/离房间静态回调捕获）。
+    HookOne("YiHai.OnEnterRoom(RoomMB)", RVA_ROOM_ENTER,
+            (void*)Hooked_OnEnterRoom, (void**)&g_origRoomEnter);
+    HookOne("YiHai.OnLeaveRoom(RoomMB)", RVA_ROOM_LEAVE,
+            (void*)Hooked_OnLeaveRoom, (void**)&g_origRoomLeave);
+    HookOne("YiHai.OnEnterBattle(RoomMB)", RVA_ROOM_BATTLE,
+            (void*)Hooked_OnEnterBattle, (void**)&g_origRoomBattle);
+    HookOne("RoomMB.MonsterListCleanup", RVA_ROOM_CLEANUP,
+            (void*)Hooked_MonsterListCleanup, (void**)&g_origRoomCleanup);
+    HookOne("MapManager.LateUpdate", RVA_MAP_LATE_UPDATE,
+            (void*)Hooked_MapLateUpdate, (void**)&g_origMapLate);
+    HookOne("MapManager.RefreshRoom(RoomMB)", RVA_MAP_REFRESH_ROOM,
+            (void*)Hooked_MapRefreshRoom, (void**)&g_origMapRefresh);
+    HookOne("RoomMB.get_ActiveMonsterCount", RVA_ROOM_ACTIVE_CNT,
+            (void*)Hooked_ActiveMonsterCount, (void**)&g_origRoomActiveCnt);
+    LOGI("[Neon] round7 roomHooks enter=%d leave=%d battle=%d cleanup=%d activeCnt=%d",
+         g_origRoomEnter ? 1 : 0, g_origRoomLeave ? 1 : 0, g_origRoomBattle ? 1 : 0,
+         g_origRoomCleanup ? 1 : 0, g_origRoomActiveCnt ? 1 : 0);
+
 #if NEON_DIAG
     InstallDiagHooks();
 #endif
@@ -1414,6 +1978,10 @@ void Neon_OnFeatureChanged(int featNum, bool enabled) {
             g_lastHeart.store(enabled);
             LOGI("[Neon] 丝血无敌=%s", enabled ? "ON" : "OFF");
             break;
+        case NEON_FEAT_FULLSCREEN_ATK:
+            g_fullAtk.store(enabled);
+            LOGI("[Neon] 全屏攻击=%s", enabled ? "ON" : "OFF");
+            break;
         default:
             break;
     }
@@ -1464,6 +2032,9 @@ void Neon_ForceClear() {
     g_noJumpLimit.store(false);
     g_dmgMul.store(1);
     g_lastHeart.store(false);
+    // 第七轮：全屏攻击一并复位
+    g_fullAtk.store(false);
+    g_lastPlayerAtkMs.store(0);
 }
 
 void Neon_Tick(const bool* features, const int* values) {
@@ -1476,6 +2047,7 @@ void Neon_Tick(const bool* features, const int* values) {
     g_infGkey.store(features[NEON_FEAT_INF_GKEY]);
     g_noJumpLimit.store(features[NEON_FEAT_INF_JUMP]);
     g_lastHeart.store(features[NEON_FEAT_LAST_HEART]);
+    g_fullAtk.store(features[NEON_FEAT_FULLSCREEN_ATK]);
     if (values) {
         // 滑块值每轮由框架同步（未动过时 = 下限 1 = 关）
         g_moveLvl.store(ClampLvl(values[NEON_FEAT_MOVE_SPEED]));
@@ -1491,4 +2063,10 @@ void Neon_Tick(const bool* features, const int* values) {
     }
 #endif
     if (!g_ready.load()) Neon_TryInit();
+    // ★libil2cpp 是按需分段 mmap 的（真机实测 79 段、跨 6 GB；开局只映射了一部分），
+    //   初始化那一刻扫到的 [min,max) 会比真实范围小很多 ⇒ klass 判空全部误杀。
+    //   实测 20:23 那轮：libRange=0x6dd681a000..0x6f3ad9c000，而 klass 在 0x70a0d24000 段，
+    //   于是 MapManager 送来的 RoomMB 被判「非托管」拒掉。⇒ 必须周期性重扫。
+    //   节流：前 60 拍（≈12 s）每拍扫，此后每 10 拍（≈2 s）扫一次。
+    // maps 周期重扫已删除：托管对象校验不再依赖 libil2cpp 映射范围（见 NeonLooksLikeManaged 注释）。
 }

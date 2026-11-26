@@ -3,7 +3,7 @@
 #
 # - 保留官方 classes.dex / classes3 / classes4 + resources.arsc 字节一致
 # - 官方 classes2 已顶满 65535 methods：拆分后重装
-#     classes2 = com/tpf（GameActivity 生命周期 + SignSpoof/RootBeer）
+#     classes2 = com/tpf（GameActivity 生命周期 + RootBeer；无运行时签名伪装）
 #     classes5 = 原 c2 中 kotlin/okhttp/taptap/… + com/starry
 # - 旧版 Tap SDK：ActivityHandler.authorize → 抛 starry_force_web_login
 #     → LoginClient catch → WebViewHandler（强制网页登录）
@@ -13,6 +13,10 @@
 # - 2026-10-01 签名改为工作区 release 证书（01_tools/starry_release.jks，CN=StarryMagic）
 #     原因：菜单 v5 设备指纹只用 SSAID，而 SSAID 按签名证书隔离 —— 与其它星光包
 #     不同证书会算出不同 dev_*，服务端按整张卡绑 device_id ⇒ 403「卡密已绑定其他设备」。
+# - 2026-11-26 迁移「无签名伪装」版：SignSpoof（运行时签名伪装）2026-10-28 已整体删除且禁止复活，
+#     本脚本不再读/校验/注入该类。[1b] 只校验底包 cert DER；[3b] 只挂 MenuService + loadLibrary("starry_magic")。
+#     静态判定（底包 4 个 dex）：无 TapSignKit / GatekeeperRepository / InitializerServiceImpl / 自验签代码
+#     ⇒ 签名处理走「有则改、无则跳过」（patch_tapsign 对 TapSDK 2.x 自动 skip）。
 #
 # 产物：08_output/霓虹深渊/霓虹深渊_3.2.860_surgical-releaseSigned.apk
 #
@@ -20,6 +24,8 @@
 #   bash scripts/surgical_neon_3.2.860.sh
 #   STARRY_INSTALL=1 bash scripts/surgical_neon_3.2.860.sh
 #   NEON_BASE_APK=/path/to/base.apk bash scripts/surgical_neon_3.2.860.sh
+#   定制包（game_id=nhsy-dz，产物名 ..._nhsy-dz-releaseSigned.apk）:
+#   NEON_VARIANT=dz bash scripts/surgical_neon_3.2.860.sh
 #   换签不改内容（不需要官方底包）:
 #   NEON_RESIGN_APK=08_output/霓虹深渊/xxx.apk [STARRY_INSTALL=1] bash scripts/surgical_neon_3.2.860.sh
 #   换别的 keystore: NEON_SIGN_KS=/path/xx.jks STARRY_KS_ALIAS=xx STARRY_KS_PASS=xx
@@ -53,10 +59,13 @@ NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 NDK_CXX="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
 KS="$NIXIANG/01_tools/starry_release.jks"
 PKG="com.shangyoo.neon"
+# NEON_VARIANT=dz → 定制包（so 内 game_id=nhsy-dz，产物名独立）；不传 = 正常版（game_id=neon）
+NEON_VARIANT="${NEON_VARIANT:-}"
 SIGNED="$OUT/霓虹深渊_3.2.860_surgical-releaseSigned.apk"
+[[ "$NEON_VARIANT" == "dz" ]] && SIGNED="$OUT/霓虹深渊_3.2.860_nhsy-dz-releaseSigned.apk"
 [[ "$BUILD_TYPE" == "debug" ]] && SIGNED="$OUT/霓虹深渊_3.2.860_surgical-debugSigned.apk"
 ALIAS_APK="$OUT/霓虹深渊_3.2.860_starry-releaseSigned.apk"
-# TapTap 官方 cert MD5（TapSignKit.getSign）
+# TapTap 官方 cert MD5（底包验签 + TapSignKit.getSign 回灌常量；本包 TapSDK 2.x 无此类）
 ORIG_MD5="49af51d22ed01a4af3b4338ec385a849"
 
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
@@ -130,9 +139,14 @@ NDK_BUILD="$NDK/ndk-build"
 JNI_DIR="$STARRY_SRC/app/src/main/jni"
 OBJ_OUT="$STARRY_SRC/app/src/obj_neon"
 LIBS_OUT="$STARRY_SRC/app/src/libs_neon"
+# ndk-build 不感知 LOCAL_CFLAGS 变化 ⇒ 切变体时必须清 NeonEntry.o，否则沿用上一种 game_id
+rm -f "$OBJ_OUT/local/arm64-v8a/objs/starry_magic/Games/NeonEntry.o" \
+      "$OBJ_OUT/local/arm64-v8a/objs/starry_magic/Games/NeonEntry.o.d"
+VARIANT_ARG=""
+[[ "$NEON_VARIANT" == "dz" ]] && VARIANT_ARG="NEON_VARIANT=dz"
 (cd "$JNI_DIR" && \
   "$NDK_BUILD" NDK_PROJECT_PATH="$STARRY_SRC/app" APP_BUILD_SCRIPT=./Android_neon.mk \
-  NDK_APPLICATION_MK=./Application.mk NDK_OUT="$OBJ_OUT" NDK_LIBS_OUT="$LIBS_OUT" \
+  NDK_APPLICATION_MK=./Application.mk NDK_OUT="$OBJ_OUT" NDK_LIBS_OUT="$LIBS_OUT" $VARIANT_ARG \
   -j"$(sysctl -n hw.ncpu 2>/dev/null || echo 4)")
 SO_BUILT="$LIBS_OUT/arm64-v8a/libstarry_magic.so"
 [[ -f "$SO_BUILT" ]] || { echo "ERROR: missing $SO_BUILT"; exit 1; }
@@ -144,6 +158,15 @@ fi
 if grep -a -q '\[Wggls\]' "$SO_BUILT" || grep -a -q '\[Shhj\]' "$SO_BUILT"; then
   echo "ERROR: so 仍含上一款游戏标签" >&2
   exit 1
+fi
+if [[ "$NEON_VARIANT" == "dz" ]]; then
+  grep -a -q -F 'nhsy-dz' "$SO_BUILT" || { echo "ERROR: NEON_VARIANT=dz 但 so 无 nhsy-dz" >&2; exit 1; }
+  echo "  so game_id=nhsy-dz ok"
+else
+  if grep -a -q -F 'nhsy-dz' "$SO_BUILT"; then
+    echo "ERROR: 未传 NEON_VARIANT=dz 但 so 含 nhsy-dz（陈旧对象）" >&2; exit 1
+  fi
+  echo "  so game_id=neon ok"
 fi
 for dest in \
   "$STARRY_SRC/app/src/main/jniLibs/arm64-v8a" \
@@ -160,13 +183,11 @@ rsync -a --delete \
   --exclude '.gradle/' --exclude 'app/build/' --exclude 'build/' \
   --exclude 'auth-server/.venv/' --exclude 'auth-server/data/' --exclude '.idea/' \
   "$STARRY_SRC/" "$WORK/starry/"
-SIGN_SPOOF="$WORK/starry/app/src/main/java/com/starry/magic/sign/SignSpoof.java"
-python3.11 - "$ORIG_APK" "$SIGN_SPOOF" "$ORIG_MD5" <<'PY'
-import base64, hashlib, re, subprocess, sys, tempfile, zipfile
+python3.11 - "$ORIG_APK" "$ORIG_MD5" <<'PY'
+import hashlib, subprocess, sys, tempfile, zipfile
 from pathlib import Path
 
-apk, spoof_path, expect_md5 = sys.argv[1:4]
-spoof = Path(spoof_path)
+apk, expect_md5 = sys.argv[1:3]
 
 def extract_cert_der(apk_path: str) -> bytes:
     with zipfile.ZipFile(apk_path, "r") as z:
@@ -196,25 +217,7 @@ def extract_cert_der(apk_path: str) -> bytes:
 der = extract_cert_der(apk)
 if hashlib.md5(der).hexdigest() != expect_md5.lower():
     raise SystemExit(f"cert MD5 mismatch after export (expect {expect_md5})")
-text = spoof.read_text(encoding="utf-8")
-if "NEON_TT_PKG" not in text or "fakes.put(NEON_TT_PKG" not in text:
-    raise SystemExit("SignSpoof.java missing NEON_TT (com.shangyoo.neon) — add cert in source first")
-# 校验源码内嵌 DER 与官方底包一致
-m = re.search(
-    r'NEON_TT_CERT_B64\s*=\s*((?:"[^"]+"\s*\+\s*)*"[^"]+");',
-    text,
-    re.S,
-)
-if not m:
-    raise SystemExit("NEON_TT_CERT_B64 parse failed")
-expr = m.group(1)
-parts = re.findall(r'"([^"]*)"', expr)
-embedded = base64.b64decode("".join(parts))
-if hashlib.md5(embedded).hexdigest() != expect_md5.lower():
-    raise SystemExit("SignSpoof NEON_TT cert MD5 != official base")
-if embedded != der:
-    raise SystemExit("SignSpoof NEON_TT DER bytes != official base CERT.RSA")
-print(f"  SignSpoof NEON_TT ok (MD5={expect_md5})")
+print(f"  base cert DER ok (MD5={expect_md5})")
 PY
 (cd "$WORK/starry" && ./gradlew "$GRADLE_TASK" --console=plain)
 STARRY_APK="$WORK/starry/app/build/outputs/apk/$BUILD_TYPE/$APK_NAME"
@@ -276,13 +279,17 @@ for d in "$WORK/starry_dec"/smali "$WORK/starry_dec"/smali_classes*; do
 done
 shopt -u nullglob
 [[ -d "$WORK/c5smali/com/starry" ]] || { echo "ERROR: com/starry smali missing"; exit 1; }
-if ! find "$WORK/c5smali" -name 'NativeMenuController.smali' | grep -q .; then
-  echo "ERROR: NativeMenuController.smali missing" >&2
+# R8（app/proguard-rules.pro 第 95 行 -keep,allowobfuscation class com.starry.magic.**）
+# 会把 NativeMenuController 改名成 com/starry/magic/menu/<短名>，按类名找不到；
+# 判据改为「按名保留的 MenuService」+ menu 包 smali 数量（2026-11-26）。
+MENU_SMALI_CNT="$(find "$WORK/c5smali/com/starry/magic/menu" -name '*.smali' 2>/dev/null | wc -l | tr -d ' ')"
+if [[ ! -f "$WORK/c5smali/com/starry/magic/menu/MenuService.smali" || "${MENU_SMALI_CNT:-0}" -lt 5 ]]; then
+  echo "ERROR: c5 内菜单类缺失 MenuService.smali? menu_smali_count=${MENU_SMALI_CNT}" >&2
   exit 1
 fi
 echo "  split ok: c2=com/tpf…  c5=taptap+deps+starry"
 
-echo "[3b/6] patch c5 ActivityHandler → force WebLogin；c2 GameActivity/SignSpoof/RootBeer"
+echo "[3b/6] patch c5 ActivityHandler → force WebLogin；c2 GameActivity/RootBeer（无签名伪装）"
 python3.11 - "$WORK/c2smali" "$WORK/c5smali" "$ORIG_MD5" <<'PY'
 from pathlib import Path
 import re, sys
@@ -331,7 +338,7 @@ def patch_force_web_login(root: Path):
 def patch_tapsign(root: Path):
     taps = list(root.glob("**/TapSignKit.smali"))
     if not taps:
-        print("  TapSignKit: skip (本包旧版 SDK 无 TapSignKit，靠 SignSpoof)")
+        print("  TapSignKit: skip (本包 TapSDK 2.x 无 TapSignKit ⇒ 无需签名回灌)")
         return
     body = f""".method public final getSign(Landroid/content/Context;)Ljava/lang/String;
     .locals 1
@@ -363,23 +370,27 @@ def patch_tapsign(root: Path):
             print(f"  WARN TapSignKit patch miss ({tap})")
 
 def patch_tpf_application(root: Path):
+    """只负责 loadLibrary("starry_magic")。
+    2026-11-26：运行时签名伪装（SignSpoof）已整体删除且禁止复活，本函数不再注入该类。"""
     app = root / "com/tpf/sdk/TPFApplication.smali"
     if not app.is_file():
         print("  WARN TPFApplication missing")
         return
     s = app.read_text(encoding="utf-8")
-    s = re.sub(
-        r"\n\.method static constructor <clinit>\(\)V\n(?:.|\n)*?SignSpoof;->install\(\)V\n(?:.|\n)*?\.end method\n",
-        "\n",
+    # 历史残留清理：旧 smali 缓存/旧底包若带 SignSpoof 调用，就地剥掉（否则首调 NoClassDefFoundError）
+    s, n_spoof = re.subn(
+        r"^\s*invoke-static \{\}, Lcom/starry/magic/sign/SignSpoof;->install\(\)V\n",
+        "",
         s,
-        count=1,
+        flags=re.M,
     )
-    if "SignSpoof;->install" in s and "attachBaseContext" in s:
-        print("  TPFApplication SignSpoof ok")
+    if n_spoof:
+        print(f"  TPFApplication: 剥离历史签名伪装调用 {n_spoof} 处（该类已删除）")
+    if 'const-string v0, "starry_magic"' in s:
+        print("  TPFApplication.attachBaseContext: loadLibrary(starry_magic) 已在，跳过")
         app.write_text(s, encoding="utf-8")
         return
     load_lib = (
-        "\n    invoke-static {}, Lcom/starry/magic/sign/SignSpoof;->install()V\n\n"
         '    const-string v0, "starry_magic"\n\n'
         "    invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V\n"
     )
@@ -401,7 +412,7 @@ def patch_tpf_application(root: Path):
         print("  WARN TPFApplication.attachBaseContext patch miss")
         return
     app.write_text(s2, encoding="utf-8")
-    print("  TPFApplication.attachBaseContext → SignSpoof + loadLibrary")
+    print("  TPFApplication.attachBaseContext → loadLibrary(starry_magic)")
 
 def bump_method_regs(head: str) -> str:
     """GameActivity.onCreate 等 .registers 2 时 v0==p0；loadLibrary 须先 +1 腾寄存器。"""
@@ -465,24 +476,12 @@ def inject_activity(path: Path, tag: str):
             return
         head = m.group(1)
         head2 = bump_method_regs(head)
-        # loadLibrary 已在 TPFApplication.attachBaseContext；Activity 只挂 MenuService/SignSpoof
+        # loadLibrary 已在 TPFApplication.attachBaseContext；Activity 只挂 MenuService
         inject = """
-    invoke-static {}, Lcom/starry/magic/sign/SignSpoof;->install()V
-
     invoke-static {p0}, Lcom/starry/magic/menu/MenuService;->start(Landroid/content/Context;)V
 """
         s = s[: m.start(1)] + head2 + inject + s[m.start(2) :]
         print(f"  hook {tag}.onCreate")
-    elif "SignSpoof;->install" not in s:
-        s2, n = re.subn(
-            r"(invoke-static \{p0\}, Lcom/starry/magic/menu/MenuService;->start\(Landroid/content/Context;\)V)",
-            "    invoke-static {}, Lcom/starry/magic/sign/SignSpoof;->install()V\n\n    \\1",
-            s,
-            count=1,
-        )
-        if n == 1:
-            s = s2
-            print(f"  hook {tag}.onCreate +SignSpoof")
     if "MenuService;->notifyHostResumed" not in s:
         s2, n = re.subn(
             r"(\.method protected onResume\(\)V[\s\S]*?)(    return-void\n\.end method)",
@@ -687,12 +686,13 @@ assert "assets/web/pages/mod-menu-v2.html" not in zout2.namelist()
 assert "classes5.dex" in zout2.namelist()
 assert "lib/arm64-v8a/libstarry_magic.so" in zout2.namelist()
 nc = zout2.read("classes5.dex")
-assert b"NativeMenuController" in nc, "classes5 missing NativeMenuController"
-assert b"SignSpoof" in nc or b"SignSpoof" in zout2.read("classes5.dex")
+# NativeMenuController 被 R8 allowobfuscation 改名（com/starry/magic/menu/<短名>）⇒ 按名断言会误报
+assert b"com/starry/magic/menu/MenuService" in nc, "classes5 missing MenuService"
 assert b"starry_force_web_login" in nc, "classes5 missing TapTap WebLogin patch"
 assert b"ActivityHandler" in nc, "classes5 missing ActivityHandler (64k split failed?)"
 c2b = zout2.read("classes2.dex")
-assert b"SignSpoof" in c2b, "classes2 missing SignSpoof install"
+assert b"SignSpoof" not in c2b, "classes2 仍含 SignSpoof 引用（该类已删除、禁止复活）"
+assert b"SignSpoof" not in nc, "classes5 仍含 SignSpoof 引用（该类已删除、禁止复活）"
 assert b"MenuService" in c2b, "classes2 missing MenuService"
 assert b"ActivityHandler" not in c2b, "classes2 still has ActivityHandler — should be split to classes5"
 print(f"  merged ok; entries≈{n}; Manifest+classes5; WebLogin forced; protected dex/arsc intact")
@@ -765,4 +765,4 @@ source "$_NIXIANG/04_scripts/_common/starry_post_install.sh"
 starry_post_install "$PKG"
 adb shell am force-stop "$PKG" 2>/dev/null || true
 adb shell monkey -p "$PKG" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1 || true
-echo "log: adb logcat -s StarryApp:V StarryMagic:V Mod_Menu MenuService Neon StarrySignSpoof"
+echo "log: adb logcat -s StarryApp:V StarryMagic:V Mod_Menu MenuService Neon"

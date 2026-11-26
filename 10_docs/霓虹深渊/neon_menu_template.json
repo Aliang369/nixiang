@@ -2,51 +2,19 @@
   "template_id": "neon",
   "name": "霓虹深渊",
   "package": "com.shangyoo.neon",
-  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104（2026-10-01 第四轮：近战/远程攻速合并为单一「攻速」；2026-10-02 第六轮新增 ⑨无限跳跃 ⑩伤害倍率 ⑪丝血无敌）",
+  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104",
   "features": [
-    {
-      "feat_num": 1,
-      "name": "无敌"
-    },
-    {
-      "feat_num": 2,
-      "name": "秒杀"
-    },
-    {
-      "feat_num": 3,
-      "name": "技能无CD"
-    },
-    {
-      "feat_num": 4,
-      "name": "移速"
-    },
-    {
-      "feat_num": 5,
-      "name": "攻速"
-    },
-    {
-      "feat_num": 6,
-      "name": "金币使用不减"
-    },
-    {
-      "feat_num": 7,
-      "name": "钥匙使用不减"
-    },
-    {
-      "feat_num": 8,
-      "name": "彩色钥匙使用不减"
-    },
-    {
-      "feat_num": 9,
-      "name": "无限跳跃"
-    },
-    {
-      "feat_num": 10,
-      "name": "伤害倍率"
-    },
-    {
-      "feat_num": 11,
-      "name": "丝血无敌"
-    }
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "秒杀"},
+    {"feat_num": 3, "name": "技能无CD"},
+    {"feat_num": 4, "name": "移速"},
+    {"feat_num": 5, "name": "攻速"},
+    {"feat_num": 6, "name": "金币使用不减"},
+    {"feat_num": 7, "name": "钥匙使用不减"},
+    {"feat_num": 8, "name": "彩色钥匙使用不减"},
+    {"feat_num": 9, "name": "无限跳跃"},
+    {"feat_num": 10, "name": "伤害倍率"},
+    {"feat_num": 11, "name": "丝血无敌"},
+    {"feat_num": 12, "name": "全屏攻击"}
   ]
 }

@@ -28,6 +28,8 @@ enum NeonFeat : int {
     NEON_FEAT_INF_JUMP     = 9,  // Toggle_无限跳跃（PlayerActor.get_multipleJumpCount 返回 -1000）
     NEON_FEAT_DAMAGE_MUL   = 10, // Slider_伤害倍率:1:50（HitPoints.DeductHP 内缩放 DamageInfo+0x18）
     NEON_FEAT_LAST_HEART   = 11, // Toggle_丝血无敌（Hearts.DeductHP 拦致命伤，锁血到 1）
+    // ＝＝ 2026-11-26 第七轮：一个新战斗功能（菜单下标必须与 NeonEntry.cpp 严格对齐）＝＝
+    NEON_FEAT_FULLSCREEN_ATK = 12, // Toggle_全屏攻击（HitPoints.DeductHP 内把一次玩家伤害镜像到同房间其余怪物）
 };
 
 bool Neon_TryInit(JavaVM* vm = nullptr);

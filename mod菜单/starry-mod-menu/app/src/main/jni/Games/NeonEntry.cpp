@@ -8,11 +8,19 @@
  *    - MainModern.cpp / Main.cpp / GameConfig.h / 公共 Android.mk 永不需要动
  *    - 不用的回调留 nullptr，不要造假实现
  *    - featureList 下标 = featNum（Category_ 占下标），与 NeonMod.h 的 enum 对齐
- *    - authGameId 保持 "neon"（存量 grandfather，后台 games.game_id 已是 neon）
+ *    - game_id 编译期二选一：默认 "neon"（正常版，存量 grandfather 不改）；
+ *      -DNEON_GAME_ID_DZ=1 时为 "nhsy-dz"（定制版，2026-11-26 用户指定）
  * ================================================================
  */
 #include "ModEntry.h"
 #include "NeonMod.h"
+
+// game_id：定制版由 Android_neon.mk 的 NEON_VARIANT=dz 打开（-DNEON_GAME_ID_DZ=1）
+#ifdef NEON_GAME_ID_DZ
+#define NEON_AUTH_GAME_ID "nhsy-dz"   // 定制版（用户 2026-11-26 指定）
+#else
+#define NEON_AUTH_GAME_ID "neon"      // 正常版（存量 grandfather，不改）
+#endif
 
 static const char* kNeon_Features[] = {
     "Category_战斗",           // 0
@@ -27,12 +35,13 @@ static const char* kNeon_Features[] = {
     "Toggle_无限跳跃",             // 9  NEON_FEAT_INF_JUMP（PlayerActor.get_multipleJumpCount 返回 -1000）
     "Slider_伤害倍率:1:50",        // 10 NEON_FEAT_DAMAGE_MUL（1 = 关；HitPoints.DeductHP 内缩放 DamageInfo+0x18）
     "Toggle_丝血无敌",             // 11 NEON_FEAT_LAST_HEART（Hearts.DeductHP 拦致命伤，锁血到 1）
+    "Toggle_全屏攻击",             // 12 NEON_FEAT_FULLSCREEN_ATK（复用 HitPoints.DeductHP 钩子，镜像到同房间其余怪物）
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
     static const StarryGameMod mod = {
-        .tag = "neon",
-        .authGameId = "neon",           // com.shangyoo.neon TapTap 渠道；后台 games.game_id = neon
+        .tag = NEON_AUTH_GAME_ID,
+        .authGameId = NEON_AUTH_GAME_ID,  // com.shangyoo.neon；默认 neon，定制版(=-DNEON_GAME_ID_DZ)为 nhsy-dz
         .featureList = kNeon_Features,
         .featureCount = (int)(sizeof(kNeon_Features) / sizeof(kNeon_Features[0])),
 

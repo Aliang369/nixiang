@@ -43,6 +43,13 @@ ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif
 
+# ==== 定制变体（2026-11-26）====
+# ndk-build 传 NEON_VARIANT=dz → game_id 用 nhsy-dz（定制包）；不传 = neon（正常版，行为不变）
+ifeq ($(NEON_VARIANT),dz)
+LOCAL_CFLAGS    += -DNEON_GAME_ID_DZ=1
+LOCAL_CPPFLAGS  += -DNEON_GAME_ID_DZ=1
+endif
+
 # ==== 公共区（勿动）====
 LOCAL_SRC_FILES += xDL/xdl.c \
                    xDL/xdl_iterate.c \
