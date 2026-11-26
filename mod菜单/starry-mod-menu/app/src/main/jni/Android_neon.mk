@@ -43,8 +43,12 @@ ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif
 
-# ==== game_id（2026-11-26 第八轮）====
-# 正式版固定 nhsy（NeonEntry.cpp 内 NEON_AUTH_GAME_ID）；旧的 neon / nhsy-dz 编译期变体已废止。
+# ==== game_id 变体 ====
+# 不传 NEON_VARIANT → 正式版 game_id=nhsy；NEON_VARIANT=dz → 定制版 game_id=nhsy-dz
+ifeq ($(NEON_VARIANT),dz)
+LOCAL_CFLAGS    += -DNEON_GAME_ID_DZ=1
+LOCAL_CPPFLAGS  += -DNEON_GAME_ID_DZ=1
+endif
 
 # ==== 公共区（勿动）====
 LOCAL_SRC_FILES += xDL/xdl.c \

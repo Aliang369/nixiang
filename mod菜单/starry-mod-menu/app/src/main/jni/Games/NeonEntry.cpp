@@ -8,14 +8,18 @@
  *    - MainModern.cpp / Main.cpp / GameConfig.h / 公共 Android.mk 永不需要动
  *    - 不用的回调留 nullptr，不要造假实现
  *    - featureList 下标 = featNum（Category_ 占下标），与 NeonMod.h 的 enum 对齐
- *    - game_id 固定 "nhsy"（2026-11-26 第八轮用户指定：正式版 game_id = nhsy，
- *      旧的 "neon" 与"NHSY 定制版 nhsy-dz"双轨随本轮一并收敛，不再有编译期变体）
+ *    - game_id：正式版 "nhsy"（默认）；定制版 "nhsy-dz"（NEON_VARIANT=dz 编译期切换）
  * ================================================================
  */
 #include "ModEntry.h"
 #include "NeonMod.h"
 
+// game_id：正式版默认 "nhsy"；编译期 -DNEON_GAME_ID_DZ=1（NEON_VARIANT=dz）出定制版 "nhsy-dz"
+#ifdef NEON_GAME_ID_DZ
+#define NEON_AUTH_GAME_ID "nhsy-dz"
+#else
 #define NEON_AUTH_GAME_ID "nhsy"
+#endif
 
 static const char* kNeon_Features[] = {
     "Category_战斗",           // 0
