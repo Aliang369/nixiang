@@ -4,6 +4,16 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# ---- 跨平台工具链与命令垫片（2026-11-27 Windows/Git Bash 适配）----
+[ -f "$NIXIANG/04_scripts/_common/env.sh" ] && source "$NIXIANG/04_scripts/_common/env.sh"
+if ! command -v md5 >/dev/null 2>&1; then
+  md5() { case "${1:-}" in -q) shift; md5sum "$@" | awk '{print $1}' ;; *) md5sum "$@" ;; esac; }
+fi
+sha256_of() {
+  if command -v shasum >/dev/null 2>&1; then shasum -a 256 "$1" | awk '{print $1}'
+  else sha256sum "$1" | awk '{print $1}'; fi
+}
+_size_bytes() { wc -c < "$1" | tr -d ' '; }
 GAME="明日方舟"
 PKG="com.hypergryph.arknights"
 META_FILE="$SCRIPT_DIR/official_apk.json"
@@ -21,8 +31,13 @@ KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
 KS_PASS="${STARRY_KS_PASS:-starry2026}"
 SO_BUILD="$NIXIANG/mod菜单/starry-mod-menu/libs_mrfzz/arm64-v8a/libstarry_magic.so"
 
-export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
-export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
+# JDK17：env.sh 已按主机解析（Win 走 JAVA_HOME/winget 目录/PATH，mac 走 java_home）
+if [ -z "${JAVA_HOME:-}" ] || [ ! -x "$JAVA_HOME/bin/java" ]; then
+  JAVA_HOME="${NIXIANG_JAVA17:-}"
+fi
+[ -n "${JAVA_HOME:-}" ] || { echo "ERROR: 找不到 JDK17（env.sh 的 NIXIANG_JAVA17 为空）" >&2; exit 1; }
+export JAVA_HOME
+export PATH="$JAVA_HOME/bin:$PATH"
 
 [[ -f "$UNSIGNED" ]] || { echo "ERROR: missing $UNSIGNED (run surgical first)" >&2; exit 1; }
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK" >&2; exit 1; }
@@ -32,26 +47,38 @@ ACTUAL_ORIG_MD5="$(md5 -q "$ORIG_APK")"
 [[ "$ACTUAL_ORIG_MD5" == "$ORIG_MD5" ]] \
   || { echo "ERROR: official apk md5 mismatch: $ACTUAL_ORIG_MD5" >&2; exit 1; }
 
+# build-tools：Win 上是 zipalign.exe / apksigner.bat，bash 的 [ -x ] 不做扩展名补全，
+# 所以一律先 [ -f ] 逐个解析真实文件名（照 env.sh「Win 上 -x 恒为假」的实测结论）
 BT=""
-for v in 36.0.0 35.0.0 34.0.0; do
-  if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then
-    BT="$HOME/Library/Android/sdk/build-tools/$v"
-    break
-  fi
+for c in "${MRFZZ_BUILD_TOOLS:-}" \
+         "$NIXIANG/01_tools/android-sdk/build-tools/android-15" \
+         "${NIXIANG_BUILD_TOOLS:-}" \
+         "${ANDROID_SDK_ROOT:-}"/build-tools/* "${ANDROID_HOME:-}"/build-tools/* ; do
+  [ -n "$c" ] && [ -d "$c" ] || continue
+  { [ -f "$c/zipalign" ] || [ -f "$c/zipalign.exe" ]; } || continue
+  BT="$c"; break
 done
+ZA=""; AS=""
+if [ -n "$BT" ]; then
+  ZA="$BT/zipalign"; [ -f "$ZA" ] || ZA="$BT/zipalign.exe"
+  AS="$BT/apksigner"; [ -f "$AS" ] || AS="$BT/apksigner.bat"; [ -f "$AS" ] || AS="$BT/apksigner.exe"
+fi
+echo "[tool] build-tools=${BT:-未解析} zipalign=${ZA:-无} apksigner=${AS:-无}"
 
 WORK="$(mktemp -d /tmp/mrfzz_sign.XXXXXX)"
 trap 'rm -rf "$WORK"' EXIT
 ALIGNED="$WORK/aligned.apk"
 
 if [[ -n "$BT" ]]; then
-  "$BT/zipalign" -f -p 4 "$UNSIGNED" "$ALIGNED"
+  "$ZA" -f -p 4 "$UNSIGNED" "$ALIGNED"
   rm -f "$SIGNED"
-  "$BT/apksigner" sign \
+  "$AS" sign \
     --ks "$KS" --ks-key-alias "$KS_ALIAS" \
     --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
     --out "$SIGNED" "$ALIGNED"
-  "$BT/apksigner" verify --verbose --print-certs "$SIGNED" 2>&1 | sed -n '1,12p'
+  "$AS" verify --verbose --print-certs "$SIGNED" 2>&1 | sed -n '1,14p'
+  # apksigner 会顺带写 v4 的 .idsig（apksigner 0.9 默认行为）；交付目录只留 apk
+  rm -f "$SIGNED.idsig"
 fi
 
 if [[ ! -f "$SIGNED" ]]; then
@@ -64,8 +91,8 @@ if [[ ! -f "$SIGNED" ]]; then
 fi
 
 [[ -f "$SIGNED" ]] || { echo "ERROR: sign failed" >&2; exit 1; }
-if [[ -n "$BT" && -x "$BT/apksigner" ]]; then
-  "$BT/apksigner" verify "$SIGNED" >/dev/null \
+if [[ -n "$AS" && -f "$AS" ]]; then
+  "$AS" verify "$SIGNED" >/dev/null \
     || { echo "ERROR: apksigner verify failed" >&2; exit 1; }
 fi
 
@@ -108,13 +135,13 @@ with zipfile.ZipFile(orig) as a, zipfile.ZipFile(signed) as b:
 print("  official protected entries unchanged")
 PY
 
-if [[ -n "$BT" && -x "$BT/apksigner" ]]; then
-  "$BT/apksigner" verify --print-certs "$SIGNED" 2>&1 \
+if [[ -n "$AS" && -f "$AS" ]]; then
+  "$AS" verify --print-certs "$SIGNED" 2>&1 \
     | grep -q "CN=StarryMagic" \
     || { echo "ERROR: unexpected signer certificate" >&2; exit 1; }
 fi
 
 echo "[sign] done -> $SIGNED"
 echo "[sign] md5 = $(md5 -q "$SIGNED")"
-echo "[sign] sha256 = $(shasum -a 256 "$SIGNED" | awk '{print $1}')"
+echo "[sign] sha256 = $(sha256_of "$SIGNED")"
 ls -lh "$SIGNED"

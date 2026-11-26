@@ -1,2 +1,2 @@
 # 机械管线指纹锁（pipeline.sh 启动自检用；变更纪律＝同一提交改脚本 + 刷新本文件 + push，见 _common/stages.md 文末跨机姿势）
-pipeline_sh_sha256=bf5eac4f6eee1da7ce1fb737d42e7bb32a98366733394f94e0f00c14b2a3aebd
+pipeline_sh_sha256=60924f0c1db296390bb71d929df18183240a054fd5432bb60d5fa4c2bb78fc1f

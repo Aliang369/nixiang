@@ -1,0 +1,15 @@
+{
+  "game_dir": "E:/nixiang/08_output/明日方舟",
+  "keep": "明日方舟_2.7.91_surgical-releaseSigned.apk",
+  "keep_size": 1936614456,
+  "keep_md5": "fce95375eb1f9f39360682614271ca10",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "明日方舟_2.7.91_surgical-unsigned.apk",
+      "size": 1936229238,
+      "md5": "80c9d648e754565cd962c4ba49897a41"
+    }
+  ],
+  "removed_count": 1
+}

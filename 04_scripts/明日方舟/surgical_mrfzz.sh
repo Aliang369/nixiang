@@ -17,6 +17,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# ---- 跨平台工具链与命令垫片（2026-11-27 Windows/Git Bash 适配）----
+# env.sh 提供 NIXIANG_HOST / NIXIANG_JAVA17 / NIXIANG_BUILD_TOOLS / python3 垫片与 PATH 前置
+[ -f "$NIXIANG/04_scripts/_common/env.sh" ] && source "$NIXIANG/04_scripts/_common/env.sh"
+# md5 -q 在 Win 上不原生存在（仓库 ~/.nx_shims.sh 一般已垫片，这里再自带一份兜底）
+if ! command -v md5 >/dev/null 2>&1; then
+  md5() { case "${1:-}" in -q) shift; md5sum "$@" | awk '{print $1}' ;; *) md5sum "$@" ;; esac; }
+fi
+# 字节数：不依赖 BSD 的 stat -f（Win 上靠垫片，垫片缺了就会写进空串）
+_size_bytes() { wc -c < "$1" | tr -d ' '; }
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
 GAME="明日方舟"
 PKG="com.hypergryph.arknights"
@@ -32,14 +41,54 @@ UNSIGNED="$OUT/${GAME}_${VERSION}_surgical-unsigned.apk"
 MF_CACHE="$NIXIANG/07_patched/$GAME/surgical_provider_only/AndroidManifest.xml"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
-NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
-NDK_CXX="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-gnu/libc++_shared.so"
-[[ -f "$NDK_CXX" ]] || NDK_CXX="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
+# 01_tools 里的 smali/baksmali/apktool 是 bash 包装脚本（调 java -jar），Win 上不会自动在 PATH
+PATH="$NIXIANG/01_tools/apktool:$NIXIANG/01_tools/smali:$PATH"
+export PATH
+APKTOOL="$(command -v apktool 2>/dev/null || true)"
+[ -n "$APKTOOL" ] || { echo "ERROR: 找不到 apktool（期望 $NIXIANG/01_tools/apktool/apktool）" >&2; exit 1; }
+# NDK：ANDROID_NDK_HOME 优先；否则仓库内 01_tools 的 r27c，再退 SDK/ndk/*（Win / mac 通用）
+NDK="${ANDROID_NDK_HOME:-}"
+if [ -z "$NDK" ] || [ ! -d "$NDK" ]; then
+  NDK=""
+  for c in "$NIXIANG/01_tools/android-sdk/ndk/android-ndk-r27c" \
+           "${ANDROID_SDK_ROOT:-}"/ndk/* "${ANDROID_HOME:-}"/ndk/* ; do
+    [ -d "$c" ] || continue
+    NDK="$c"; break
+  done
+fi
+[ -n "$NDK" ] || { echo "ERROR: 找不到 NDK（设 ANDROID_NDK_HOME）" >&2; exit 1; }
+# libc++_shared.so：prebuilt 目录名随主机不同（Win 与 mac 不同名），用通配匹配，
+# 不把主机名写死；sysroot 下 aarch64 的两种 lib 目录名都试一遍。
+NDK_CXX=""
+for c in "$NDK"/toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so \
+         "$NDK"/toolchains/llvm/prebuilt/*/sysroot/usr/lib/aarch64-linux-gnu/libc++_shared.so ; do
+  [ -f "$c" ] && { NDK_CXX="$c"; break; }
+done
+[ -n "$NDK_CXX" ] || { echo "ERROR: 找不到 libc++_shared.so（NDK=${NDK}）" >&2; exit 1; }
+echo "[env] ndk=$NDK"
+echo "[env] libc++_shared=$NDK_CXX"
 AUTHORITY="$PKG.starryinit"
-AAPT2="${AAPT2:-$HOME/Library/Android/sdk/build-tools/36.0.0/aapt2}"
+# aapt2：manifest 回读是硬判据 ⇒ 必须解析到真实可执行文件（Win 上是 aapt2.exe；
+# bash 的 [ -x ] 不做扩展名补全，这里直接按候选逐个 [ -f ] 判定）
+if [ -z "${AAPT2:-}" ]; then
+  AAPT2=""
+  for c in "$NIXIANG/01_tools/android-sdk/build-tools/android-15/aapt2.exe" \
+           "${NIXIANG_BUILD_TOOLS:-}/aapt2.exe" "${NIXIANG_BUILD_TOOLS:-}/aapt2" \
+           "${ANDROID_SDK_ROOT:-}"/build-tools/*/aapt2.exe "${ANDROID_SDK_ROOT:-}"/build-tools/*/aapt2 \
+           "${ANDROID_HOME:-}"/build-tools/*/aapt2.exe "${ANDROID_HOME:-}"/build-tools/*/aapt2 \
+           "$(command -v aapt2 2>/dev/null || true)" ; do
+    [ -n "$c" ] && [ -f "$c" ] && { AAPT2="$c"; break; }
+  done
+fi
+[ -n "${AAPT2:-}" ] || { echo "ERROR: 找不到 aapt2（设 AAPT2=/path/to/aapt2）" >&2; exit 1; }
 
-export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
-export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
+# JDK17：env.sh 已按主机解析（Win 走 JAVA_HOME/winget 目录/PATH，mac 走 java_home）
+if [ -z "${JAVA_HOME:-}" ] || [ ! -x "$JAVA_HOME/bin/java" ]; then
+  JAVA_HOME="${NIXIANG_JAVA17:-}"
+fi
+[ -n "${JAVA_HOME:-}" ] || { echo "ERROR: 找不到 JDK17（env.sh 的 NIXIANG_JAVA17 为空）" >&2; exit 1; }
+export JAVA_HOME
+export PATH="$JAVA_HOME/bin:$PATH"
 
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK" >&2; exit 1; }
 [[ -x "$SMALI_BIN" ]] || { echo "ERROR: missing $SMALI_BIN" >&2; exit 1; }
@@ -58,28 +107,70 @@ if ! mkdir "$LOCK_DIR" 2>/dev/null; then
   exit 1
 fi
 echo $$ > "$LOCK_DIR/pid"
-WORK="$(mktemp -d /tmp/mrfzz_surgical.XXXXXX)"
+# 暂存目录必须纯 ASCII 且在工作区内（stages.md「Windows 执行环境与中文路径硬规则」②）：
+# /tmp 落在用户临时目录（工作区外，收尾必漏）；apktool 解包/重建一律在这里做，
+# 产物再拷回中文路径。
+STAGE_ROOT="$NIXIANG/13_scratch/mrfzz_stage"
+mkdir -p "$STAGE_ROOT"
+WORK="$STAGE_ROOT/work"
+rm -rf "$WORK"
+mkdir -p "$WORK"
 trap 'rm -rf "$WORK"; rm -rf "$LOCK_DIR"' EXIT
 mkdir -p "$OUT" "$WORK" "$(dirname "$MF_CACHE")"
 
-echo "[1/6] gradle assembleRelease (starry + HyperGryph SignSpoof)"
-rsync -a --delete \
-  --exclude '.gradle/' --exclude 'app/build/' --exclude 'build/' \
-  --exclude 'auth-server/.venv/' --exclude 'auth-server/data/' --exclude '.idea/' \
-  --exclude 'obj_*/' --exclude 'libs_*/' \
-  "$STARRY_SRC/" "$WORK/starry/"
-(cd "$WORK/starry" && ./gradlew assembleRelease --console=plain)
+echo "[1/6] gradle assembleRelease（starry Java 桥 → classes6.dex 的原料）"
+# Win 的 Git Bash 没有 rsync ⇒ 用 tar 管道等价复制（同样排除构建缓存与各游戏 libs_*）
+copy_tree() {  # $1=src $2=dst
+  mkdir -p "$2"
+  ( cd "$1" && tar -cf - \
+      --exclude='./.gradle' --exclude='./app/build' --exclude='./build' \
+      --exclude='./auth-server/.venv' --exclude='./auth-server/data' --exclude='./.idea' \
+      --exclude='./obj_*' --exclude='./libs_*' . ) | ( cd "$2" && tar -xf - )
+}
+copy_tree "$STARRY_SRC" "$WORK/starry"
+# 临时副本必须没有旧 build：否则 gradle 报 UP-TO-DATE，拿到上一轮的 dex（源码改了也不复编）
+[ ! -d "$WORK/starry/app/build" ] || { echo "ERROR: 临时副本带入旧 app/build" >&2; exit 1; }
+
+if [ "$NIXIANG_HOST" = "win" ]; then
+  # 仓库 local.properties 写死另一台机器的 sdk.dir 且被 git 跟踪 ⇒ 临时副本里移走，
+  # 改由 ANDROID_HOME 提供（stages.md ②：不要手写 sdk.dir，转义易错）
+  rm -f "$WORK/starry/local.properties"
+  SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-${LOCALAPPDATA:-$HOME/AppData/Local}/Android/Sdk}}"
+  [ -d "$SDK_ROOT" ] || { echo "ERROR: 找不到 Android SDK（设 ANDROID_SDK_ROOT）" >&2; exit 1; }
+  export ANDROID_SDK_ROOT="$SDK_ROOT"
+  export ANDROID_HOME="$SDK_ROOT"
+  # 镜像前置 + compileSdk/buildTools 回落 + 关 SDK 自动下载（只改临时副本）
+  if [ -f "$NIXIANG/04_scripts/_common/gradle_localize.py" ]; then
+    python3 "$NIXIANG/04_scripts/_common/gradle_localize.py" "$WORK/starry"       --sdk "$(cygpath -m "$SDK_ROOT")" || exit 1
+  else
+    echo "  WARN: 缺 gradle_localize.py，跳过镜像/SDK 本地化" >&2
+  fi
+  GRADLE_BAT=""
+  for c in "$NIXIANG/01_tools/gradle"/*/bin/gradle.bat ; do
+    [ -f "$c" ] && { GRADLE_BAT="$c"; break; }
+  done
+  [ -n "$GRADLE_BAT" ] || { echo "ERROR: 找不到 01_tools/gradle/*/bin/gradle.bat" >&2; exit 1; }
+  echo "  gradle: $GRADLE_BAT (offline)"
+  # Win 上只能走 gradle.bat；且它要求 JAVA_HOME 是 Windows 形式（POSIX 路径会被判非法）
+  ( cd "$WORK/starry" && JAVA_HOME="$(cygpath -w "$JAVA_HOME")" \
+      cmd.exe /c "$(cygpath -w "$GRADLE_BAT") assembleRelease --offline --console=plain" )
+else
+  ( cd "$WORK/starry" && ./gradlew assembleRelease --console=plain )
+fi
 STARRY_APK="$WORK/starry/app/build/outputs/apk/release/app-release.apk"
 [[ -f "$STARRY_APK" ]] || { echo "ERROR: missing $STARRY_APK" >&2; exit 1; }
 
 echo "[2/6] apktool d starry -> com/starry smali -> classes6.dex"
-apktool d -f -o "$WORK/starry_dec" "$STARRY_APK" >/dev/null
+"$APKTOOL" d -f -o "$WORK/starry_dec" "$STARRY_APK" >/dev/null
 SMALI_ROOT="$WORK/smali_in"
 mkdir -p "$SMALI_ROOT"
 shopt -s nullglob
 for d in "$WORK/starry_dec"/smali "$WORK/starry_dec"/smali_classes*; do
   [[ -d "$d/com/starry" ]] || continue
-  rsync -a "$d/com/starry" "$SMALI_ROOT/com/"
+  # cp -R 的目标父目录必须先存在，否则会把 starry 整个塞成 com（层级错一层，
+  # 后面按 com/starry/magic/*.smali 断言就缺文件）
+  mkdir -p "$SMALI_ROOT/com"
+  cp -R "$d/com/starry" "$SMALI_ROOT/com/"
 done
 shopt -u nullglob
 for need in \
@@ -133,17 +224,32 @@ ls -la "$WORK/classes6.dex"
 # dex ↔ ModBridge native 声明交叉校验
 MB_JAVA="$STARRY_SRC/app/src/main/java/com/starry/magic/bridge/ModBridge.java"
 [[ -f "$MB_JAVA" ]] || { echo "ERROR: missing $MB_JAVA" >&2; exit 1; }
+# 只取真正的 native 方法声明（"native <name>("），不把注释里出现的旧方法名当声明：
+# OTA 下线后 ModBridge.java 仍有一行注释提到 nativeVerifyOtaSig / nativeApplyPlayPatch，
+# 旧正则把注释词也当声明 ⇒ 断言 dex 里必须有，永久 FAIL（2026-11-27 实测，与本检查目的无关）
+python3 - "$MB_JAVA" > "$WORK/native_decl.txt" <<'PY'
+import re, sys
+# 只看真正的 native 方法声明（public static native void nativeInit(...)），
+# 先剥掉块注释与行注释：OTA 下线后源码里仍有一行注释提到 nativeApplyPlayPatch，
+# 旧写法把注释里的词也当声明 ⇒ 断言 dex 必须有它，永久 FAIL（2026-11-27 实测）。
+src = open(sys.argv[1], encoding="utf-8").read()
+src = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
+src = re.sub(r"//[^\n]*", "", src)
+names = sorted(set(re.findall(r"\bnative\s+[\w.<>\[\]]+\s+(native\w+)\s*\(", src)))
+print("\n".join(names))
+PY
 NATIVE_TOTAL=0
-for m in $(LC_ALL=C grep -oE '\bnative[A-Za-z0-9_]+' "$MB_JAVA" | sort -u); do
+while IFS= read -r m; do
+  [ -n "$m" ] || continue
   NATIVE_TOTAL=$((NATIVE_TOTAL + 1))
   LC_ALL=C grep -aqF "$m" "$WORK/classes6.dex" \
     || { echo "ERROR: classes6.dex 缺 native 声明 $m" >&2; exit 1; }
-done
+done < "$WORK/native_decl.txt"
 echo "  dex↔ModBridge native 声明校验通过（$NATIVE_TOTAL 项）"
 
 mkdir -p "$WORK/lib/arm64-v8a"
 cp "$SO_PREBUILT" "$WORK/lib/arm64-v8a/"
-[[ -f "$NDK_CXX" ]] && cp "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so"
+cp "$NDK_CXX" "$WORK/lib/arm64-v8a/libc++_shared.so"
 
 STAGE_DIR="$NIXIANG/07_patched/$GAME/surgical"
 mkdir -p "$STAGE_DIR"
@@ -158,7 +264,7 @@ elif [[ -f "$MF_CACHE" ]]; then
   cp "$MF_CACHE" "$WORK/AndroidManifest.xml"
   echo "  using cached $MF_CACHE"
 else
-  apktool d -f -s --no-assets -o "$WORK/orig_dec" "$ORIG_APK" >/dev/null
+  "$APKTOOL" d -f -s --no-assets -o "$WORK/orig_dec" "$ORIG_APK" >/dev/null
   python3 - "$WORK/orig_dec/AndroidManifest.xml" "$AUTHORITY" <<'PY'
 from pathlib import Path
 import sys
@@ -223,7 +329,7 @@ p.write_text(t, encoding="utf-8")
 print("  text Manifest patched")
 PY
   rm -rf "$WORK/orig_dec"/smali* 2>/dev/null || true
-  apktool b -f "$WORK/orig_dec" -o "$WORK/mf_only.apk" >/dev/null
+  "$APKTOOL" b -f "$WORK/orig_dec" -o "$WORK/mf_only.apk" >/dev/null
   unzip -p "$WORK/mf_only.apk" AndroidManifest.xml > "$WORK/AndroidManifest.xml"
   cp "$WORK/AndroidManifest.xml" "$MF_CACHE"
   echo "  cached -> $MF_CACHE"
@@ -231,7 +337,7 @@ fi
 ls -la "$WORK/AndroidManifest.xml"
 
 echo "[4/6] binary Manifest 回读校验"
-if [[ -x "$AAPT2" ]]; then
+if [[ -f "$AAPT2" ]]; then
   "$AAPT2" dump xmltree --file AndroidManifest.xml "$ORIG_APK" > "$WORK/tree_orig.txt"
   python3 - "$WORK/AndroidManifest.xml" "$WORK/mf_check.apk" <<'PY'
 import sys, zipfile
@@ -308,7 +414,8 @@ if not (12 <= added <= 30):
 print(f"  manifest ok (新增 {added} 项 / 官方节点零丢失)")
 PY
 else
-  echo "  WARN: aapt2 不在 ${AAPT2}，跳过 manifest 回读校验" >&2
+  echo "ERROR: aapt2 不在 ${AAPT2}，manifest 回读是硬判据，不做静默跳过" >&2
+  exit 1
 fi
 
 echo "[5/6] surgical zip merge（官方 dex/arsc/assets/原 so 字节不变）"
@@ -469,4 +576,4 @@ PY
 
 echo "[6/6] unsigned output -> $UNSIGNED"
 echo "unsigned_md5=$(md5 -q "$UNSIGNED")"
-echo "unsigned_size=$(stat -f '%z' "$UNSIGNED")"
+echo "unsigned_size=$(_size_bytes "$UNSIGNED")"

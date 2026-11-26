@@ -12,7 +12,23 @@ HELPER="$SCRIPT_DIR/search_metadata_mem_device.sh"
 PKG="com.hypergryph.arknights"
 OUT="$NIXIANG_ROOT/06_dumped/明日方舟/official/runtime_current"
 DEV_DIR="/data/local/tmp/mrfzz_official_metadata"
-ADB_BIN="${ADB_BIN:-adb}"
+ADB_BIN="${ADB_BIN:-}"
+if [[ -z "$ADB_BIN" ]]; then
+  for cand in /e/leidian/LDPlayer14/adb.exe "E:/leidian/LDPlayer14/adb.exe"; do
+    [[ -x "$cand" ]] && { ADB_BIN="$cand"; break; }
+  done
+  [[ -n "$ADB_BIN" ]] || ADB_BIN="adb"
+fi
+PYTHON_BIN="${PYTHON_BIN:-python}"
+# Windows 端：official_apk.json 里 apk_path 可能是另一台机器的绝对路径 ⇒ 退回 02_apks/<游戏>/ 找同名版本
+resolve_apk() {
+  local raw="$1" ver="$2"
+  if [[ -f "$raw" ]]; then printf '%s\n' "$raw"; return 0; fi
+  local cand
+  cand="$(ls -1 "$NIXIANG_ROOT/02_apks/明日方舟/"*"${ver}"*.apk 2>/dev/null | head -1 || true)"
+  [[ -n "$cand" ]] && { printf '%s\n' "$cand"; return 0; }
+  printf '%s\n' "$raw"
+}
 
 [[ -f "$STATE_FILE" ]] || { echo "错误: 缺少设备状态文件，请先跑 device_ready" >&2; exit 1; }
 [[ -f "$META_FILE" ]] || { echo "错误: 缺少 ${META_FILE}，请先跑 fetch_official" >&2; exit 1; }
@@ -22,11 +38,13 @@ PID="$("$ADB_BIN" -s "$SERIAL" shell pidof "$PKG" | tr -d '\r' | awk '{print $1}
 [[ -n "$PID" ]] || { echo "错误: 原版游戏进程未运行，请先把 TapTap 原版启动并保持进程存活" >&2; exit 1; }
 
 # metadata 尺寸随版本变化：从原版 APK 内 global-metadata.dat 条目长度派生（覆盖 MRFZZ_METADATA_SIZE）。
-APK="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["apk_path"])' "$META_FILE")"
+APK_RAW="$("$PYTHON_BIN" -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["apk_path"])' "$META_FILE")"
+VER_NAME="$("$PYTHON_BIN" -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["version_name"])' "$META_FILE")"
+APK="$(resolve_apk "$APK_RAW" "$VER_NAME")"
 [[ -f "$APK" ]] || { echo "错误: APK 不存在: $APK" >&2; exit 1; }
 METADATA_SIZE="${MRFZZ_METADATA_SIZE:-$(unzip -l "$APK" 'assets/bin/Data/Managed/Metadata/global-metadata.dat' | awk '/global-metadata\.dat$/{print $1; exit}')}"
 [[ "$METADATA_SIZE" =~ ^[0-9]+$ ]] || { echo "错误: 无法从 APK 解析 metadata 尺寸: $METADATA_SIZE" >&2; exit 1; }
-echo "[meta] version=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["version_name"])' "$META_FILE") metadata_size=$METADATA_SIZE pid=$PID"
+echo "[meta] version=$("$PYTHON_BIN" -c 'import json,sys;print(json.load(open(sys.argv[1],encoding="utf-8"))["version_name"])' "$META_FILE") metadata_size=$METADATA_SIZE pid=$PID"
 
 rm -rf "$OUT"
 mkdir -p "$OUT/raw"
@@ -49,7 +67,7 @@ while IFS= read -r remote; do
 done < "$OUT/metadata_files.txt"
 cp -f "$OUT/raw/$first_base" "$OUT/global-metadata.runtime.dat"
 
-SIZE="$(stat -f '%z' "$OUT/global-metadata.runtime.dat")"
+SIZE="$(wc -c < "$OUT/global-metadata.runtime.dat" | tr -d ' ')"
 MAGIC="$(xxd -p -l 4 "$OUT/global-metadata.runtime.dat")"
 [[ "$SIZE" -eq "$METADATA_SIZE" ]] || { echo "错误: runtime metadata 大小异常: ${SIZE}（期望 ${METADATA_SIZE}）" >&2; exit 1; }
 
@@ -64,7 +82,7 @@ if [[ "$MAGIC" != "af1bb1fa" ]]; then
   echo "[meta] magic_fixed=$FIXED magic_now=$(xxd -p -l 4 "$FIXED")"
 fi
 
-python3 - "$META_FILE" "$OUT" "$SERIAL" "$PID" "$SIZE" "$MAGIC" "$FIXED" <<'PY'
+"$PYTHON_BIN" - "$META_FILE" "$OUT" "$SERIAL" "$PID" "$SIZE" "$MAGIC" "$FIXED" <<'PY'
 import json
 import sys
 from pathlib import Path

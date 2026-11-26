@@ -527,10 +527,12 @@ run_stage() {
   local stage_json workdir
   stage_json="$(json_py "$jf" stage_info "$sid")" || die "stage_info 失败"
   workdir="$(json_py "$jf" workdir)"
+  workdir="${workdir%$'\r'}"   # Windows: python 输出 CRLF，命令替换只去 LF
   [ -d "$workdir" ] || die "workdir 不存在: ${workdir}"
 
   local command
   command="$(printf '%s' "$stage_json" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("command","true"))')"
+  command="${command%$'\r'}"   # Windows: 同上，否则 bash -c 收到带 CR 的命令
 
   # env 展开（来自 json 的 env 字段）
   while IFS=$'\t' read -r k v; do
@@ -548,6 +550,7 @@ print("\n".join(files))')"
     echo "▶ preflight 机器关（阶段声明文件，执行前先检查）"
     local pf_args=()
     while IFS= read -r pf_one; do
+      pf_one="${pf_one%$'\r'}"   # Windows: preflight 列表带 CRLF，CR 会让 [ -f ] 判缺失
       [ -n "$pf_one" ] || continue
       case "$pf_one" in
         /*) pf_args+=("$pf_one") ;;

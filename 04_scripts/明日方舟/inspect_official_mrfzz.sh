@@ -4,12 +4,18 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PYTHON_BIN="${PYTHON_BIN:-python}"
 META_FILE="$SCRIPT_DIR/official_apk.json"
 OUT="$NIXIANG_ROOT/06_dumped/明日方舟/official/static_inspect"
 
 [[ -f "$META_FILE" ]] || { echo "错误: 缺少 ${META_FILE}，请先跑 fetch_official 阶段" >&2; exit 1; }
-APK="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["apk_path"])' "$META_FILE")"
-[[ -f "$APK" ]] || { echo "错误: APK 不存在: $APK" >&2; exit 1; }
+APK="$("$PYTHON_BIN" -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["apk_path"])' "$META_FILE")"
+if [[ ! -f "$APK" ]]; then
+  # apk_path 指向的底包已不在（收尾不留 APK）：按 version_name 在 02_apks/<游戏>/ 回退
+  APK="$(ls -1 "$NIXIANG_ROOT/02_apks/明日方舟/"*"2.7.91"*.apk 2>/dev/null | head -1 || true)"
+  [[ -n "$APK" && -f "$APK" ]] || { echo "错误: APK 不存在且 02_apks 无可回退底包" >&2; exit 1; }
+  echo "[apk] apk_path 失效，回退: $APK"
+fi
 
 rm -rf "$OUT"
 mkdir -p "$OUT/key_files"
@@ -54,7 +60,7 @@ if [[ -n "$MANIFEST" ]]; then
   fi
 fi
 
-python3 - "$APK" "$OUT" "$MANIFEST" "$IL2CPP" "$UNITY" "$METADATA" "$SDK" "$TOOLCHECK" "$RXPATCH" "$NESTED" <<'PY'
+"$PYTHON_BIN" - "$APK" "$OUT" "$MANIFEST" "$IL2CPP" "$UNITY" "$METADATA" "$SDK" "$TOOLCHECK" "$RXPATCH" "$NESTED" <<'PY'
 import json
 import re
 import sys
