@@ -8,40 +8,31 @@
  *    - MainModern.cpp / Main.cpp / GameConfig.h / 公共 Android.mk 永不需要动
  *    - 不用的回调留 nullptr，不要造假实现
  *    - featureList 下标 = featNum（Category_ 占下标），与 NeonMod.h 的 enum 对齐
- *    - game_id 编译期二选一：默认 "neon"（正常版，存量 grandfather 不改）；
- *      -DNEON_GAME_ID_DZ=1 时为 "nhsy-dz"（定制版，2026-11-26 用户指定）
+ *    - game_id 固定 "nhsy"（2026-11-26 第八轮用户指定：正式版 game_id = nhsy，
+ *      旧的 "neon" 与"NHSY 定制版 nhsy-dz"双轨随本轮一并收敛，不再有编译期变体）
  * ================================================================
  */
 #include "ModEntry.h"
 #include "NeonMod.h"
 
-// game_id：定制版由 Android_neon.mk 的 NEON_VARIANT=dz 打开（-DNEON_GAME_ID_DZ=1）
-#ifdef NEON_GAME_ID_DZ
-#define NEON_AUTH_GAME_ID "nhsy-dz"   // 定制版（用户 2026-11-26 指定）
-#else
-#define NEON_AUTH_GAME_ID "neon"      // 正常版（存量 grandfather，不改）
-#endif
+#define NEON_AUTH_GAME_ID "nhsy"
 
 static const char* kNeon_Features[] = {
     "Category_战斗",           // 0
-    "Toggle_无敌",             // 1  NEON_FEAT_INVINCIBLE（Hearts.DeductHP 直接返回 false）
-    "Toggle_秒杀",             // 2  NEON_FEAT_SECKILL（伤害放大 + 目标 CurrentHp 归零）
-    "Toggle_技能无CD",         // 3  NEON_FEAT_NO_CD（IsSkillCD/SetSkillCD/SecCool* 6 处）
-    "Slider_移速:1:5",         // 4  NEON_FEAT_MOVE_SPEED（1 = 关，2/3/4/5 → 1.5/2/3/4 倍）
-    "Slider_攻速:1:5",         // 5  NEON_FEAT_ATTACK_SPEED（枪械射击间隔 + 多段近战挥砍 CD 统一加速）
-    "Toggle_金币使用不减",         // 6  NEON_FEAT_INF_COIN（对局内金币：UseCoin 拦截 + HasCoin 恒真）
-    "Toggle_钥匙使用不减",         // 7  NEON_FEAT_INF_KEY（对局内钥匙：UseKey 拦截 + HasKey 恒真）
-    "Toggle_彩色钥匙使用不减",     // 8  NEON_FEAT_INF_GKEY（GameplayKey＝彩色钥匙，SpecialKeyPowerUp 拾取）
-    "Toggle_无限跳跃",             // 9  NEON_FEAT_INF_JUMP（PlayerActor.get_multipleJumpCount 返回 -1000）
-    "Slider_伤害倍率:1:50",        // 10 NEON_FEAT_DAMAGE_MUL（1 = 关；HitPoints.DeductHP 内缩放 DamageInfo+0x18）
-    "Toggle_丝血无敌",             // 11 NEON_FEAT_LAST_HEART（Hearts.DeductHP 拦致命伤，锁血到 1）
-    "Toggle_全屏攻击",             // 12 NEON_FEAT_FULLSCREEN_ATK（复用 HitPoints.DeductHP 钩子，镜像到同房间其余怪物）
+    "Toggle_无敌",             // 1  NEON_FEAT_INVINCIBLE
+    "Toggle_秒杀",             // 2  NEON_FEAT_SECKILL
+    "Toggle_技能无CD",         // 3  NEON_FEAT_NO_CD
+    "Slider_移速:1:5",         // 4  NEON_FEAT_MOVE_SPEED（1 = 关）
+    "Toggle_金币使用不减",     // 5  NEON_FEAT_INF_COIN
+    "Toggle_钥匙使用不减",     // 6  NEON_FEAT_INF_KEY
+    "Toggle_彩色钥匙使用不减", // 7  NEON_FEAT_INF_GKEY
+    "Toggle_无限跳跃",         // 8  NEON_FEAT_INF_JUMP
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {
     static const StarryGameMod mod = {
         .tag = NEON_AUTH_GAME_ID,
-        .authGameId = NEON_AUTH_GAME_ID,  // com.shangyoo.neon；默认 neon，定制版(=-DNEON_GAME_ID_DZ)为 nhsy-dz
+        .authGameId = NEON_AUTH_GAME_ID,  // com.shangyoo.neon -> nhsy
         .featureList = kNeon_Features,
         .featureCount = (int)(sizeof(kNeon_Features) / sizeof(kNeon_Features[0])),
 
@@ -51,7 +42,7 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,       // 200ms：开关/滑块同步要跟手
 
-        .onLoad = nullptr,              // 无 EarlyHook：16 处挂点全懒装，过检为运行期改写
+        .onLoad = nullptr,              // 无 EarlyHook：挂点全懒装，过检为运行期改写
         .tryInit = Neon_TryInit,
         .isReady = Neon_IsReady,
         .tick = Neon_Tick,

@@ -1,5 +1,11 @@
 /* ================================================================
- *  霓虹深渊 3.2.860 — 仅战斗（便利功能已移除）
+ *  霓虹深渊 3.2.860 — 正式版 8 项（2026-11-26 第八轮收敛）
+ *  无敌 / 秒杀 / 技能无CD / 移速 / 金币使用不减 / 钥匙使用不减 /
+ *  彩色钥匙使用不减 / 无限跳跃
+ *  【本轮删除】攻速、伤害倍率、丝血无敌、全屏攻击 —— 菜单下线，
+ *  InstallHooks 不再安装对应钩子、gate/tick 不再有通道（实现代码保留但不可达）。
+ *
+ *  —— 以下为 2026-10-02 起的历史口径（保留供 RVA 追溯，功能已下线）——
  *  无敌 / 秒杀 / 技能无CD / 移速 / 攻速（统一一刀切：枪械 + 多段近战）
  *  RVA 一律 dump.cs；禁止 Il2Cpp::Api::Load；禁止非主线程调 timeScale
  *
@@ -1839,15 +1845,9 @@ bool Neon_TryInit(JavaVM* vm) {
     HookOne("CompMoveSpeed", RVA_COMP_MOVE_SPEED, (void*)Hooked_CompMoveSpeed, (void**)&g_origCompMove);
     HookOne("GetMaxSpeed", RVA_GET_MAX_SPEED, (void*)Hooked_GetMaxSpeed, (void**)&g_origMaxSpeed);
 
-    // 新增：武器攻速（挂不上不影响上面 4 项，只丢新功能）
-    HookOne("GunGraph.AttackRoutineWithEvents.MoveNext", RVA_GRAPH_ATTACK_MN,
-            (void*)Hooked_GraphAttackMoveNext, (void**)&g_origGraphAttackMn);
-    HookOne("GunGraph.AttackRoutine.MoveNext", RVA_GRAPH45_ATTACK_MN,
-            (void*)Hooked_Graph45AttackMoveNext, (void**)&g_origGraph45Mn);
-    HookOne("Gun.shootingInterval.MoveNext", RVA_SHOOT_INTERVAL_MN,
-            (void*)Hooked_ShootIntervalMoveNext, (void**)&g_origShootIntervalMn);
-    HookOne("Gun.MeleeCheck.MoveNext", RVA_MELEE_CHECK_MN,
-            (void*)Hooked_MeleeCheckMoveNext, (void**)&g_origMeleeCheckMn);
+    // 【2026-11-26 第八轮删除「攻速」】以下四个钩子不再安装（菜单项已下线，无开关通道）：
+    //   GunGraph.AttackRoutineWithEvents.MoveNext / GunGraph.AttackRoutine.MoveNext
+    //   / Gun.shootingInterval.MoveNext / Gun.MeleeCheck.MoveNext
 
     // 对局内资源（挂不上不影响战斗项）
     HookOne("NEONPlayerState.UseCoin", RVA_PS_USE_COIN, (void*)Hooked_UseCoin, (void**)&g_origUseCoin);
@@ -1859,11 +1859,8 @@ bool Neon_TryInit(JavaVM* vm) {
     HookOne("NEONPlayerState.UseGameplayKey", RVA_PS_USE_GKEY, (void*)Hooked_UseGKey, (void**)&g_origUseGKey);
     HookOne("NEONPlayerState.HasGameplayKey", RVA_PS_HAS_GKEY, (void*)Hooked_HasGKey, (void**)&g_origHasGKey);
 
-    // 第四轮真身（用户实测定位）：
-    //   FireDelay 缩放（枪械）＋ 多段近战 AsBusyTime 增量缩放 ＋ 多段近战 set_BusyTime 窗口缩放
-    HookOne("GunOutput.FireDelay", RVA_OUT_FIRE_DELAY, (void*)Hooked_GetFireDelay, (void**)&g_origFireDelay);
-    HookOne("MeleeMultiSeg.AsBusyTime", RVA_MELEE_AS_BUSY, (void*)Hooked_MeleeAsBusyTime, (void**)&g_origMeleeAsBusy);
-    HookOne("MeleeMultiSeg.SetBusyTime", RVA_MELEE_SET_BUSY, (void*)Hooked_SetBusyTime, (void**)&g_origSetBusy);
+    // 【2026-11-26 第八轮删除「攻速」】真身三点同样不再安装：
+    //   GunOutput.get_FireDelay / MeleeMultiSeg.AsBusyTime / MeleeMultiSeg.SetBusyTime
 
     // ＝＝ 第六轮新增 ＝＝
     //   ⑨ 无限跳跃：替换 PlayerActor.get_multipleJumpCount
@@ -1880,10 +1877,8 @@ bool Neon_TryInit(JavaVM* vm) {
     HookOne("PlayerStateInt.op_Implicit", RVA_OP_IMPLICIT, (void*)Hooked_PlayerStateInt_OpImplicit, (void**)&g_origOpImplicit);
     HookOne("PlayerActorBase.get_canNotJump", RVA_CAN_NOT_JUMP, (void*)Hooked_GetCanNotJump, (void**)&g_origCanNotJump);
     HookOne("BaseMechaControl.CanMultipleJump", RVA_CAN_MULTI_JUMP, (void*)Hooked_CanMultipleJump, (void**)&g_origCanMultiJump);
-    HookOne("Hearts.DeductHeartFirst", RVA_HEART_FIRST, (void*)Hooked_HeartFirst, (void**)&g_origHeartFirst);
-    HookOne("Hearts.DeductArmorFirst", RVA_ARMOR_FIRST, (void*)Hooked_ArmorFirst, (void**)&g_origArmorFirst);
-    HookOne("Hearts.DeductHeart_ApplyApportion", RVA_HEART_APPORTION, (void*)Hooked_HeartApportion, (void**)&g_origApportion);
-    HookOne("Hearts.ForceDie", RVA_FORCE_DIE, (void*)Hooked_Hearts_ForceDie, (void**)&g_origForceDie);
+    // 【2026-11-26 第八轮删除「丝血无敌」】四个扣血叶函数钩子不再安装：
+    //   Hearts.DeductHeartFirst / DeductArmorFirst / DeductHeart_ApplyApportion / ForceDie
     g_fnGetArmor = reinterpret_cast<IntFn_t>(Abs(RVA_HEARTS_GET_ARMOR));
     g_fnGetSane  = reinterpret_cast<IntFn_t>(Abs(RVA_HEARTS_GET_SANE));
     LOGI("[Neon] round6b jumpChain=%d/%d/%d heartChain=%d/%d/%d die=%d armor=%d sane=%d",
@@ -1891,36 +1886,9 @@ bool Neon_TryInit(JavaVM* vm) {
          g_origHeartFirst ? 1 : 0, g_origArmorFirst ? 1 : 0, g_origApportion ? 1 : 0,
          g_origForceDie ? 1 : 0, g_fnGetArmor ? 1 : 0, g_fnGetSane ? 1 : 0);
 
-    // ＝＝ 第七轮新增：⑫全屏攻击 ＝＝
-    //   ⑫ 复用上面的 HitPoints.DeductHP 钩子（不新建第二个钩子，只补直调函数）
-    //   按「挂不上不影响已有 11 项」惯例：解析失败只丢新功能，不 return false。
-    g_fnRoomGet      = reinterpret_cast<RoomGet_t>(Abs(RVA_ROOM_GET));
-    g_fnEhiGetRoom   = reinterpret_cast<RoomGet_t>(Abs(RVA_EHI_GET_ROOM));
-    // 玩家类型槽：so 内 .got 项，运行时值 = Il2CppClass*
-    if (g_libBase) {
-        g_playerKlass    = *reinterpret_cast<void**>(g_libBase + RVA_SLOT_PLAYER_KLASS);
-        g_netPlayerKlass = *reinterpret_cast<void**>(g_libBase + RVA_SLOT_NETPLAYER_KLASS);
-    }
-    LOGI("[Neon][fs] 玩家类型槽 player=%p netPlayer=%p", g_playerKlass, g_netPlayerKlass);
-    // ⑫ 房间捕获钩子：全屏攻击枚举「同房间怪物」必须拿到 RoomMB（真机上
-    //    NPActor.get_actorCurRoomMB 返回 0，只能靠进/离房间静态回调捕获）。
-    HookOne("YiHai.OnEnterRoom(RoomMB)", RVA_ROOM_ENTER,
-            (void*)Hooked_OnEnterRoom, (void**)&g_origRoomEnter);
-    HookOne("YiHai.OnLeaveRoom(RoomMB)", RVA_ROOM_LEAVE,
-            (void*)Hooked_OnLeaveRoom, (void**)&g_origRoomLeave);
-    HookOne("YiHai.OnEnterBattle(RoomMB)", RVA_ROOM_BATTLE,
-            (void*)Hooked_OnEnterBattle, (void**)&g_origRoomBattle);
-    HookOne("RoomMB.MonsterListCleanup", RVA_ROOM_CLEANUP,
-            (void*)Hooked_MonsterListCleanup, (void**)&g_origRoomCleanup);
-    HookOne("MapManager.LateUpdate", RVA_MAP_LATE_UPDATE,
-            (void*)Hooked_MapLateUpdate, (void**)&g_origMapLate);
-    HookOne("MapManager.RefreshRoom(RoomMB)", RVA_MAP_REFRESH_ROOM,
-            (void*)Hooked_MapRefreshRoom, (void**)&g_origMapRefresh);
-    HookOne("RoomMB.get_ActiveMonsterCount", RVA_ROOM_ACTIVE_CNT,
-            (void*)Hooked_ActiveMonsterCount, (void**)&g_origRoomActiveCnt);
-    LOGI("[Neon] round7 roomHooks enter=%d leave=%d battle=%d cleanup=%d activeCnt=%d",
-         g_origRoomEnter ? 1 : 0, g_origRoomLeave ? 1 : 0, g_origRoomBattle ? 1 : 0,
-         g_origRoomCleanup ? 1 : 0, g_origRoomActiveCnt ? 1 : 0);
+    // 【2026-11-26 第八轮删除「全屏攻击」】玩家类型槽与房间捕获七钩子不再安装：
+    //   YiHai.OnEnterRoom/OnLeaveRoom/OnEnterBattle、RoomMB.MonsterListCleanup、
+    //   MapManager.LateUpdate/RefreshRoom、RoomMB.get_ActiveMonsterCount
 
 #if NEON_DIAG
     InstallDiagHooks();
@@ -1955,9 +1923,6 @@ void Neon_OnFeatureChanged(int featNum, bool enabled) {
         case NEON_FEAT_MOVE_SPEED:
             if (!enabled) g_moveLvl.store(1);
             break;
-        case NEON_FEAT_ATTACK_SPEED:
-            if (!enabled) g_atkLvl.store(1);
-            break;
         case NEON_FEAT_INF_COIN:
             g_infCoin.store(enabled);
             LOGI("[Neon] 金币使用不减=%s", enabled ? "ON" : "OFF");
@@ -1973,14 +1938,6 @@ void Neon_OnFeatureChanged(int featNum, bool enabled) {
         case NEON_FEAT_INF_JUMP:
             g_noJumpLimit.store(enabled);
             LOGI("[Neon] 无限跳跃=%s", enabled ? "ON" : "OFF");
-            break;
-        case NEON_FEAT_LAST_HEART:
-            g_lastHeart.store(enabled);
-            LOGI("[Neon] 丝血无敌=%s", enabled ? "ON" : "OFF");
-            break;
-        case NEON_FEAT_FULLSCREEN_ATK:
-            g_fullAtk.store(enabled);
-            LOGI("[Neon] 全屏攻击=%s", enabled ? "ON" : "OFF");
             break;
         default:
             break;
@@ -2004,18 +1961,6 @@ void Neon_OnValueChanged(int featNum, int value) {
     if (featNum == NEON_FEAT_MOVE_SPEED) {
         g_moveLvl.store(ClampLvl(value));
         LOGI("[Neon] 移速 lvl=%d mul=%.1f", ClampLvl(value), MoveMul());
-        return;
-    }
-    if (featNum == NEON_FEAT_ATTACK_SPEED) {
-        int lvl = ClampLvl(value);
-        g_atkLvl.store(lvl);
-        LOGI("[Neon] 攻速 lvl=%d mul=%.1f", lvl, AtkMul());
-        return;
-    }
-    if (featNum == NEON_FEAT_DAMAGE_MUL) {
-        int d = DmgClamp(value);
-        g_dmgMul.store(d);
-        LOGI("[Neon] 伤害倍率 x%d", d);
         return;
     }
 }
@@ -2046,22 +1991,10 @@ void Neon_Tick(const bool* features, const int* values) {
     g_infKey.store(features[NEON_FEAT_INF_KEY]);
     g_infGkey.store(features[NEON_FEAT_INF_GKEY]);
     g_noJumpLimit.store(features[NEON_FEAT_INF_JUMP]);
-    g_lastHeart.store(features[NEON_FEAT_LAST_HEART]);
-    g_fullAtk.store(features[NEON_FEAT_FULLSCREEN_ATK]);
     if (values) {
         // 滑块值每轮由框架同步（未动过时 = 下限 1 = 关）
         g_moveLvl.store(ClampLvl(values[NEON_FEAT_MOVE_SPEED]));
-        g_atkLvl.store(ClampLvl(values[NEON_FEAT_ATTACK_SPEED]));
-        g_dmgMul.store(DmgClamp(values[NEON_FEAT_DAMAGE_MUL]));
     }
-#if NEON_DIAG
-    {
-        static unsigned tk = 0;
-        if ((tk++ % 5u) == 0u)
-            LOGI("[Neon][diag] tick f5=%d v5=%d gA=%d", (int)features[NEON_FEAT_ATTACK_SPEED],
-                 values ? values[NEON_FEAT_ATTACK_SPEED] : -1, g_atkLvl.load());
-    }
-#endif
     if (!g_ready.load()) Neon_TryInit();
     // ★libil2cpp 是按需分段 mmap 的（真机实测 79 段、跨 6 GB；开局只映射了一部分），
     //   初始化那一刻扫到的 [min,max) 会比真实范围小很多 ⇒ klass 判空全部误杀。

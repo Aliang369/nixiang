@@ -2,11 +2,11 @@
  *  霓虹深渊 (com.shangyoo.neon) — Unity IL2CPP 3.2.860 / vc104
  *  feat_num = featureList 数组下标（含 Category 占位）
  *
- *  2026-10-02 迁移 modern 注册表（NeonEntry.cpp + Android_neon.mk），
- *  新增对局内资源 ⑦⑧⑨，并把原「近战攻速/远程攻速」合并为单一 ⑤ 攻速
- *  （第四轮，用户要求：不区分近远，一把滑条把所有玩家攻击节奏调快）：
- *    ⑤ 攻速 → ① GunOutput.get_FireDelay(60/RPM) ② 枪图协程 d__45/d__46 的 <timer>
- *             ③ DeputyWeaponSlot_MeleeMultiSeg.set_BusyTime（多段近战＝梅那把刀的挥砍 CD）
+ *  2026-11-26 正式版收敛（第八轮）：菜单从 12 项砍到 8 项，删除
+ *  【攻速】【伤害倍率】【丝血无敌】【全屏攻击】（用户当轮指定）。
+ *  删除方式＝摘掉开关通道与挂载点（InstallHooks 不再安装对应钩子），
+ *  保留编号连续：1 无敌 / 2 秒杀 / 3 技能无CD / 4 移速 /
+ *  5 金币使用不减 / 6 钥匙使用不减 / 7 彩色钥匙使用不减 / 8 无限跳跃
  *
  *  签名与 ModEntry.h 回调一致；legacy Main.cpp 用默认参数仍可编译
  *  （Main.cpp 禁改，仅声明 Neon_IsReady/Neon_ForceClear，无签名冲突）
@@ -17,19 +17,14 @@
 #include <jni.h>
 
 enum NeonFeat : int {
-    NEON_FEAT_INVINCIBLE   = 1,  // Toggle_无敌
-    NEON_FEAT_SECKILL      = 2,  // Toggle_秒杀
-    NEON_FEAT_NO_CD        = 3,  // Toggle_技能无CD
-    NEON_FEAT_MOVE_SPEED   = 4,  // Slider_移速:1:5
-    NEON_FEAT_ATTACK_SPEED = 5,  // Slider_攻速:1:5（统一近战/远程，不分流）
-    NEON_FEAT_INF_COIN     = 6,  // Toggle_金币使用不减（NEONPlayerState.UseCoin/HasCoin）
-    NEON_FEAT_INF_KEY      = 7,  // Toggle_钥匙使用不减（NEONPlayerState.UseKey/HasKey）
-    NEON_FEAT_INF_GKEY     = 8,  // Toggle_彩色钥匙使用不减（NEONPlayerState.Use/HasGameplayKey）
-    NEON_FEAT_INF_JUMP     = 9,  // Toggle_无限跳跃（PlayerActor.get_multipleJumpCount 返回 -1000）
-    NEON_FEAT_DAMAGE_MUL   = 10, // Slider_伤害倍率:1:50（HitPoints.DeductHP 内缩放 DamageInfo+0x18）
-    NEON_FEAT_LAST_HEART   = 11, // Toggle_丝血无敌（Hearts.DeductHP 拦致命伤，锁血到 1）
-    // ＝＝ 2026-11-26 第七轮：一个新战斗功能（菜单下标必须与 NeonEntry.cpp 严格对齐）＝＝
-    NEON_FEAT_FULLSCREEN_ATK = 12, // Toggle_全屏攻击（HitPoints.DeductHP 内把一次玩家伤害镜像到同房间其余怪物）
+    NEON_FEAT_INVINCIBLE = 1,  // Toggle_无敌（Hearts.DeductHP 直接返回 false）
+    NEON_FEAT_SECKILL    = 2,  // Toggle_秒杀（伤害放大 + 目标 CurrentHp 归零）
+    NEON_FEAT_NO_CD      = 3,  // Toggle_技能无CD（35 处 CanUseSkill 全挂）
+    NEON_FEAT_MOVE_SPEED = 4,  // Slider_移速:1:5（1 = 关）
+    NEON_FEAT_INF_COIN   = 5,  // Toggle_金币使用不减（UseCoin 拦截 + HasCoin 恒真）
+    NEON_FEAT_INF_KEY    = 6,  // Toggle_钥匙使用不减（UseKey 拦截 + HasKey 恒真）
+    NEON_FEAT_INF_GKEY   = 7,  // Toggle_彩色钥匙使用不减（GameplayKey）
+    NEON_FEAT_INF_JUMP   = 8,  // Toggle_无限跳跃（get_multipleJumpCount 返回 -1000）
 };
 
 bool Neon_TryInit(JavaVM* vm = nullptr);

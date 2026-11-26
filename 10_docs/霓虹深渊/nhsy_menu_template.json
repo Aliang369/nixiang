@@ -1,0 +1,40 @@
+{
+  "template_id": "nhsy",
+  "name": "霓虹深渊",
+  "package": "com.shangyoo.neon",
+  "source": "Games/NeonEntry.cpp kNeon_Features + Games/NeonMod.h NeonFeat @ 3.2.860/vc104（正式版 8 项，2026-11-26）",
+  "features": [
+    {
+      "feat_num": 1,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 2,
+      "name": "秒杀"
+    },
+    {
+      "feat_num": 3,
+      "name": "技能无CD"
+    },
+    {
+      "feat_num": 4,
+      "name": "移速"
+    },
+    {
+      "feat_num": 5,
+      "name": "金币使用不减"
+    },
+    {
+      "feat_num": 6,
+      "name": "钥匙使用不减"
+    },
+    {
+      "feat_num": 7,
+      "name": "彩色钥匙使用不减"
+    },
+    {
+      "feat_num": 8,
+      "name": "无限跳跃"
+    }
+  ]
+}

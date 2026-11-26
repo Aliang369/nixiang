@@ -24,8 +24,7 @@
 #   bash scripts/surgical_neon_3.2.860.sh
 #   STARRY_INSTALL=1 bash scripts/surgical_neon_3.2.860.sh
 #   NEON_BASE_APK=/path/to/base.apk bash scripts/surgical_neon_3.2.860.sh
-#   定制包（game_id=nhsy-dz，产物名 ..._nhsy-dz-releaseSigned.apk）:
-#   NEON_VARIANT=dz bash scripts/surgical_neon_3.2.860.sh
+#   正式版 game_id 固定 nhsy（2026-11-26 第八轮收敛，旧的 neon / nhsy-dz 双轨已废止）
 #   换签不改内容（不需要官方底包）:
 #   NEON_RESIGN_APK=08_output/霓虹深渊/xxx.apk [STARRY_INSTALL=1] bash scripts/surgical_neon_3.2.860.sh
 #   换别的 keystore: NEON_SIGN_KS=/path/xx.jks STARRY_KS_ALIAS=xx STARRY_KS_PASS=xx
@@ -59,10 +58,8 @@ NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 NDK_CXX="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
 KS="$NIXIANG/01_tools/starry_release.jks"
 PKG="com.shangyoo.neon"
-# NEON_VARIANT=dz → 定制包（so 内 game_id=nhsy-dz，产物名独立）；不传 = 正常版（game_id=neon）
-NEON_VARIANT="${NEON_VARIANT:-}"
-SIGNED="$OUT/霓虹深渊_3.2.860_surgical-releaseSigned.apk"
-[[ "$NEON_VARIANT" == "dz" ]] && SIGNED="$OUT/霓虹深渊_3.2.860_nhsy-dz-releaseSigned.apk"
+# 正式版 so 内 game_id = nhsy（2026-11-26 起；不再有编译期变体）
+SIGNED="$OUT/霓虹深渊_3.2.860_nhsy-releaseSigned.apk"
 [[ "$BUILD_TYPE" == "debug" ]] && SIGNED="$OUT/霓虹深渊_3.2.860_surgical-debugSigned.apk"
 ALIAS_APK="$OUT/霓虹深渊_3.2.860_starry-releaseSigned.apk"
 # TapTap 官方 cert MD5（底包验签 + TapSignKit.getSign 回灌常量；本包 TapSDK 2.x 无此类）
@@ -143,7 +140,6 @@ LIBS_OUT="$STARRY_SRC/app/src/libs_neon"
 rm -f "$OBJ_OUT/local/arm64-v8a/objs/starry_magic/Games/NeonEntry.o" \
       "$OBJ_OUT/local/arm64-v8a/objs/starry_magic/Games/NeonEntry.o.d"
 VARIANT_ARG=""
-[[ "$NEON_VARIANT" == "dz" ]] && VARIANT_ARG="NEON_VARIANT=dz"
 (cd "$JNI_DIR" && \
   "$NDK_BUILD" NDK_PROJECT_PATH="$STARRY_SRC/app" APP_BUILD_SCRIPT=./Android_neon.mk \
   NDK_APPLICATION_MK=./Application.mk NDK_OUT="$OBJ_OUT" NDK_LIBS_OUT="$LIBS_OUT" $VARIANT_ARG \
@@ -159,15 +155,11 @@ if grep -a -q '\[Wggls\]' "$SO_BUILT" || grep -a -q '\[Shhj\]' "$SO_BUILT"; then
   echo "ERROR: so 仍含上一款游戏标签" >&2
   exit 1
 fi
-if [[ "$NEON_VARIANT" == "dz" ]]; then
-  grep -a -q -F 'nhsy-dz' "$SO_BUILT" || { echo "ERROR: NEON_VARIANT=dz 但 so 无 nhsy-dz" >&2; exit 1; }
-  echo "  so game_id=nhsy-dz ok"
-else
-  if grep -a -q -F 'nhsy-dz' "$SO_BUILT"; then
-    echo "ERROR: 未传 NEON_VARIANT=dz 但 so 含 nhsy-dz（陈旧对象）" >&2; exit 1
-  fi
-  echo "  so game_id=neon ok"
+if grep -a -q -F 'nhsy-dz' "$SO_BUILT"; then
+  echo "ERROR: so 含旧 game_id nhsy-dz（陈旧对象，删 app/src/obj_neon 重编）" >&2; exit 1
 fi
+grep -a -q -F 'nhsy' "$SO_BUILT" || { echo "ERROR: so 无 game_id=nhsy" >&2; exit 1; }
+echo "  so game_id=nhsy ok"
 for dest in \
   "$STARRY_SRC/app/src/main/jniLibs/arm64-v8a" \
   "$STARRY_SRC/app/src/main/libs/arm64-v8a" \
