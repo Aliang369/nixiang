@@ -1,5 +1,23 @@
 /* ================================================================
- *  战魂铭人 MOD — 游戏逻辑（3.5.0 重构，骨架 Games/_TemplateMod v2）
+ *  战魂铭人 MOD — 游戏逻辑（3.5.0 重构，骨架 Games/_TemplateMod v2；3.8.0 复核＝零漂移）
+ *
+ *  3.8.0 / hotfix 3.8.0.1 复核（2026-11-27，与 3.7.x 逐符号比对：类名/字段名/枚举全部同名同位，
+ *  8 功能代码路径 0 改动，本块仅供下一版 diff 起点）：
+ *    证据 03_decompiled/战魂铭人/3.8.0/hotfix_cs/ + 06_dumped/战魂铭人/3.8.0/hotfix/GameLogic_3.8.0.1.dll
+ *    无敌/秒杀  Character._isBlockDamage:109 _currentHealth:147 _currentShield:149 _networkBody:99
+ *               _camp:59；getter 在 !hasOriginProperties 时仍转发 networkBody（Character.cs:635 起）
+ *               NetworkBodyOwl.isBlockDamage:322 currentHealth:325 currentShield:328 netIDtoBody:84
+ *               LevelProcess.AllMonster:155；Hero._body:32；Body.<character>k__BackingField（Body.cs:1013）
+ *    无限技能   Body.skillList:1017；Skill.countdown:487 currentUseableCount:181 maxUseableCount:183
+ *               Ive/Countdown._m_LastFlushTime:7 m_Interval:9 isCountdownOver:23
+ *    局内金币   GameProcess.heroRunningData:486；HeroRunningData.heroBackpack:97；ItemID.coin_base=0（ItemID.cs:3）
+ *    货币/道具  PlayerArchive._ex*:1042-1068 _fertilizer:1066 _resourceDic:1074；EncryptValue 三字段 :8/:10/:12
+ *    解锁       HeroArchive:25 _isUnlock:31 myHeroBodyName:27 skill/styleUnlockLibrary:47/49
+ *               Archive.heroArchiveDic:4911 HeroBodySkillNameLibrary:4913 HeroSkillStyleNameLibrary:4917
+ *    全皮肤     HeroSkinConfig.HeroSkinName（运行时枚举字段，165 个 hero_* 徽标）/ResourceTag.HeroSkin=1:873
+ *    3.8.0 新增约束：EncryptValue.SetValue/OffSetValue 先过 IsLegal()（EncryptValue.cs:33/:58），不合法即
+ *      Event_Report("ram_cheat_detected") + isCheated=true（:35/:40，全工程唯一置位点）
+ *      ⇒ 直写必须继续维持 _showValue == mValue ^ encryptKey（EvWrite 写前校验，勿改成只写 _showValue）
  *
  *  3.5.0 实测证据（10_docs/战魂铭人/战魂铭人_3.5.0_复刻记录_20260829.md）：
  *    1) HybridCLR 游戏内调用走解释器分发，不经过 MethodInfo.methodPointer
@@ -500,6 +518,8 @@ static bool EvWrite(void* ev, int32_t value, const EvOff& e) {
     if (!SafeReadMem(reinterpret_cast<uint8_t*>(ev) + e.ev_m, &m, 4)) return false;
     if (!SafeReadMem(reinterpret_cast<uint8_t*>(ev) + e.ev_key, &key, 4)) return false;
     if (show != (m ^ key)) return false;  // 不变式不成立 = 偏移错/对象错，拒绝写
+    // 3.8.0：SetValue/OffSetValue 内建 IsLegal() 反作弊（EncryptValue.cs:33/:58），不合法即
+    // 上报 ram_cheat_detected + isCheated=true（:35/:40）⇒ 这里只能「保持不变式」的直写
     memcpy(reinterpret_cast<uint8_t*>(ev) + e.ev_key, &key, 4);  // key 不变
     int32_t nv = value ^ key;
     memcpy(reinterpret_cast<uint8_t*>(ev) + e.ev_m, &nv, 4);

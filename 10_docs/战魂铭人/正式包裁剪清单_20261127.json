@@ -1,0 +1,17 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/战魂铭人",
+  "keep": "战魂铭人_3.8.0_surgical-releaseSigned.apk",
+  "keep_size": 1069972657,
+  "keep_md5": "a696a25fbbbf582be0f684bc9c19b040",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "战魂铭人_3.8.0_surgical-releaseSigned.apk.idsig",
+      "size": 8431131,
+      "md5": "0e14e1e5826cd0953735f8acf04830f4"
+    }
+  ],
+  "removed_count": 1,
+  "keep_sha256": "e8e2f36b705e234d5cbb7118de73a4d81e0155636e53f3b9bd3665c1a9785a2b",
+  "notes": "正式包：战魂铭人 3.8.0 外科注入 release 签名包，apksigner verify 通过；08_output/战魂铭人 裁剪后仅存本 APK（包类文件计数=1）；同目录 .idsig（8,431,131 B）随裁剪移除，清单见 removed。"
+}
