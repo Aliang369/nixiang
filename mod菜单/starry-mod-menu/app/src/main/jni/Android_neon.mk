@@ -43,11 +43,12 @@ ifdef STARRY_TRACE
 LOCAL_CFLAGS    += -DSTARRY_TRACE=1
 endif
 
-# ==== game_id 变体 ====
-# 不传 NEON_VARIANT → 正式版 game_id=nhsy；NEON_VARIANT=dz → 定制版 game_id=nhsy-dz
+# ==== 变体 ====
+# 不传 NEON_VARIANT → 正式版：game_id=nhsy，菜单 8 项
+# NEON_VARIANT=dz    → 定制版：game_id=nhsy-dz，菜单 12 项（+攻速/伤害倍率/丝血无敌/全屏攻击）
 ifeq ($(NEON_VARIANT),dz)
-LOCAL_CFLAGS    += -DNEON_GAME_ID_DZ=1
-LOCAL_CPPFLAGS  += -DNEON_GAME_ID_DZ=1
+LOCAL_CFLAGS    += -DNEON_GAME_ID_DZ=1 -DNEON_FULL_MENU=1
+LOCAL_CPPFLAGS  += -DNEON_GAME_ID_DZ=1 -DNEON_FULL_MENU=1
 endif
 
 # ==== 公共区（勿动）====

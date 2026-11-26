@@ -139,9 +139,12 @@ NDK_BUILD="$NDK/ndk-build"
 JNI_DIR="$STARRY_SRC/app/src/main/jni"
 OBJ_OUT="$STARRY_SRC/app/src/obj_neon"
 LIBS_OUT="$STARRY_SRC/app/src/libs_neon"
-# ndk-build 不感知 LOCAL_CFLAGS 变化 ⇒ 切变体时必须清 NeonEntry.o，否则沿用上一种 game_id
+# ndk-build 不感知 LOCAL_CFLAGS 变化 ⇒ 切变体时必须清掉受 -D 影响的全部 .o
+# （NeonEntry.cpp 决定 game_id 与菜单表，NeonMod.cpp 的 #ifdef NEON_FULL_MENU 决定钩子与通道）
 rm -f "$OBJ_OUT/local/arm64-v8a/objs/starry_magic/Games/NeonEntry.o" \
-      "$OBJ_OUT/local/arm64-v8a/objs/starry_magic/Games/NeonEntry.o.d"
+      "$OBJ_OUT/local/arm64-v8a/objs/starry_magic/Games/NeonEntry.o.d" \
+      "$OBJ_OUT/local/arm64-v8a/objs/starry_magic/Games/NeonMod.o" \
+      "$OBJ_OUT/local/arm64-v8a/objs/starry_magic/Games/NeonMod.o.d"
 VARIANT_ARG=""
 [[ "$NEON_VARIANT" == "dz" ]] && VARIANT_ARG="NEON_VARIANT=dz"
 (cd "$JNI_DIR" && \

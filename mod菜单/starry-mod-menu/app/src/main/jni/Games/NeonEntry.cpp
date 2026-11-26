@@ -1,42 +1,62 @@
 /* ================================================================
  *  NeonEntry — 霓虹深渊（com.shangyoo.neon）注册表入口
  *
- *  职责：只填一张 StarryGameMod 表（菜单 / 初始化参数 / 回调接线）。
+ *  只填一张 StarryGameMod 表（菜单 / 初始化参数 / 回调接线）。
  *
  *  铁律：
  *    - 改菜单、调初始化节奏、增删回调 → 只改本文件
  *    - MainModern.cpp / Main.cpp / GameConfig.h / 公共 Android.mk 永不需要动
  *    - 不用的回调留 nullptr，不要造假实现
- *    - featureList 下标 = featNum（Category_ 占下标），与 NeonMod.h 的 enum 对齐
- *    - game_id：正式版 "nhsy"（默认）；定制版 "nhsy-dz"（NEON_VARIANT=dz 编译期切换）
+ *    - featureList 下标 = featNum（Category_ 占下标），与 NeonMod.h 的 enum 同变体对齐
+ *
+ *  两套菜单（编译期二选一，NEON_VARIANT=dz 即 -DNEON_FULL_MENU=1）：
+ *    - 正式版 nhsy    ：8 项（无敌/秒杀/技能无CD/移速/金币/钥匙/彩色钥匙/无限跳跃）
+ *    - 定制版 nhsy-dz ：12 项（正式版 8 项 ＋ 攻速/伤害倍率/丝血无敌/全屏攻击）
  * ================================================================
  */
 #include "ModEntry.h"
 #include "NeonMod.h"
 
-// game_id：正式版默认 "nhsy"；编译期 -DNEON_GAME_ID_DZ=1（NEON_VARIANT=dz）出定制版 "nhsy-dz"
 #ifdef NEON_GAME_ID_DZ
-#define NEON_AUTH_GAME_ID "nhsy-dz"
+#define NEON_AUTH_GAME_ID "nhsy-dz"   // 定制版
 #else
-#define NEON_AUTH_GAME_ID "nhsy"
+#define NEON_AUTH_GAME_ID "nhsy"      // 正式版
 #endif
 
+#ifdef NEON_FULL_MENU
 static const char* kNeon_Features[] = {
     "Category_战斗",           // 0
-    "Toggle_无敌",             // 1  NEON_FEAT_INVINCIBLE
-    "Toggle_秒杀",             // 2  NEON_FEAT_SECKILL
-    "Toggle_技能无CD",         // 3  NEON_FEAT_NO_CD
-    "Slider_移速:1:5",         // 4  NEON_FEAT_MOVE_SPEED（1 = 关）
-    "Toggle_金币使用不减",     // 5  NEON_FEAT_INF_COIN
-    "Toggle_钥匙使用不减",     // 6  NEON_FEAT_INF_KEY
-    "Toggle_彩色钥匙使用不减", // 7  NEON_FEAT_INF_GKEY
-    "Toggle_无限跳跃",         // 8  NEON_FEAT_INF_JUMP
+    "Toggle_无敌",             // 1
+    "Toggle_秒杀",             // 2
+    "Toggle_技能无CD",         // 3
+    "Slider_移速:1:5",         // 4
+    "Slider_攻速:1:5",         // 5
+    "Toggle_金币使用不减",     // 6
+    "Toggle_钥匙使用不减",     // 7
+    "Toggle_彩色钥匙使用不减", // 8
+    "Toggle_无限跳跃",         // 9
+    "Slider_伤害倍率:1:50",    // 10
+    "Toggle_丝血无敌",         // 11
+    "Toggle_全屏攻击",         // 12
 };
+#else
+static const char* kNeon_Features[] = {
+    "Category_战斗",           // 0
+    "Toggle_无敌",             // 1
+    "Toggle_秒杀",             // 2
+    "Toggle_技能无CD",         // 3
+    "Slider_移速:1:5",         // 4
+    "Toggle_金币使用不减",     // 5
+    "Toggle_钥匙使用不减",     // 6
+    "Toggle_彩色钥匙使用不减", // 7
+    "Toggle_无限跳跃",         // 8
+};
+#endif
 
 extern "C" const StarryGameMod* const GameMod_Get() {
     static const StarryGameMod mod = {
         .tag = NEON_AUTH_GAME_ID,
-        .authGameId = NEON_AUTH_GAME_ID,  // com.shangyoo.neon -> nhsy
+        .authGameId = NEON_AUTH_GAME_ID,
         .featureList = kNeon_Features,
         .featureCount = (int)(sizeof(kNeon_Features) / sizeof(kNeon_Features[0])),
 
