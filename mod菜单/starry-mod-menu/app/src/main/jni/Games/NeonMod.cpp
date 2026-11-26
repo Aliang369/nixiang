@@ -591,9 +591,17 @@ static void NeonRefreshLibRangeFromMaps() {
         }
     }
     if (lo && hi > lo) {
-        // 钩子反推的 base 更小时以更小者为准（只扩不缩，避免漏判低地址段）
-        if (!g_libBase || lo < g_libBase) g_libBase = lo;
-        g_libEnd = hi;
+        // ★2026-11-26 根因修复（无限跳跃真机无效）：RVA 基准必须与钩子解析用的 base 完全一致，
+        //   即「第一段 LOAD（off==vaddr==0）」的起始地址。maps 里的最小 start 可能是前置保护段
+        //   （实测 maps lo=0x6ddac2c000，而钩子基准 base=0x6f24af4000，差 0x46DCB000）——
+        //   旧写法 `if (!g_libBase || lo < g_libBase) g_libBase = lo;` 把基准改小了 74 MB，
+        //   于是 NeonStackHit 里 `rva = pc - g_libBase` 整体偏移，所有按 RVA 的栈判据恒不命中
+        //   ⇒ PlayerStateInt.op_Implicit 的跳跃上限判据静默失效（无限跳跃「没效果」）。
+        //   ⇒ base 只由锚点（Abs(RVA_GRAPH_ATTACK_MN) - RVA）决定；锚点也没有时才退回 lo。
+        //   end 只扩不缩（分段 mmap，取最大 end 才能覆盖 .bss 末）。
+        if (!g_libBase) g_libBase = lo;
+        if (hi > g_libEnd) g_libEnd = hi;
+        if (g_libEnd <= g_libBase) g_libEnd = g_libBase + 0xB000000UL;
     } else {
         if (!g_libBase) return;                  // 连 base 都还没有：等下一次
         g_libEnd = g_libBase + 0xB000000UL;      // 兜底 176MB
