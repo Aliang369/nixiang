@@ -1,0 +1,11 @@
+{
+  "template_id": "xajhqxz",
+  "name": "笑傲江湖：群侠传",
+  "package": "com.tanwan.mobile.xajhazh",
+  "source": "Games/XajhqxzEntry.cpp kXajhqxz_Features",
+  "features": [
+    {"feat_num": 1, "name": "无敌"},
+    {"feat_num": 2, "name": "战斗加速"},
+    {"feat_num": 3, "name": "秒杀"}
+  ]
+}
