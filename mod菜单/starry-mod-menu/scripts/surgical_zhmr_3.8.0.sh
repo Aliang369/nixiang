@@ -3,12 +3,12 @@
 #
 # 产物：08_output/战魂铭人/战魂铭人_3.8.0_surgical-releaseSigned.apk
 #
-# 派生（2026-11-27）：由 surgical_zhmr_3.7.0.sh 派生 —— 只改版本/底包/指纹/缓存目录/产物名/
-#   lock/remote，另加「底包指纹硬断言」与「解释器·apktool 解析」；组装逻辑与既有硬化未动。
+# 自包含（2026-11-27 建立）：版本/底包/指纹/缓存目录/产物名/lock/remote 全部在本文件定义，
+#   另含「底包指纹硬断言」与「解释器·apktool 解析」；换版只改本文件顶部变量即可。
 #   底包 = 02_apks/战魂铭人/战魂铭人_3.8.0_taptap_base.apk（1,067,655,862 B，
 #   sha256 1e2d614a…e4743，package com.chillyroom.zhmr.yw，vc20685）。
 #
-# 方案（2026-08-29，对比 3.4.0 inject_zhmr.sh 整包 apktool b 已禁用）：
+# 方案（整包 apktool b 已禁用，改用外科 zip 组装）：
 #   - StarryApp.smali .super 改为官方 com.chillyroomsdk.sdkbridge.BasePlayerApplication
 #     （Manifest 只换 android:name，官方 Application 链经 super 照常执行）
 #   - 星光 smali → classes4.dex（原包 classes.dex/2/3，最小空闲下标=4；ART 连续 dex 规则）
