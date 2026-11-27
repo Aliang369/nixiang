@@ -25,6 +25,9 @@ PKG="com.bilibili.priconne"
 BASE="${STARRY_BASE_APK:-$NIXIANG/02_apks/公主连结/公主连结_11.7.2_device_starry_20261031.apk}"
 OUT="$NIXIANG/08_output/公主连结"
 SIGNED="$OUT/公主连结_11.7.2_双ABI_20261031-releaseSigned.apk"
+# 可选：二进制补丁 Manifest（外科合并时用它替换底包那条；受保护断言改为「产物==提供文件」，
+# classes*.dex / resources.arsc 仍必须与底包逐字节相等）。留空＝完全沿用旧行为。
+PCR_BINARY_MANIFEST="${PCR_BINARY_MANIFEST:-}"
 APP_ABIS="${APP_ABIS:-}"        # 留空＝按底包实况自动判定（04_scripts/_common/detect_abis.py）
 KS="${STARRY_KS:-$NIXIANG/01_tools/starry_release.jks}"
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
@@ -50,6 +53,9 @@ SMALI_JAR="$NIXIANG/01_tools/smali/smali-fat.jar"   # 必须 fat-jar：smali.jar
 [[ -f "$NDK_BIN" ]] || { echo "ERROR: 缺 NDK ndk-build.cmd ($NDK_BIN)"; exit 1; }
 [[ -f "$APKTOOL" ]] || { echo "ERROR: 缺 apktool.jar"; exit 1; }
 [[ -f "$SMALI_JAR" ]] || { echo "ERROR: 缺 smali.jar"; exit 1; }
+if [ -n "$PCR_BINARY_MANIFEST" ]; then
+  [[ -f "$PCR_BINARY_MANIFEST" ]] || { echo "ERROR: PCR_BINARY_MANIFEST 指向的文件不存在: $PCR_BINARY_MANIFEST"; exit 1; }
+fi
 [[ -n "$ZIPALIGN" && -n "$APKSIGNER" ]] || { echo "ERROR: 缺 zipalign/apksigner（env.sh 未解析）"; exit 1; }
 
 # 按底包实况决定出哪几套 so：底包带 lib/x86_64 就多出一份（雷电原生 x86_64 直跑），
@@ -59,6 +65,13 @@ if [ -z "$APP_ABIS" ]; then
   APP_ABIS="$("$PY" "$NIXIANG/04_scripts/_common/detect_abis.py" "$BASE" 2>/dev/null | tr -d '\r')"
 fi
 [ -n "$APP_ABIS" ] || { echo "ERROR: 底包没有框架可产出的 ABI（用 APP_ABIS=... 显式指定）"; exit 1; }
+
+# dex 序号必须按底包实况算：ART 的 DexPathList 只按 classes.dex→classes2.dex→… 连续扫描，
+# 遇到第一个缺号即停；写死 classes13.dex 在只有 4 个 dex 的底包上会被断层在 5 而永不加载。
+DEX_IDX="$("$PY" "$NIXIANG/04_scripts/_common/next_free_dex.py" "$BASE" 2>/dev/null | tr -d '\r')"
+case "$DEX_IDX" in ''|*[!0-9]*) echo "ERROR: next_free_dex.py 未给出有效序号（'$DEX_IDX'）"; exit 1;; esac
+DEX_NAME="classes${DEX_IDX}.dex"
+echo "DEX_NAME=${DEX_NAME}（next_free_dex.py 按底包实况算出）"
 export JAVA_HOME="${NIXIANG_JAVA17:-${JAVA_HOME:-}}"
 export PATH="$JAVA_HOME/bin:$PATH"
 export ANDROID_HOME="$(m "$SDK_HOME")"
@@ -102,7 +115,7 @@ echo "[2/6] gradle assembleRelease（菜单 smali 源）"
 STARRY_APK="$STARRY_SRC/app/build/outputs/apk/release/app-release.apk"
 [[ -f "$STARRY_APK" ]] || { echo "ERROR: 缺 $STARRY_APK"; exit 1; }
 
-echo "[3/6] apktool d → com/starry smali → classes13.dex"
+echo "[3/6] apktool d → com/starry smali → $DEX_NAME"
 java -jar "$(m "$APKTOOL")" d -f -o "$WORK/starry_dec" "$(m "$STARRY_APK")" >/dev/null
 SMALI_ROOT="$WORK/smali_in"
 mkdir -p "$SMALI_ROOT/com"
@@ -144,20 +157,24 @@ p.write_text(t, encoding="utf-8")
 print(f"  StarryApp.smali → com/bilibili/priconne/App ({n} edits)")
 PY
 
-java -jar "$(m "$SMALI_JAR")" assemble -o "$WORK/classes13.dex" "$SMALI_ROOT" >/dev/null
-ls -l "$WORK/classes13.dex"
+java -jar "$(m "$SMALI_JAR")" assemble -o "$WORK/$DEX_NAME" "$SMALI_ROOT" >/dev/null
+ls -l "$WORK/$DEX_NAME"
 if [ -d "$WORK/starry_dec/assets/certs" ]; then
   mkdir -p "$WORK/assets"
   cp -R "$WORK/starry_dec/assets/certs" "$WORK/assets/certs"
 fi
 
 echo "[4/6] zip 外科合并（受保护 dex / resources.arsc / Manifest 逐字节保留）"
-"$PY" - "$BASE" "$WORK" "$WORK/unsigned.apk" <<'PY'
-import sys, zipfile, hashlib
+"$PY" - "$BASE" "$WORK" "$WORK/unsigned.apk" "${PCR_BINARY_MANIFEST:-}" "$DEX_NAME" <<'PY'
+import sys, re, zipfile, hashlib
 from pathlib import Path
 
 src, work, dst = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
-c13 = (work / "classes13.dex").read_bytes()
+dex_name = sys.argv[5]      # 由 next_free_dex.py 算出的 classesN.dex（禁写死）
+mf = Path(sys.argv[4]) if len(sys.argv) > 4 and sys.argv[4].strip() else None   # 可选：补丁 Manifest
+mf_bytes = mf.read_bytes() if mf is not None else b""
+mf_sha = hashlib.sha256(mf_bytes).hexdigest() if mf is not None else ""
+c13 = (work / dex_name).read_bytes()
 extras = {}
 for p in (work / "lib").rglob("*"):
     if p.is_file():
@@ -169,14 +186,15 @@ if certs.is_dir():
             extras["assets/certs/" + str(p.relative_to(certs)).replace("\\", "/")] = p.read_bytes()
 
 def is_protected(name):
-    if name in ("resources.arsc", "AndroidManifest.xml"):
+    if name == "resources.arsc":
         return True
-    if name == "classes.dex":
-        return True
-    if name.startswith("classes") and name.endswith(".dex"):
-        mid = name[len("classes"):-len(".dex")]
-        if mid.isdigit() and 2 <= int(mid) <= 12:
-            return True
+    if name == "AndroidManifest.xml":
+        return mf is None      # 提供补丁 Manifest 时改判「产物 == 提供文件」，不参与底包等比
+    # 底包所有 classes*.dex 一律逐字节保留（不再只认 0/2..12：序号范围随底包变化）
+    m = re.fullmatch(r"classes(\d*)\.dex", name)
+    if m:
+        mid = m.group(1)
+        return mid == "" or int(mid) >= 2
     return False
 
 zin = zipfile.ZipFile(src, "r")
@@ -186,9 +204,9 @@ for item in zin.infolist():
     name = item.filename
     if name.startswith("META-INF/"):
         continue
-    if name == "classes13.dex" or name in extras:
+    if name == dex_name or name in extras:
         continue
-    data = zin.read(item)
+    data = mf_bytes if (name == "AndroidManifest.xml" and mf is not None) else zin.read(item)
     info = zipfile.ZipInfo(name, item.date_time)
     info.compress_type = zipfile.ZIP_STORED if name == "resources.arsc" else item.compress_type
     info.external_attr = item.external_attr
@@ -196,7 +214,7 @@ for item in zin.infolist():
     zout.writestr(info, data)
     n += 1
 
-info = zipfile.ZipInfo("classes13.dex")
+info = zipfile.ZipInfo(dex_name)
 info.compress_type = zipfile.ZIP_DEFLATED
 info.create_system = 3
 zout.writestr(info, c13)
@@ -214,10 +232,21 @@ for name in zi.namelist():
     if is_protected(name):
         assert hashlib.sha256(zi.read(name)).hexdigest() == \
                hashlib.sha256(zo.read(name)).hexdigest(), f"PROTECTED MUTATED: {name}"
+if mf is not None:
+    assert "AndroidManifest.xml" in zo.namelist(), "MISSING: AndroidManifest.xml"
+    assert hashlib.sha256(zo.read("AndroidManifest.xml")).hexdigest() == mf_sha, \
+           "MANIFEST != PROVIDED: " + mf_sha
 zn = set(zo.namelist())
-for k in ["classes13.dex"] + list(extras):
+for k in [dex_name] + list(extras):
     assert k in zn, f"MISSING: {k}"
-print(f"  合并完成 entries≈{n} classes13={len(c13)}B 新增={len(extras)} 受保护 sha256 全等")
+# 新增条目白名单：只允许 classesN.dex + extras（lib/*、assets/certs/*、Manifest override 不算新增）
+allowed_new = {dex_name} | set(extras)
+surplus = set(zn) - set(zi.namelist()) - allowed_new
+assert not surplus, f"UNEXPECTED NEW ENTRIES: {sorted(surplus)}"
+prot = "classes*.dex + resources.arsc" + ("" if mf is not None else " + AndroidManifest.xml")
+print(f"  合并完成 entries≈{n} {dex_name}={len(c13)}B 新增={len(extras)} 受保护全等（{prot}）")
+if mf is not None:
+    print(f"  Manifest 取补丁文件 {mf} sha256={mf_sha}（已跳过底包 Manifest）")
 for k in sorted(extras):
     print(f"    + {k} {len(extras[k])}B")
 zi.close(); zo.close()
@@ -233,6 +262,24 @@ echo "[6/6] apksigner 签名 → $SIGNED"
 "$APKSIGNER" verify --print-certs "$SIGNED" | head -5
 ls -lh "$SIGNED"
 
+# Manifest 校验行：产物 zip 内 AndroidManifest.xml 是否等于提供的补丁文件
+if [ -n "$PCR_BINARY_MANIFEST" ]; then
+  "$PY" - "$SIGNED" "$PCR_BINARY_MANIFEST" <<'PY'
+import sys, zipfile, hashlib
+from pathlib import Path
+apk, mfp = Path(sys.argv[1]), Path(sys.argv[2])
+exp = hashlib.sha256(mfp.read_bytes()).hexdigest()
+with zipfile.ZipFile(apk, "r") as z:
+    got = hashlib.sha256(z.read("AndroidManifest.xml")).hexdigest()
+eq = "YES" if got == exp else "NO"
+print(f"[manifest] 来源={mfp} 提供sha256={exp} 产物sha256={got} 与提供文件相等={eq}")
+if got != exp:
+    raise SystemExit("ERROR: 产物 AndroidManifest.xml 与提供的补丁文件不一致")
+PY
+else
+  echo "[manifest] 未设 PCR_BINARY_MANIFEST，AndroidManifest.xml 沿用底包（逐字节保留）"
+fi
+
 if [ "${STARRY_INSTALL:-0}" = "1" ]; then
   SERIAL="${SERIAL:-emulator-5554}"
   echo "[install] $SERIAL 覆盖安装（禁 uninstall：热更约 10GB）"
@@ -245,5 +292,14 @@ if [ "${STARRY_INSTALL:-0}" = "1" ]; then
   adb -s "$SERIAL" shell "su -c 'rm -f /data/local/tmp/pcr_x64.apk'" 2>/dev/null || true
   echo "log: adb -s $SERIAL logcat -s StarryApp:V StarryNativeLoad:V StarryMagic:V Pcr:V MenuService:V"
 fi
+
+if [ -n "$PCR_BINARY_MANIFEST" ]; then
+  PROT_DESC="底包全部 classes*.dex + resources.arsc"
+  NEW_DESC="$DEX_NAME + lib/*/libstarry_magic.so|libc++_shared.so + AndroidManifest.xml(override)"
+else
+  PROT_DESC="底包全部 classes*.dex + resources.arsc + AndroidManifest.xml"
+  NEW_DESC="$DEX_NAME + lib/*/libstarry_magic.so|libc++_shared.so"
+fi
+echo "[dex] DEX_NAME=$DEX_NAME 受保护断言=全等（$PROT_DESC 逐字节相等）；新增=$NEW_DESC"
 
 echo "DONE: $SIGNED"

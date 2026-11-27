@@ -54,7 +54,7 @@
 #elif defined(STARRY_GAME_MATCH2)
 #define STARRY_AUTH_GAME_ID "xxh2"
 #elif defined(STARRY_GAME_PCR)
-#define STARRY_AUTH_GAME_ID "pcr"
+#define STARRY_AUTH_GAME_ID "gzlj"
 #elif defined(STARRY_GAME_GYWS)
 #define STARRY_AUTH_GAME_ID "gyws"
 #elif defined(STARRY_GAME_ZHMR)
