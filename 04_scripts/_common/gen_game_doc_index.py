@@ -303,13 +303,19 @@ def main() -> int:
             if args.check:
                 stale_list.append(d.name)
                 continue
-            target.write_text(content, encoding="utf-8", newline="\n")
+            # 3.9 兼容：write_text 的 newline 参数 3.10 才有；newline="" 与 "\n" 写入等价（都保持 LF，
+            # 也避免 Win 上按 os.linesep 写 CRLF 让生成物比 HEAD 多字节）
+            with target.open("w", encoding="utf-8", newline="") as fh:
+                fh.write(content)
             updated += 1
         else:
             if args.check:
                 stale_list.append(d.name)
                 continue
-            target.write_text(content, encoding="utf-8", newline="\n")
+            # 3.9 兼容：write_text 的 newline 参数 3.10 才有；newline="" 与 "\n" 写入等价（都保持 LF，
+            # 也避免 Win 上按 os.linesep 写 CRLF 让生成物比 HEAD 多字节）
+            with target.open("w", encoding="utf-8", newline="") as fh:
+                fh.write(content)
             made += 1
 
     if args.check:
