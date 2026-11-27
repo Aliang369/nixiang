@@ -60,11 +60,11 @@ static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
         unsigned long start = 0, end = 0, off = 0;
         char perm[8] = {0};
         if (sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
-        if (!strchr(perm, 'x') || end <= start) continue;
-        if (fileOff >= off && fileOff < off + (end - start)) {
-            found = reinterpret_cast<void*>(start + (fileOff - off));
-            break;
-        }
+        if (end <= start) continue;
+        if (fileOff < off || fileOff >= off + (end - start)) continue;
+        void* cand = reinterpret_cast<void*>(start + (fileOff - off));
+        if (strchr(perm, 'x')) { found = cand; break; }   /* real device: prefer executable segment */
+        if (!found) found = cand;                          /* houdini JIT: no x segment, fall back to read-only */
     }
     fclose(fp);
     return found;

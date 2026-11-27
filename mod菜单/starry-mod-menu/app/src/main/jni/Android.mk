@@ -29,19 +29,9 @@ LOCAL_MODULE := Keystone
 LOCAL_SRC_FILES := KittyMemory/Deps/Keystone/libs-android/$(TARGET_ARCH_ABI)/libkeystone.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-# ============================================================
-#  WXSJ 内置 patched targetfuntional.dll（objcopy 静态库）
-#  v7.14 单一版本：只内置官方 hotfix2 / 2,030,080 对应的那份补丁 dll。
-#  （v7.13 的 wxsj_dll_v711 / 第二份内置已废弃：官方灰度切换窗口已结束）
-# ============================================================
-include $(CLEAR_VARS)
-LOCAL_MODULE := wxsj_dll_hf2
-LOCAL_SRC_FILES := Games/WxsjPatchedDll_hf2.a
-include $(PREBUILT_STATIC_LIBRARY)
-include $(CLEAR_VARS)
-LOCAL_MODULE := wxsj_dll_hf3
-LOCAL_SRC_FILES := Games/WxsjPatchedDll_hf3.a
-include $(PREBUILT_STATIC_LIBRARY)
+# WXSJ（无限升级）内置补丁 dll 的 PREBUILT 静态库已从公共装配迁出，由单游戏 mk 控制：
+#   11.266018/vc1637 → Android_wxsj_vc1637.mk（wxsj_vc1637_dll_hf2/hf3/hf4）
+#   13.x legacy      → Android_wxsj_legacy.mk（wxsj_dll_hf2/hf3/hf4/hf5/hf6）
 
 # ============================================================
 #  星光魔法 MOD 菜单 — 主模块
@@ -298,7 +288,7 @@ LOCAL_SRC_FILES := Main.cpp Games/ZhmrMod.cpp Unity/Il2CppApi.cpp
 # LOCAL_SRC_FILES := Main.cpp Games/WdyzMod.cpp Unity/Il2CppApi.cpp
 # 独奏骑士 1.1.768：仅当环境变量 STARRY_GAME_DZQS=1 时覆盖默认目标，避免影响其他游戏的激活分支。
 ifdef STARRY_GAME_DZQS
-LOCAL_CFLAGS    := $(filter-out -DSTARRY_GAME_WDYZ,$(LOCAL_CFLAGS)) -DENABLE_UNITY_HOOK -DSTARRY_GAME_DZQS
+LOCAL_CFLAGS    := $(filter-out -DSTARRY_GAME_%,$(LOCAL_CFLAGS)) -DENABLE_UNITY_HOOK -DSTARRY_GAME_DZQS
 LOCAL_SRC_FILES := Main.cpp Games/DzqsMod.cpp Unity/Il2CppApi.cpp
 endif
 # 无限升级 12.10701 / vc1644 — 2026-10-26 激活（官方原版 12.10701 复刻星空版；走 scripts/wxsj_so_only.sh）
@@ -349,6 +339,6 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH) \
                     $(LOCAL_PATH)/KittyMemory/Deps/Keystone/includes \
                     $(LOCAL_PATH)/xDL
 
-LOCAL_STATIC_LIBRARIES := Dobby Keystone wxsj_dll_hf2 wxsj_dll_hf3
+LOCAL_STATIC_LIBRARIES := Dobby Keystone
 
 include $(BUILD_SHARED_LIBRARY)

@@ -46,6 +46,7 @@ modern 的 `Games/*Mod.cpp` 同样从生成器产出（防闪退骨架 v3，内�
 | 3 | **拷贝覆盖** → `app/src/main/jniLibs/arm64-v8a/libstarry_magic.so`（建议同步 `app/src/main/libs/`、`app/libs/`） |
 | 4 | 再 `gradlew` / 跑 `surgical_*.sh` / `*_so_only.sh` |
 | 5 | **装机前自检**：成品 APK（或 jniLibs）里的 so，须含本游戏标签（如 `[Gjc2]` / `gjc2`），**禁止**仍出现上一款（如 `[Dwct]`）。中文菜单串用 `LC_ALL=C grep -ac '菜单名' <so>` 按字节搜——`strings` 默认 ASCII 不认 UTF-8 中文，会漏报 |
+| 6 | **鉴权 game_id 字节断言**：so 里须同时命中「本游戏 game_id + 值」的字节对（如 `dzqs=1/zhmr=0`），**tag 对 ≠ game_id 对**——公共 `Android.mk` 的 `-DSTARRY_GAME_*` 曾污染覆盖段，编出 tag 正确而鉴权串成别款游戏的 so（fail-closed 或串号）。判据：`LC_ALL=C grep -ac '<本游戏 id>=' <so>` ≥1 且 `grep -ac '<别款 id>=' <so>` = 0 |
 
 **漏做第 3 步 = 菜单/鉴权仍是上一款游戏**（历史实例：打出上一款游戏的菜单；切游戏后 gradle 十几秒「成功」往往是旧 so）。
 
@@ -122,8 +123,6 @@ STARRY_INSTALL_ONLY=1 SERIAL=<serial> bash mod菜单/starry-mod-menu/scripts/sur
 2. 脚本六段：底包校验（zip 结构 + 星光 dex 落位正确）→ HEAD `gradlew assembleRelease --offline` 取 dex → `apktool d` + `StarryApp.smali` **宿主改写四处**（`.super`/`<init>`/`attachBaseContext`/`onCreate` → 本游戏宿主 Application）→ `smali assemble` 出新 dex + 断言 → zip 外科置换**只换该 `classesN.dex`**（逐条目 sha256 审计 + so 与底包逐字节相同断言）→ `zipalign`/`apksigner` + 证书钉 + 门禁 + 可选装机。
 3. 两个必踩的坑：① **证书钉要归一化**——`apksigner` 输出小写无冒号，`keytool` 指纹大写带冒号，直接比会假失败（`tr -d ':' | tr 'A-Z' 'a-z'` 后再比）。② **判 dex 里的中文串一律用 `python3.11` 字节断言，不要 `grep -aq '中文'`**（本机 locale 下会假失败）；并且别把脚本接 `| tail`（pipeline 退出码取 tail，脚本 die 了也显示 0，会误判成功）。
 4. **取号/授权类单点路径必查兜底**：只走单一设备标识（如 v5 SSAID）时，标识不可用即抛错 ⇒ 菜单整块不可用；应具备 v5 优先 + v4 硬件指纹兜底。
-
-> 先例（脚本六段实例、宿主改写目标、反例记录）：`10_docs/独奏骑士/技能先例.md`。
 
 ★ **菜单 dex 新鲜度铁律**（2026-10-26 起，出包阶段必过）：出包脚本是「**模板优先，缺了才现编**」——
 只要 `templates/<tpl>/classesN.dex` 还在，菜单 dex 就**永远不会重编**，改过的 Java 进不了包。
