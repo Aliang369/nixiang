@@ -2,12 +2,27 @@
   "template_id": "sc33",
   "name": "生存33天",
   "package": "com.lgcb.scsst.sc33ttaptapwz37zgx3.dayssurvive",
-  "source": "Games/Sc33Entry.cpp GameMod_Get（2026-10-17 起；此前为 Main.cpp STARRY_GAME_SC33 菜单表）",
+  "source": "Games/Sc33Entry.cpp GameMod_Get（kSc33_Features，@ 1.0.24/vc54 热更 v214）",
   "features": [
-    {"feat_num": 1, "name": "百倍伤害"},
-    {"feat_num": 2, "name": "无敌"},
-    {"feat_num": 3, "name": "全屏秒杀"},
-    {"feat_num": 4, "name": "攻速"},
-    {"feat_num": 5, "name": "免广告"}
+    {
+      "feat_num": 1,
+      "name": "百倍伤害"
+    },
+    {
+      "feat_num": 2,
+      "name": "无敌"
+    },
+    {
+      "feat_num": 3,
+      "name": "全屏秒杀"
+    },
+    {
+      "feat_num": 4,
+      "name": "攻速"
+    },
+    {
+      "feat_num": 5,
+      "name": "免广告"
+    }
   ]
 }

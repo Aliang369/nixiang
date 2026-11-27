@@ -72,6 +72,13 @@
 -keep class com.starry.magic.cocos.ZxrHooks { *; }
 # 魔法奇录：JS 侧 jsb.reflection.callStaticMethod("com.starry.magic.cocos.MfqlHooks", ...) 全名调用
 -keep class com.starry.magic.cocos.MfqlHooks { *; }
+# 2026-11-27（生存33天 1.0.24 v214 出包实测）：注入进 games/classes8.dex 的 smali 按全名调
+# Lcom/starry/magic/cocos/Sc33Hooks;->getRet(I)Z / setRet(IZ)V / shouldSkipAd()Z，JS 侧还用
+# jsb.reflection.callStaticMethod("com.starry.magic.cocos.Sc33Hooks","getAtkMul","()I") 全名调用。
+# 缺本规则时 R8 把该类删/改名 ⇒ classes9.dex 内 Sc33Hooks 命中 0（模板 APK 同样 0），
+# JMYBTActivity.get_ret/set_ret 与 SdkManager.shouldSkipAd 运行时 ClassNotFound，开关与免广告静默失效。
+# 必须全名 keep（不带 allowobfuscation）。
+-keep class com.starry.magic.cocos.Sc33Hooks { *; }
 
 # 2026-11-26（镇邪人 48572 出包）：仅为让 clearFeaturePrefsIfListChanged 可作为「开关保存修复」的静态探针
 # 存在（verify/静态验收按字节找该串）；Preferences 无任何外部按名调用（注入 smali 只按名引用 MenuService / ZxrHooks），
