@@ -1,38 +1,26 @@
 # 魂坠深境 — 文档索引
 
-包名：`com.chillyroom.containerofsoul.yw` · 现行 `1.1.7` / vc45（历史：1.1.3/vc44、1.1.2/vc43、1.1.1/vc42）
+包名：`com.chillyroom.containerofsoul.yw` · 现行 `1.1.7` / vc45
 成品：`08_output/魂坠深境/魂坠深境_1.1.7_starry-newmenu-releaseSigned.apk`（949,566,587 B，md5 `aeafe4bfc03c372e0bce69835be92027`）
 源码：`mod菜单/starry-mod-menu/app/src/main/jni/Games/HzsjMod.{h,cpp}`（六功能运行时按名解析，正式包零 hook）
-组装：`mod菜单/starry-mod-menu/scripts/surgical_hzsj_1.1.1.sh`（一份脚本管 1.1.1 / 1.1.2 / 1.1.3 / 1.1.7 四代底包）
+组装：`mod菜单/starry-mod-menu/scripts/surgical_hzsj_1.1.1.sh`
+底包：`02_apks/魂坠深境/魂坠深境_1.1.7_device_official.apk`（947,889,995 B，md5 `4c8f1192…`，勿删）
 
-## 必读（现行）
+## 必读
 
 | 文档 | 用途 |
 |------|------|
-| [版本适配_1.1.7_20261127.md](./版本适配_1.1.7_20261127.md) | **当前唯一现行技术文档**：1.1.7/vc45 复刻（底包指纹、三连、静态验证、注入面、货币 999 与无敌 maxHealth 两轮重构、二进制判据、装机与 L3） |
-| [路线锁定.md](./路线锁定.md) | 六功能挂点表（类/字段/解析方式/运行期判据日志串）与换版本必查的三处耦合 |
-| [硬约束.md](./硬约束.md) | A/B 区生效约束（菜单 dex 从 HEAD 重编、禁垃圾脚本、真机回归） |
-
-## 历史（只作追溯，不指导执行）
-
-| 文档 | 内容 |
-|------|------|
-| [版本适配_1.1.3_20261028.md](./版本适配_1.1.3_20261028.md) | 1.1.3/vc44 复刻 + Manifest 缓存分桶修复 |
-| [双轨制重构_1.1.3_20261029.md](./双轨制重构_1.1.3_20261029.md) | 1.1.3 双轨制（B=killer classes6 / A=classes3 改包登录） |
-| [版本适配_1.1.2_20261013.md](./版本适配_1.1.2_20261013.md) | 1.1.2/vc43 + TapTap 签名时机/强制网页登录修复 |
-| [热更重抓与功能重实现_20260921.md](./热更重抓与功能重实现_20260921.md) | 1.1.1/vc42 热更后五功能重实现 |
-| [版本适配_1.1.1_20260910.md](./版本适配_1.1.1_20260910.md) | 1.1.1 modern 双轨迁移 |
-| [模拟器适配_20261007.md](./模拟器适配_20261007.md) | 模拟器指针区间判据 + 菜单换新 |
-| [改包初判_1.1.0_20260903.md](./改包初判_1.1.0_20260903.md) / [对齐1.1.0_探针抓桥_20260903.md](./对齐1.1.0_探针抓桥_20260903.md) | 1.1.0 初判与探针抓桥 |
-| [复盘_1.0.5到1.1.0_效率分析_20260903.md](./复盘_1.0.5到1.1.0_效率分析_20260903.md) | 1.0.5→1.1.0 效率复盘 |
+| [版本适配_1.1.7_20261127.md](./版本适配_1.1.7_20261127.md) | 唯一现行技术文档：底包指纹、出包三连与注入面、静态验证、货币/无敌两个重构、二进制判据、装机与 L3 |
+| [路线锁定.md](./路线锁定.md) | 六功能挂点表（类/字段/写入值/运行期判据）与换版本必查三处 |
+| [硬约束.md](./硬约束.md) | A/B 现行约束 + D 区技术事实（货币 999、无敌 maxHealth） |
+| [hzsj_menu_template.json](./hzsj_menu_template.json) | 后台菜单模板（template_id=hzsj，六项 feat_num 1–5、7） |
+| [轮次台账.tsv](./轮次台账.tsv) | 同一功能「改代码 → 装机 → 用户实测」逐轮结果 |
+| [正式包裁剪清单_20261127.json](./正式包裁剪清单_20261127.json) | 唯一正式包的裁剪留档 |
 
 ## 脚本
 
 | 路径 | 用途 |
 |------|------|
-| `04_scripts/魂坠深境/hzsj_build_dex.sh` | 菜单 dex（javac+R8，版本桩 1.1.7/45；硬约束 #3 要求每次从 HEAD 重编） |
-| `04_scripts/魂坠深境/hzsj_build_so.sh` | native so（`Android_hzsj.mk` 私有 mk，产物 `libs_hzsj/arm64-v8a/libstarry_magic.so`） |
+| `04_scripts/魂坠深境/hzsj_build_dex.sh` | 菜单 dex（javac+R8，版本桩 1.1.7/45；须每次从 HEAD 重编） |
+| `04_scripts/魂坠深境/hzsj_build_so.sh` | native so（私有 `Android_hzsj.mk`，产物 `libs_hzsj/arm64-v8a/libstarry_magic.so`） |
 | `mod菜单/.../scripts/surgical_hzsj_1.1.1.sh` | 出包唯一入口：manifest 注入 + classes3 A 轨改包 + classes5/6 + so/libc++ + 签名对齐 |
-| `04_scripts/魂坠深境/pipeline.json` / `pipeline.log` | 管线配置（stages 仍是 1.1.1 口径，不驱动 1.1.7 出包）与阶段日志 |
-
-底包（勿删）：`02_apks/魂坠深境/魂坠深境_1.1.7_device_official.apk`（947,889,995 B，md5 `4c8f1192…`）。
