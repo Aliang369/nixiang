@@ -49,7 +49,9 @@ extern "C" const StarryGameMod* const GameMod_Get() {
         .initRetryIntervalMs = 2000000,
         .tickIntervalMs = 200000,
 
-        .onLoad = nullptr,              // TODO: EarlyHook / 过检补丁 / 菜单 bootstrap 在此挂
+        // 3.5（2026-11-28）：反篡改校验在启动后 ~0.1s 就跑，框架 initDelayMs=3s 太晚
+        // ⇒ 在 JNI_OnLoad 起快线程（5ms 轮询 libil2cpp）抢在 <Start> 之前装钩。
+        .onLoad = 旷野征途_OnLoad,
         .tryInit = 旷野征途_TryInit,
         .isReady = 旷野征途_IsReady,
         .tick = 旷野征途_Tick,

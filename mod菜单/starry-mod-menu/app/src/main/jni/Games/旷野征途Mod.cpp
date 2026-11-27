@@ -34,6 +34,8 @@
 #include <cstdarg>    // DbgLog 变参
 #include <cstdio>     // DbgLog 文件落盘
 
+#include <pthread.h>  // 3.5 早期装钩线程（pthread_create，detached）
+#include <unistd.h>   // 3.5 usleep(5ms) 轮询 libil2cpp
 #include <mutex>      // §④ 装钩互斥
 #include <setjmp.h>   // §④ sigsetjmp 保护区
 #include <signal.h>   // §④ 致命信号兜底
@@ -200,7 +202,7 @@ static void  LogHookDiag(const char* tag, void* target, void* orig, int installe
 static uintptr_t kRvaShowInternal = 0x1C8A9AC;   // 1.8 实测（file）
 static uintptr_t kRvaHandleNative = 0x1C8A724;   // 1.8 实测（file，只调不挂）
 static uintptr_t kRvaEnterInterp  = 0x19876a8;   // 1.8 实测（file）
-static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2 / 24=2.4 / 32=3.2 / 33=3.3
+static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2 / 24=2.4 / 32=3.2 / 33=3.3 / 35=3.5
 
 // 3.2 指纹常量（2026-11-24 静态实测；全部 **file offset**，VA = file + 0x4000）
 static const uintptr_t kOff32Show   = 0x1CFC6D0u;  // ShowInternal（VA 0x1D006D0，序言 0xF81E0FFE）
@@ -216,6 +218,21 @@ static const uintptr_t kOff33Interp = 0x19F8A30u;  // EnterFrameFromInterpreter�
 static const uintptr_t kOff33Timescale = 0x37B9344u;    // Time::set_timeScale（VA 0x37BD344，序言 0xFC1E0FE8）
 static const unsigned long long kSize33Lib = 66297952ull;  // libil2cpp.so 66,297,952 B（sha256 bbf9fc30…97a004）
 
+// 3.5 指纹常量（2026-11-28 静态实测；全部 **file offset**，VA = file + 0x4000）
+//   底包 libil2cpp.so 66,377,504 B / sha256 26d210e1e9e93a6d27c6cb56b78671fa47f724d5dfca907f9fad920601ce4f6c
+//   ⚠ 3.5 三个首字与 3.3 **完全相同**（show 0xF81E0FFE / interp 0xF81D0FFE / timescale 0xFC1E0FE8）：
+//     首字只证明「该地址上确实是指定函数」，不证明「这是 3.5」⇒ 判别只能靠「3.5 的地址表 + 文件大小」，
+//     所以 3.3 分支必须留着（不能因为同段结构就合并），两者只有 size（66,297,952 vs 66,377,504）能分开。
+//   反篡改（ET.AndroidPackageIntegrity，TypeDefIndex 10253）第三个方法名 3.5 = **VerifyPackageContents**
+//     （file 0x2B7C680 / RVA 0x2B80680 / 体长 0xA24），**不是** 3.3 的 VerifyReleaseManifest，
+//     也**不是** 3.2 的 VerifyNativeLibraries —— 两个旧名在 3.5 库按名 0 命中。
+//     480 B 条目校验由硬编码改成 hashesLength(0x60)+SignatureLength(0x180)；白名单仍是
+//     libmain/libunity/libil2cpp 的 sha256 ⇒ libil2cpp.so 必须字节不变，改包只能靠 killer dex 回灌官方 DER。
+static const uintptr_t kOff35Show   = 0x1D04B30u;  // ShowInternal（VA 0x1D08B30，序言 0xF81E0FFE）
+static const uintptr_t kOff35Interp = 0x19FE258u;  // EnterFrameFromInterpreter（VA 0x1A02258，序言 0xF81D0FFE）
+static const uintptr_t kOff35Timescale = 0x37CA8F0u;    // Time::set_timeScale（VA 0x37CE8F0，序言 0xFC1E0FE8）
+static const unsigned long long kSize35Lib = 66377504ull;  // libil2cpp.so 66,377,504 B（sha256 26d210e1…4f6c）
+
 // 探针：用「首指令是否等于已知序言」判版本，不依赖包名/版本号字符串
 static int DetectLibVersion() {
     struct Probe { int ver; uintptr_t off; };
@@ -224,13 +241,42 @@ static int DetectLibVersion() {
     //   2.4 在 2.2 探针 0x1CA9130 处 = 0xB4000D96（≠0xF81E0FFE，不会误判成 2.2）
     //   2.4 在 1.8 探针 0x1C8A9AC 处 = 0x97F951DD（≠0xF81E0FFE）
     // 3.2 单点序言不足（0xF81E0FFE 在段内多处同构）⇒ 三点取二，见下。
-    static const Probe probes[] = {{33, kOff33Show}, {32, kOff32Show}, {24, 0x1CCE6CCu}, {22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
+    // 3.5 首插表首（2026-11-28）：3.5 与 3.3 的三个首字一模一样（同段结构），
+    //   只能靠「3.5 的地址表 + 文件大小 66,377,504」区分 ⇒ 3.5 必须先试，3.3 分支原样保留。
+    static const Probe probes[] = {{35, kOff35Show}, {33, kOff33Show}, {32, kOff32Show}, {24, 0x1CCE6CCu}, {22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
     for (const auto& pr : probes) {
         void* va = FileOffToVa(TPL_TARGET_LIB, pr.off);
         if (!va) continue;
         uint32_t insn = 0;
         const bool prologueOk = ReadU32Guarded("verprobe", va, &insn) && insn == 0xF81E0FFEu;
 
+        if (pr.ver == 35) {
+            // 3.5 判据（三选二，2026-11-28 静态实测）：
+            //   ① file 0x1D04B30 == 0xF81E0FFE（ShowInternal 序言）
+            //   ② file 0x19FE258 == 0xF81D0FFE（解释器帧入口序言）
+            //   ③ libil2cpp.so 文件大小 == 66,377,504（sha256 26d210e1…4f6c）
+            // 接受条件：① && (② || ③)  或  ② && ③。
+            // ① 与 ② 与 3.3 同字 ⇒ **单独一条没有区分力**，靠 ③ 定版本；只中 ①/②
+            // （size 不符）⇒ 证据不足判未知，继续向后探 3.3/3.2，不硬套任何地址。
+            const bool c1 = prologueOk;
+            bool c2 = false, c3 = false;
+            uint32_t insn35 = 0;
+            void* va35 = FileOffToVa(TPL_TARGET_LIB, kOff35Interp);
+            if (va35) c2 = ReadU32Guarded("verprobe", va35, &insn35) && insn35 == 0xF81D0FFEu;
+            unsigned long long fsz35 = 0;
+            c3 = LibFileSize(TPL_TARGET_LIB, &fsz35) && fsz35 == kSize35Lib;
+            LOGI(TPL_LOG " verprobe 3.5 cond show=%d interp=%d size=%d/%llu",
+                 (int)c1, (int)c2, (int)c3, fsz35);
+            DbgLog("verprobe: 3.5 cond show=%d interp=%d size=%d/%llu", (int)c1, (int)c2, (int)c3, fsz35);
+            if (!((c1 && (c2 || c3)) || (c2 && c3))) continue;
+            g_libVer.store(35);
+            kRvaShowInternal = kOff35Show;      // file；VA 0x1D08B30
+            kRvaHandleNative = 0x1D048A8u;      // file；VA 0x1D088A8（只记录，不挂）
+            kRvaEnterInterp  = kOff35Interp;    // file；VA 0x1A02258，序言 0xF81D0FFE
+            LOGI(TPL_LOG " lib version probe: 3.5 (ShowInternal file=0x1D04B30, interp=0x19FE258)");
+            DbgLog("verprobe: 3.5 showInternal=0x1D04B30 interp=0x19FE258");
+            return 35;
+        }
         if (pr.ver == 33) {
             // 3.3 判据（三选二，2026-11-25 静态实测）：
             //   ① file 0x1CFF134 == 0xF81E0FFE（ShowInternal 序言）
@@ -1109,11 +1155,13 @@ static void InitSlotAddrs() {
     const uintptr_t interp = (ver == 18) ? 0x19876a8u
                            : (ver == 22) ? 0x19a5004u          // VA 0x19a9004
                            : (ver == 24) ? 0x19C9A78u          // VA 0x19cda78
+                           : (ver == 35) ? kOff35Interp        // 3.5 VA 0x1A02258（序言 0xF81D0FFE）
                            : (ver == 33) ? kOff33Interp        // 3.3 VA 0x19FCA30（序言 0xF81D0FFE）
                            : (ver == 32) ? kOff32Interp : 0u;  // 3.2 VA 0x19FA364（序言 0xF81D0FFE）
     const uintptr_t noad   = (ver == 18) ? 0x1C8A9ACu
                            : (ver == 22) ? 0x1CA9130u
                            : (ver == 24) ? 0x1CCE6CCu          // VA 0x1CD26CC
+                           : (ver == 35) ? kOff35Show          // 3.5 VA 0x1D08B30
                            : (ver == 33) ? kOff33Show          // 3.3 VA 0x1D03134
                            : (ver == 32) ? kOff32Show : 0u;    // 3.2 VA 0x1D006D0
     kRvaEnterInterp = interp;
@@ -1121,18 +1169,20 @@ static void InitSlotAddrs() {
     kRvaHandleNative = (ver == 18) ? 0x1C8A724u
                      : (ver == 22) ? 0x1CA8EA8u
                      : (ver == 24) ? 0x1CCE444u            // 2.4 只记录不挂
+                     : (ver == 35) ? 0x1D048A8u            // 3.5 VA 0x1D088A8（只记录不挂）
                      : (ver == 33) ? 0x1CFEEACu            // 3.3 VA 0x1D02EAC（只记录不挂）
                      : (ver == 32) ? 0x1CFC448u : 0u;      // 3.2 VA 0x1D00448（只记录不挂）
     // TimeScale 必须走 inline hook（真机实测 2026-11-24）：
     //   UnityEngine.Time::set_timeScale 在游戏 C# 里是 **AOT 直调**（bl 到函数体），
     //   by-name 换 MethodInfo->methodPointer 影响不到直调点 ⇒ 装钩成功但零命中（MODHIT 缺失）。
     //   GameUpdate 之所以 by-name 能命中，是因为它由 Unity 引擎回调（delegate/虚表路径）。
-    const uintptr_t timescale = (ver == 33) ? kOff33Timescale    // 3.3 VA 0x37BD344，序言 0xFC1E0FE8
+    const uintptr_t timescale = (ver == 35) ? kOff35Timescale    // 3.5 VA 0x37CE8F0，序言 0xFC1E0FE8
+                              : (ver == 33) ? kOff33Timescale    // 3.3 VA 0x37BD344，序言 0xFC1E0FE8
                               : (ver == 32) ? kOff32Timescale    // 3.2 VA 0x37B67A8，序言 0xFC1E0FE8
                               : (ver == 24) ? 0x37541A0u          // 2.4 VA 0x37581A0（同一序言，静态文档 §2c）
                               : 0u;                               // 其它版本/未知 ⇒ 0，退回按名（已知无效，仅兜底）
     for (auto& sl : kSlots) {
-        // EnterInterp 只在 1.8 由 kSlots 装；2.2/2.4/3.2/3.3 由 InstallBattleHooks 单点显式装
+        // EnterInterp 只在 1.8 由 kSlots 装；2.2/2.4/3.2/3.3/3.5 由 InstallBattleHooks 单点显式装
         // （同址双 Dobby 叠钩会 SIGSEGV ⇒ 这里绝不能重复填 rva）
         if (std::strcmp(sl.tag, "EnterInterp") == 0) sl.rva = (ver == 18) ? interp : 0u;
         else if (std::strcmp(sl.tag, "NoAd") == 0)   sl.rva = noad;
@@ -1171,6 +1221,26 @@ static void InitSlotAddrs() {
 //              （第二处 IL_0265）；get_curHp @IL_0210/0244/0251/02AE；早退 ret @IL_000B/0036/0055/0091/0207/0232
 //    落血语义未变：set_curHp(curHp + intDmg)，intDmg = ceil(dmg)（下界钳位 -2.1474835e9）
 //    ⇒ 3.2 的过滤器 / 五槽 / 写 dmgInfo.dmg 逻辑对 3.3 原样成立，只换挂点与版本门（不进 ApplyHp 内部）
+//  【3.5 合同（2026-11-28 静态实测；底包 libil2cpp 66,377,504 B，HotUpdate MVID d87df3ff…7855）】
+//    sig 未变：argc 4（atker / int32 atkSeatNum / dmgInfo / Action<BattleRoleActor> OnDie；不含 this）
+//          argBase 五槽 +0 this / +8 atker / +16 atkSeatNum / +24 dmgInfo / +32 OnDie —— 与 3.2/3.3 逐槽相同
+//          rva 0x10B848 / body 1610 B（fat 头 12 B + codesize 0x64A）/ maxstack 5 / locals 8
+//          RVA 全移、body 长度与 3.3 一字不差 ⇒ body 长度仍是最稳的版本指纹
+//    IL 锚点（与 3.3 偏移全同）：isGod 取用 @IL_021E（本文件仍**不调用**该属性）；
+//          首个 set_curHp @IL_024B；封顶第二处 set_curHp @IL_0265；
+//          第三处 set_curHp @IL_042C（多血条循环 curHp += maxHp，get_hpCount>1 才走）；
+//          OnDie.Invoke @IL_0542；早退 ret @IL_0207 / IL_0232
+//          （另有 000B/0036/0055/0091 守卫 ret，末 ret @IL_0649）
+//          唯一变的判据偏移：blt @IL_0282（3.3 记 0280）——按字节硬编码旧偏移会失配
+//    ⚠ 3.5 的 ApplyHp 内有 **1 处 neg（IL_04BE）**，但只服务「训练假人」分支
+//          （reallyDmg = clamp(-intDmg) → stfld reallyDmg @IL_04CA），**不在 curHp 路径上**；
+//          curHp 仍是 IL_0244 get_curHp → IL_0249 ldloc.0(intDmg) → IL_024A add → IL_024B set_curHp
+//          ⇒ 落血仍是加法、dmg<0 才掉血。**别把这处 neg 当成「3.5 伤害符号翻了」去改符号逻辑。**
+//    稳定访问器 RVA（body 短）：get_curHp 0x10EA86/7、set_curHp 0x10EA8E/8、
+//          get_isGod 0x10DE1D/24、get_maxHp 0x10E920/15（RVA 全移、codesize 全同）
+//    调用链未变：AddHp(0x10B744/246) → 闭包 <>c__DisplayClass466_0.<AddHp>b__0(0x1C9E2B/36)
+//          IL_001E call ApplyHp ⇒ ApplyHp 全汇编唯一调用点仍是该闭包
+//    ⇒ 3.2/3.3 的过滤器 / 五槽 / 写 dmgInfo.dmg 逻辑对 3.5 原样成立，只换挂点与版本门
 //  【2.4 历史合同（保留作对照，勿删）】
 //    argc=4 / body=1265 B / isGod 取用 @IL_0173 / set_curHp @IL_0197→IL_01A0 / ret @IL_0187
 //
@@ -1365,13 +1435,13 @@ static int InstallBattleHooks() {
         }
     }
 #if KYZT_BATTLE_ENABLE
-    // 帧入口（HybridCLR 解释器，无按名路径）：22 / 24 / 32 / 33 都从这里单点装，1.8 走 kSlots。
+    // 帧入口（HybridCLR 解释器，无按名路径）：22 / 24 / 32 / 33 / 35 都从这里单点装，1.8 走 kSlots。
     // 注意：HookAtRva 的参数是 **file offset**（内部走 FileOffToVa），不是 VA。
     //   · 2.2：VA 0x19a9004 ⇔ file 0x19a5004（该 VA 处为 0xB4052B20 ⇒ 传 VA 必失败）
     //   · 2.4：VA 0x19cda78 ⇔ file 0x19C9A78（序言 0xF81D0FFE = str x30,[sp,#-0x30]!）
     // 地址一律取 InitSlotAddrs 填好的 kRvaEnterInterp（不在此写版本字面量）。
     const int verHook = g_libVer.load();
-    if (verHook == 22 || verHook == 24 || verHook == 32 || verHook == 33) {
+    if (verHook == 22 || verHook == 24 || verHook == 32 || verHook == 33 || verHook == 35) {
         if (HookAtRva("Battle", kRvaEnterInterp, 0xF81D0FFEu,
                       (void*)kb::Hooked_EnterFrame, &kb::g_origEnter)) {
             ++ok;
@@ -1765,6 +1835,387 @@ static bool AnyFeatureOn() {
     return g_spd.load() || g_dmg.load() || g_inv.load() || g_noad.load() || q;
 }
 
+// ============================================================================
+//  ⑥-b 反篡改绕行（3.5 新增面；**无条件安装**，不受懒装门控制）
+//
+//  为什么必须无条件装（2026-11-28 真机现象：启动 ~1.4s 后
+//    `Process : Quit itself ... com.unity3d.player.UnityPlayer.nativeRender` + SIG:9，
+//    无 Java FATAL / 无 tombstone / 无 crash buffer ⇒ 不是崩溃，是**进程自杀**）：
+//    C# AOT 的 ET.AndroidPackageIntegrity.VerifyInstalledPackageAsync 由
+//    GameManagerMono.<Start>d__41::MoveNext 在**冷启**路径上发起：先 VerifyCurrentSigner
+//    （Java 侧 PackageInfo 签名读数），再 VerifyPackageContents（apk 条目 + 三个 so 的 sha256
+//    + RSA-2048）；任一为 false ⇒ killProcess。这条路径在玩家**一个功能都没开**时也照跑
+//    ⇒ 若跟 kSlots 一样挂在 AnyFeatureOn/SyncHooks 懒装门下，全关时 0 hook，冷启必被自杀。
+//    所以本组钩子挂在 旷野征途_TryInit 的 `lib ready` 时机（先于 GameManagerMono.Start），
+//    与开关无关、只与版本有关；且**不占 kSlots 名额**（kSlots 仍保持「全关 0 hook」语义）。
+//
+//  3.5 的面（静态实测）：VerifyPackageContents 取代 3.3 的 VerifyReleaseManifest
+//    （旧名在本库按名 0 命中），480 B 条目校验由硬编码改成 hashesLength(0x60)+SignatureLength(0x180)；
+//    VerifyInstalledPackageAsync（file 0x2B7AA7C）/ VerifyReleaseSignature（RSA-2048）本身未动。
+//    我们只把两个 bool 判定点钉成 true，**不碰 Java 侧签名回灌**（killer dex 仍必需）。
+//
+//  语义：不调用 orig（签名/内容比对没有需要保留的副作用；Dobby trampoline 只占位不用）。
+//    返回 true ⇒ 上层 Task<bool> 走「包完好」分支。若哪天出现「钩了仍自杀」，
+//    先看 MODHIT tag=AntiTamper 是否两条都命中：只中 signer ⇒ 卡在 contents/后续比对；
+//    一条都不中 ⇒ 还有第三个判定点（例如 ExitModifiedPackage）或装钩地址漂移。
+// ============================================================================
+static const uintptr_t kOff35VerifySigner   = 0x2B7BE58u;   // VerifyCurrentSigner（file；VA 0x2B7FE58）
+static const uintptr_t kOff35VerifyContents = 0x2B7C680u;   // VerifyPackageContents（file；VA 0x2B80680）
+static const uint32_t  kInsn35VerifySigner   = 0xD10183FFu;  // sub sp,sp,#0x60（后随 A9016FFE A90267FA A9035FF8）
+static const uint32_t  kInsn35VerifyContents = 0xD101C3FFu;  // sub sp,sp,#0x70（后随 A9017BFD A9026FFC A90367FA）
+
+static std::atomic<bool> g_atDone{false};          // 已尝试过安装（防重复 DobbyHook）
+static std::atomic<int>  g_atSignerHits{0};
+static std::atomic<int>  g_atContentsHits{0};
+static uintptr_t g_atSignerVa   = 0;
+static uintptr_t g_atContentsVa = 0;
+static void* g_origVerifySigner   = nullptr;       // 只记录 trampoline，**本文件不调用**
+static void* g_origVerifyContents = nullptr;
+
+// 首次各一条：MODHIT tag=AntiTamper which=signer|contents n=1 va=..
+// （不复用 ModHitFirst：它按 tag 去重，两条钩子同 tag 会把第二条吞掉）
+static void AntiTamperHit(const char* which, uintptr_t va, std::atomic<int>& cnt) {
+    if (cnt.fetch_add(1) != 0) return;
+    LOGI(TPL_LOG " MODHIT tag=AntiTamper which=%s n=1 va=0x%lX", which, (unsigned long)va);
+    DbgLog("MODHIT tag=AntiTamper which=%s n=1 va=0x%lX", which, (unsigned long)va);
+}
+
+// AArch64 传参：实例方法 = (this, arg0, arg1, MethodInfo*)，静态 = (arg0..arg2, MethodInfo*)；
+// 两种都按 4 个指针槽接住即可，返回值 bool 在 w0 ⇒ C++ 的 bool 直接对上，不需要 orig。
+static bool Hooked_VerifyCurrentSigner(void* a0, void* a1, void* a2, void* a3) {
+    (void)a0; (void)a1; (void)a2; (void)a3;
+    AntiTamperHit("signer", g_atSignerVa, g_atSignerHits);
+    return true;
+}
+
+static bool Hooked_VerifyPackageContents(void* a0, void* a1, void* a2, void* a3) {
+    (void)a0; (void)a1; (void)a2; (void)a3;
+    AntiTamperHit("contents", g_atContentsVa, g_atContentsHits);
+    return true;
+}
+
+// 无条件安装入口：只在 ver==35 生效（3.3/3.2 继续走原 killer 路径，行为一律不动）
+static void InstallAntiTamperHooks() {
+    if (g_atDone.load()) return;
+    const int ver = (g_libVer.load() == 0) ? DetectLibVersion() : g_libVer.load();
+    if (ver != 35) {
+        LOGI(TPL_LOG " antitamper: skip ver=%d", ver);
+        DbgLog("antitamper: skip ver=%d", ver);
+        return;
+    }
+    g_atDone.store(true);
+    g_atSignerVa   = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35VerifySigner);
+    g_atContentsVa = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35VerifyContents);
+    const int s = HookAtRva("AntiTamper", kOff35VerifySigner, kInsn35VerifySigner,
+                            (void*)Hooked_VerifyCurrentSigner, &g_origVerifySigner) ? 1 : 0;
+    const int c = HookAtRva("AntiTamper", kOff35VerifyContents, kInsn35VerifyContents,
+                            (void*)Hooked_VerifyPackageContents, &g_origVerifyContents) ? 1 : 0;
+    LOGI(TPL_LOG " antitamper: ver=35 signer=%d(slot 0x%lX) contents=%d(slot 0x%lX)",
+         s, (unsigned long)kOff35VerifySigner, c, (unsigned long)kOff35VerifyContents);
+    DbgLog("antitamper: ver=35 signer=%d contents=%d origSigner=%p origContents=%p",
+           s, c, g_origVerifySigner, g_origVerifyContents);
+}
+
+// ============================================================================
+//  ⑥-c 退出探针（3.5 专用诊断；**无条件安装**，仍在 lib ready 时机）
+//
+//  为什么加：§⑥-b 两个反篡改钩都 installed=1 但 **MODHIT=0**（一次都没被调用）
+//    ⇒ 启动期自杀不是那两个 bool 判定点干的，得抓「谁调了退出」。
+//  第二轮（同日）：RequestExit / RecordRevisionConfirmation 也 MODHIT=0 ⇒ 也不是它们。
+//    现在的主嫌是 ExitModifiedPackage（体内 AndroidJavaClass("android.os.Process")
+//    + CallStatic("killProcess", myPid())，与 logcat「Quit itself + SIG:9」完全对得上），
+//    外加 ShowPackageIntegrityError / ShowBlockingError 两个「失败阶段」探针：
+//    它们不打退出，但能把「哪一步判定失败」印出来。
+//
+//  RequestExit 静态实测（file 0x2B8E1DC / VA 0x2B921DC，capstone 全函数）：
+//    +0x000 sub sp,sp,#0x60 / +0x004..+0x010 存 x30/x19..x25
+//    +0x014/+0x018/+0x01C adrp 三处静态区，+0x020 ldrb w8,[x20,#0x747]（类 cctor 已初始化标志）
+//    +0x02C mov x19,x0（**reason 全程留在 x19 兼作数组元素**）→ +0x030 tbnz w8,#0 跳过 9 次 class-init
+//    +0x0CC DateTimeOffset::get_UtcNow → +0x13C Application::get_version → +0x17C get_buildGUID
+//    +0x1C4 Time::get_frameCount → +0x24C Environment::get_StackTrace（6 元 object[] 逐个填充）
+//    +0x2B4 String::Format(格式串@0x3CC7C10) → +0x2CC String::Concat → +0x2F0 Debug::LogWarning
+//    +0x300 PlayerPrefs::SetString(键@0x3CC7C18) → +0x308 PlayerPrefs::Save
+//    +0x31C/+0x320 把静态 bool（+0xB8 → +0x20）**置 1**（「exit requested」标记）
+//    +0x338 UnityEngine.Application::Quit()   ← 全函数**唯一**退出调用
+//    +0x350 ret；+0x354 起是异常落地垫（__cxa_begin_catch → end_catch → __cxa_throw → terminate）
+//    ⇒ 没有 killProcess / exit(3) / _exit：退出走的是 Application.Quit（Unity 正常退出请求，
+//      与 logcat 的 nativeRender 栈一致）。**先取 reason 拼诊断、再 Quit**，顺序如上。
+//  ⇒ 拦 RequestExit 且不调 orig = 不置标志、不写 PlayerPrefs、不 Quit（本轮只观察）。
+//     reason 在 x0（Il2CppString*），x1 是 MethodInfo*。
+//
+//  RecordRevisionConfirmation(stage, details) 是「版本修订确认」记录点：**照常调 orig**，
+//    只旁路记录 stage/details + caller rva —— 它若在退出前被调用，能直接看到阶段名。
+//
+//  诊断口径：MODHIT 命中 ⇒ 退出确由 RequestExit 发起；仍自杀但 MODHIT=0 ⇒ 换目标
+//    （GetRevisionExitDiagnostics 只读不退出，暂不挂）。
+// ============================================================================
+static const uintptr_t kOff35RequestExit  = 0x2B8E1DCu;   // RequestExit(file)；VA 0x2B921DC
+static const uintptr_t kOff35RevConfirm   = 0x2B8E620u;   // RecordRevisionConfirmation(file)；VA 0x2B92620
+static const uint32_t  kInsn35RequestExit = 0xD10183FFu;  // sub sp,sp,#0x60（后随 A90267FE A9035FF8 A90457F6）
+static const uint32_t  kInsn35RevConfirm  = 0xD10143FFu;  // sub sp,sp,#0x50（后随 F9000BFE A9025FF8 A90357F6）
+
+// —— 3.5 第二个退出候选：ExitModifiedPackage（native 早前认定体内就是
+//    new AndroidJavaClass("android.os.Process") + CallStatic("killProcess", myPid())）
+static const uintptr_t kOff35ExitModified  = 0x2B7BB58u;   // ExitModifiedPackage(file)；VA 0x2B7FB58
+static const uint32_t  kInsn35ExitModified = 0xF81D0FFEu;  // str x30,[sp,#-0x30]!（后随 A9026FF6 A9035FF4 ...）
+// —— 3.5 失败阶段探针：ShowPackageIntegrityError(Exception) / ShowBlockingError(string, Exception)
+static const uintptr_t kOff35ShowPkgErr    = 0x2BB5020u;   // ShowPackageIntegrityError(file)；VA 0x2BB9020
+static const uintptr_t kOff35ShowBlocking  = 0x2BBCD00u;   // ShowBlockingError(file)；VA 0x2BC0D00
+static const uint32_t  kInsn35ShowPkgErr   = 0xF81C0FFEu;  // str x30,[sp,#-0x40]!
+static const uint32_t  kInsn35ShowBlocking = 0xF81C0FFEu;  // str x30,[sp,#-0x40]!（两者首字相同，靠地址区分）
+// —— 3.5 返回值探针：ReadInstalledIdentity 在 VerifyInstalledPackageAsync 里先跑，
+//    它自己就会调 VerifyCurrentSigner（+0x580）⇒ 两钩都 0 命中说明它**提前 return false**。
+//    签名实测（dump.cs:642742）= private **static** bool ReadInstalledIdentity(out string apkPath,
+//    out long versionCode) ⇒ x0=&apkPath、x1=&versionCode、x2=MethodInfo*（**不是** this 在 x0）。
+static const uintptr_t kOff35ReadIdentity = 0x2B7ABF8u;   // ReadInstalledIdentity(file)；VA 0x2B7EBF8
+static const uint32_t  kInsn35ReadIdentity = 0xD10243FFu; // sub sp,sp,#0x90
+// lambda <>c__DisplayClass5_0.<VerifyInstalledPackageAsync>b__0()：body 只有 4 条
+//   ldp x8,x1,[x0,#0x10] / ldr x2,[x0,#0x20] / mov x0,x8 / b VerifyPackageContents
+static const uintptr_t kOff35LambdaB0   = 0x2B7D9A8u;     // file；VA 0x2B819A8
+static const uint32_t  kInsn35LambdaB0  = 0xA9410408u;    // ldp x8, x1, [x0, #0x10]
+
+static void* g_origRequestExit = nullptr;                 // 只记录 trampoline，**本文件不调用**
+typedef void (*RevConfirm_t)(void*, void*, void*);
+static RevConfirm_t g_origRevConfirm = nullptr;           // 照常调用（不改行为）
+static void* g_origExitModified = nullptr;                // 只记录，**不调用**（本轮要让进程活下来）
+typedef void (*ShowPkgErr_t)(void*, void*);
+static ShowPkgErr_t g_origShowPkgErr = nullptr;           // 照常调用
+typedef void (*ShowBlocking_t)(void*, void*, void*);
+static ShowBlocking_t g_origShowBlocking = nullptr;       // 照常调用
+static std::atomic<bool> g_epDone{false};
+static std::atomic<int>  g_epExitHits{0};
+static std::atomic<int>  g_epRevHits{0};
+static std::atomic<int>  g_epKillHits{0};
+static std::atomic<int>  g_epPkgErrHits{0};
+static std::atomic<int>  g_epBlockHits{0};
+static uintptr_t g_epExitVa = 0;
+static uintptr_t g_epRevVa  = 0;
+static uintptr_t g_epKillVa = 0;
+static uintptr_t g_epPkgErrVa = 0;
+static uintptr_t g_epBlockVa  = 0;
+// 返回值探针（只记录，不改语义）
+typedef bool (*ReadIdentity_t)(void*, void*, void*);       // static bool(out string, out long)
+static ReadIdentity_t g_origReadIdentity = nullptr;       // 照常调用
+typedef bool (*LambdaB0_t)(void*, void*);                 // instance bool()
+static LambdaB0_t g_origLambdaB0 = nullptr;               // 照常调用
+static std::atomic<int> g_epReadIdHits{0};
+static std::atomic<int> g_epLambdaHits{0};
+static uintptr_t g_epReadIdVa = 0;
+static uintptr_t g_epLambdaVa = 0;
+
+// Il2CppString → UTF-8：对象头后 +0x10 = int32 length，+0x14 起 UTF-16LE。
+// 指针可能已是野指针 ⇒ 整个读取跑在保护区内（炸了给 <fault@ptr>，不让游戏进程崩）。
+struct EpStrCtx { const void* s; char* out; size_t cap; };
+static void EpReadStrThunk(void* p) {
+    auto* c = static_cast<EpStrCtx*>(p);
+    c->out[0] = '\0';
+    if (!c->s) return;
+    const int32_t len = *(const int32_t*)((const uint8_t*)c->s + 0x10);
+    if (len < 0 || len > 512) return;                      // 离谱长度：不读，交回 <unreadable>
+    const uint16_t* ch = (const uint16_t*)((const uint8_t*)c->s + 0x14);
+    size_t o = 0;
+    for (int32_t i = 0; i < len && o + 4 < c->cap; ++i) {
+        const uint16_t u = ch[i];
+        if (u < 0x80) {
+            c->out[o++] = (char)u;
+        } else if (u < 0x800) {
+            c->out[o++] = (char)(0xC0 | (u >> 6));
+            c->out[o++] = (char)(0x80 | (u & 0x3F));
+        } else {
+            c->out[o++] = (char)(0xE0 | (u >> 12));
+            c->out[o++] = (char)(0x80 | ((u >> 6) & 0x3F));
+            c->out[o++] = (char)(0x80 | (u & 0x3F));
+        }
+    }
+    c->out[o] = '\0';
+}
+
+static void EpCopyStr(const void* s, char* out, size_t cap) {
+    out[0] = '\0';
+    if (!s) { std::snprintf(out, cap, "<null>"); return; }
+    EpStrCtx c{ s, out, cap };
+    if (!RunGuarded("ExitProbe", EpReadStrThunk, &c)) { std::snprintf(out, cap, "<fault@%p>", s); return; }
+    if (!out[0]) std::snprintf(out, cap, "<unreadable@%p>", s);
+}
+
+// caller 的 RVA（回 dump.cs 反查是谁调的）：RA − libil2cpp 映射起点（LOAD#1 VA=0 ⇒ 基址即 lo）
+static unsigned long long EpCallerRva(void* ra) {
+    if (!ra) return 0ull;
+    uintptr_t lo = 0, hi = 0;
+    if (!LibGuestRange(TPL_TARGET_LIB, &lo, &hi)) return 0ull;
+    const uintptr_t a = (uintptr_t)ra;
+    if (a < lo || a >= hi) return 0ull;
+    return (unsigned long long)(a - lo);
+}
+
+static void EpHit(const char* which, uintptr_t va, std::atomic<int>& cnt) {
+    if (cnt.fetch_add(1) != 0) return;                     // 首次各一条
+    LOGI(TPL_LOG " MODHIT tag=ExitProbe which=%s n=1 va=0x%lX", which, (unsigned long)va);
+    DbgLog("MODHIT tag=ExitProbe which=%s n=1 va=0x%lX", which, (unsigned long)va);
+}
+
+// RequestExit(string reason)：**拦下不执行**（不置标志 / 不写 PlayerPrefs / 不 Application.Quit）
+static void Hooked_RequestExit(void* reason, void* mi) {
+    (void)mi;
+    EpHit("RequestExit", g_epExitVa, g_epExitHits);
+    char buf[512];
+    EpCopyStr(reason, buf, sizeof(buf));
+    LOGI(TPL_LOG " exit-probe RequestExit reason=\"%s\"", buf);
+    DbgLog("exit-probe RequestExit reason=\"%s\"", buf);
+    const unsigned long long rva = EpCallerRva(__builtin_return_address(0));
+    LOGI(TPL_LOG " exit-probe caller rva=0x%llX", rva);
+    DbgLog("exit-probe caller rva=0x%llX", rva);
+    // 直接返回：本轮只观察「拦下后游戏还跑不跑」
+}
+
+// RecordRevisionConfirmation(string stage, string details)：只记录，**照常调 orig**
+static void Hooked_RecordRevisionConfirmation(void* stage, void* details, void* mi) {
+    (void)mi;
+    EpHit("RevConfirm", g_epRevVa, g_epRevHits);
+    char s1[384], s2[384];
+    EpCopyStr(stage, s1, sizeof(s1));
+    EpCopyStr(details, s2, sizeof(s2));
+    const unsigned long long rva = EpCallerRva(__builtin_return_address(0));
+    LOGI(TPL_LOG " exit-probe RecordRevisionConfirmation stage=\"%s\" details=\"%s\" caller rva=0x%llX",
+         s1, s2, rva);
+    DbgLog("exit-probe RecordRevisionConfirmation stage=\"%s\" details=\"%s\" caller rva=0x%llX",
+           s1, s2, rva);
+    if (g_origRevConfirm) g_origRevConfirm(stage, details, mi);
+}
+
+// ExitModifiedPackage()：静态实测 body 0x22C / 556 B（file 0x2B7BB58 → ret@+0x22C）：
+//   +0x01C ldrb w8,[x22,#0x6c9] +0x02C tbnz → 只是类 cctor 闸门，**没有任何前置 if**；
+//   +0xC0 AndroidJavaClass::.ctor("android.os.Process"@0x3CC7058) → +0xCC new object[1]
+//   → +0x14C 取 myPid（helper 0x1D88E58）→ +0x168 box(int) → +0x1BC AndroidJavaObject::CallStatic
+//   （方法名 "killProcess"@0x3CC7068，参数数组）→ 清理 → ret。⇒ 体内**只有 killProcess**。
+// 本轮：直接 return，不放行 killProcess（看进程活下来之后会发生什么）。
+static void Hooked_ExitModifiedPackage(void* a0, void* a1) {
+    (void)a0; (void)a1;
+    EpHit("ExitModifiedPackage", g_epKillVa, g_epKillHits);
+    const unsigned long long rva = EpCallerRva(__builtin_return_address(0));
+    LOGI(TPL_LOG " exit-probe ExitModifiedPackage caller rva=0x%llX", rva);
+    DbgLog("exit-probe ExitModifiedPackage caller rva=0x%llX", rva);
+}
+
+// ShowPackageIntegrityError(Exception)：失败阶段探针，只记首次 + 照常调用 orig
+static void Hooked_ShowPackageIntegrityError(void* ex, void* mi) {
+    EpHit("ShowPackageIntegrityError", g_epPkgErrVa, g_epPkgErrHits);
+    if (g_origShowPkgErr) g_origShowPkgErr(ex, mi);
+}
+
+// ShowBlockingError(string stage, Exception ex)：x0=stage 字符串，照常调用 orig
+static void Hooked_ShowBlockingError(void* stage, void* ex, void* mi) {
+    EpHit("ShowBlockingError", g_epBlockVa, g_epBlockHits);
+    char s1[512];
+    EpCopyStr(stage, s1, sizeof(s1));
+    const unsigned long long rva = EpCallerRva(__builtin_return_address(0));
+    LOGI(TPL_LOG " exit-probe ShowBlockingError stage=\"%s\" caller rva=0x%llX", s1, rva);
+    DbgLog("exit-probe ShowBlockingError stage=\"%s\" caller rva=0x%llX", s1, rva);
+    if (g_origShowBlocking) g_origShowBlocking(stage, ex, mi);
+}
+
+// ReadInstalledIdentity(out string apkPath, out long versionCode)：**先调 orig**，再读 out 参数与返回值，
+// 原样返回 w0（只观察）。x0=&apkPath（指向 Il2CppString*）、x1=&versionCode（指向 int64）、x2=MethodInfo*。
+// il2cpp_string_new 包装（懒解析）：强制通过时要把一个合法 apkPath 写回 out 槽
+static void* KyztNewIl2cppString(const char* utf8) {
+    typedef void* (*StrNew_t)(const char*);
+    static StrNew_t fn = nullptr;
+    if (!fn) fn = (StrNew_t)Il2Cpp::ResolveExport("il2cpp_string_new");
+    if (!fn || !utf8) return nullptr;
+    return fn(utf8);
+}
+
+// 2026-11-28 第二轮：**强制通过**。链条实测（lead 反汇编）：
+//   <Start>d__41.MoveNext +0x?? bl VerifyInstalledPackageAsync → 结果 w0 为 false 就 ExitModifiedPackage；
+//   VerifyInstalledPackageAsync +0xA4 bl ReadInstalledIdentity → 它 false 就直接 Task.FromResult(false)。
+// ⇒ 只要把这里变成 true，后面 VerifyCurrentSigner / lambda / VerifyPackageContents 才可能跑，
+//   而那三个点我们已经分别钩成 true 或「先调 orig 再记录」。所以这里 false 就补齐 out 参数并返回 true。
+static bool Hooked_ReadInstalledIdentity(void* pApk, void* pVc, void* mi) {
+    EpHit("ReadInstalledIdentity", g_epReadIdVa, g_epReadIdHits);
+    if (!g_origReadIdentity) return false;
+    const bool ret = g_origReadIdentity(pApk, pVc, mi);     // 先跑真实实现
+    char apk[512];
+    EpCopyStr(pApk ? *(void**)pApk : nullptr, apk, sizeof(apk));   // out 是引用：解一层
+    const long long vc = (pVc ? *(const long long*)pVc : 0ll);
+    const int force = ret ? 0 : 1;
+    LOGI(TPL_LOG " exit-probe ReadInstalledIdentity ret=%d apk=\"%s\" vc=%lld force=%d",
+         (int)ret, apk, vc, force);
+    DbgLog("exit-probe ReadInstalledIdentity ret=%d apk=\"%s\" vc=%lld force=%d",
+           (int)ret, apk, vc, force);
+    if (ret) return true;                                    // 本来就通过：原样
+    // —— FORCE-PASS：优先沿用 orig 给的路径；空/不可读则用占位常量 ——
+    const bool haveApk = (apk[0] && apk[0] != '<');
+    const char* use = haveApk ? apk : "/data/app/com.xf.kyzt/base.apk";
+    LOGI(TPL_LOG " exit-probe ReadInstalledIdentity FORCE-PASS (orig apk=\"%s\" vc=%lld)", apk, vc);
+    DbgLog("exit-probe ReadInstalledIdentity FORCE-PASS (orig apk=\"%s\" vc=%lld)", apk, vc);
+    void* ns = KyztNewIl2cppString(use);
+    if (ns && pApk) {
+        *(void**)pApk = ns;                                  // *out apkPath = 新托管字符串
+    } else {
+        LOGW(TPL_LOG " exit-probe ReadInstalledIdentity force: il2cpp_string_new 失败，apk 槽未改写");
+        DbgLog("exit-probe ReadInstalledIdentity force: string_new null");
+    }
+    if (pVc) *(long long*)pVc = 35;                          // 与 3.5 vc 对齐（读出来是 35 时更自然）
+    return true;
+}
+
+// lambda <>c__DisplayClass5_0.<VerifyInstalledPackageAsync>b__0()：先调 orig，只打返回值。
+static bool Hooked_LambdaB0(void* self, void* mi) {
+    EpHit("LambdaB0", g_epLambdaVa, g_epLambdaHits);
+    if (!g_origLambdaB0) return false;
+    const bool ret = g_origLambdaB0(self, mi);
+    LOGI(TPL_LOG " exit-probe lambda b__0 ret=%d", (int)ret);
+    DbgLog("exit-probe lambda b__0 ret=%d", (int)ret);
+    return ret;
+}
+
+// 无条件安装入口：只在 ver==35 生效（3.3/3.2 行为不动）
+static void InstallExitProbeHooks() {
+    if (g_epDone.load()) return;
+    const int ver = (g_libVer.load() == 0) ? DetectLibVersion() : g_libVer.load();
+    if (ver != 35) {
+        LOGI(TPL_LOG " exit-probe: skip ver=%d", ver);
+        DbgLog("exit-probe: skip ver=%d", ver);
+        return;
+    }
+    g_epDone.store(true);
+    g_epExitVa   = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35RequestExit);
+    g_epRevVa    = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35RevConfirm);
+    g_epKillVa   = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35ExitModified);
+    g_epPkgErrVa = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35ShowPkgErr);
+    g_epBlockVa  = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35ShowBlocking);
+    g_epReadIdVa = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35ReadIdentity);
+    g_epLambdaVa = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35LambdaB0);
+    const int a = HookAtRva("ExitProbe", kOff35RequestExit, kInsn35RequestExit,
+                            (void*)Hooked_RequestExit, &g_origRequestExit) ? 1 : 0;
+    const int b = HookAtRva("ExitProbe", kOff35RevConfirm, kInsn35RevConfirm,
+                            (void*)Hooked_RecordRevisionConfirmation,
+                            (void**)&g_origRevConfirm) ? 1 : 0;
+    const int c = HookAtRva("ExitProbe", kOff35ExitModified, kInsn35ExitModified,
+                            (void*)Hooked_ExitModifiedPackage, &g_origExitModified) ? 1 : 0;
+    const int d = HookAtRva("ExitProbe", kOff35ShowPkgErr, kInsn35ShowPkgErr,
+                            (void*)Hooked_ShowPackageIntegrityError,
+                            (void**)&g_origShowPkgErr) ? 1 : 0;
+    const int e = HookAtRva("ExitProbe", kOff35ShowBlocking, kInsn35ShowBlocking,
+                            (void*)Hooked_ShowBlockingError,
+                            (void**)&g_origShowBlocking) ? 1 : 0;
+    const int f = HookAtRva("ExitProbe", kOff35ReadIdentity, kInsn35ReadIdentity,
+                            (void*)Hooked_ReadInstalledIdentity,
+                            (void**)&g_origReadIdentity) ? 1 : 0;
+    const int g = HookAtRva("ExitProbe", kOff35LambdaB0, kInsn35LambdaB0,
+                            (void*)Hooked_LambdaB0,
+                            (void**)&g_origLambdaB0) ? 1 : 0;
+    LOGI(TPL_LOG " exit-probe: ver=35 requestExit=%d revConfirm=%d exitModified=%d pkgErr=%d blocking=%d readIdentity=%d lambda=%d",
+         a, b, c, d, e, f, g);
+    LOGI(TPL_LOG " exit-probe slots: reqExit=0x%lX revConfirm=0x%lX exitModified=0x%lX pkgErr=0x%lX blocking=0x%lX readIdentity=0x%lX lambda=0x%lX",
+         (unsigned long)kOff35RequestExit, (unsigned long)kOff35RevConfirm,
+         (unsigned long)kOff35ExitModified, (unsigned long)kOff35ShowPkgErr,
+         (unsigned long)kOff35ShowBlocking, (unsigned long)kOff35ReadIdentity,
+         (unsigned long)kOff35LambdaB0);
+    DbgLog("exit-probe: ver=35 reqExit=%d rev=%d kill=%d pkgErr=%d block=%d readId=%d lambda=%d",
+           a, b, c, d, e, f, g);
+}
+
 static std::atomic<int> g_syncTries{0};
 
 static void SyncHooks() {
@@ -1782,14 +2233,81 @@ static void SyncHooks() {
 }
 
 // ============================================================================
+//  ⑦-c 早期装钩（3.5；抢在 <Start> 协程发起校验之前）
+//
+//  实测时序：校验发生在启动后 ~0.1s（<Start>d__41.MoveNext → VerifyInstalledPackageAsync），
+//    而框架 mod_thread 的 initDelayMs=3s ⇒ 钩子 3s 后才装，必然全落空（历史 MODHIT=0 的真因）。
+//  ⇒ 在 JNI_OnLoad（Entry 的 .onLoad）起 detached 线程，**每 5ms** 轮询 isLibraryLoaded，
+//    一为真立刻 TryInit（装 §⑥-b/§⑥-c 的钩），最多轮 2000 次（=10s），然后退出。
+//  并发：TryInit 内有 g_initStarted CAS，框架线程进来只会看到「已在初始化」而直接返回，
+//    不会出现同址双 DobbyHook（§④ 事故 1 的 SIGSEGV）。
+// ============================================================================
+static void* KyztEarlyInitThread(void* arg) {
+    JavaVM* vm = static_cast<JavaVM*>(arg);
+    const auto t0 = std::chrono::steady_clock::now();
+    for (int i = 0; i < 2000; ++i) {                 // 2000 × 5ms = 10s 上限
+        if (isLibraryLoaded(TPL_TARGET_LIB)) {
+            const long long ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - t0).count();
+            LOGI(TPL_LOG " early-init: lib appeared after %lld ms", ms);
+            DbgLog("early-init: lib appeared after %lld ms", ms);
+            if (旷野征途_TryInit(vm)) {
+                LOGI(TPL_LOG " early-init: TryInit ok（钩子先于 <Start> 就位）");
+                DbgLog("early-init: TryInit ok");
+            } else {
+                LOGW(TPL_LOG " early-init: TryInit 返回 false（另一线程在装/库未就绪），交回框架线程");
+                DbgLog("early-init: TryInit false");
+            }
+            return nullptr;
+        }
+        usleep(5000);                                // 5ms
+    }
+    LOGW(TPL_LOG " early-init: 10s 内未等到 libil2cpp.so，交回框架线程");
+    DbgLog("early-init: timeout");
+    return nullptr;
+}
+
+void 旷野征途_OnLoad(JavaVM* vm) {
+    pthread_t tid;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    const int rc = pthread_create(&tid, &attr, KyztEarlyInitThread, (void*)vm);
+    pthread_attr_destroy(&attr);
+    if (rc == 0) {
+        LOGI(TPL_LOG " early-init: 线程已起（5ms 轮询 libil2cpp，上限 10s）");
+        DbgLog("early-init: thread started");
+    } else {
+        LOGW(TPL_LOG " early-init: pthread_create 失败 rc=%d（退回框架 initDelay 路径）", rc);
+        DbgLog("early-init: pthread_create fail rc=%d", rc);
+    }
+}
+
+// ============================================================================
 //  ⑧ 对外接口（ModEntry.h 注册表契约，签名不可改）
 // ============================================================================
+// 初始化一次性闸门（3.5 加入）：框架线程（initDelayMs=3s 后）与 early-init 线程（5ms 轮询）
+// 会并发进 TryInit；Dobby 同址双挂 = SIGSEGV（见 §④ 事故 1）⇒ 只允许一个线程真正执行。
+static std::atomic<bool> g_initStarted{false};
+
 bool 旷野征途_TryInit(JavaVM* /*vm*/) {
     if (g_libReady.load()) return true;
-    if (!isLibraryLoaded(TPL_TARGET_LIB)) return false;
+    bool expected = false;
+    if (!g_initStarted.compare_exchange_strong(expected, true, std::memory_order_acq_rel)) {
+        // 另一线程正在（或已经）初始化：不重入，交回调用方；框架循环会看 isReady
+        return g_libReady.load();
+    }
+    if (!isLibraryLoaded(TPL_TARGET_LIB)) {
+        g_initStarted.store(false);   // 库还没到：放行后续重试
+        return false;
+    }
 
     InstallFaultGuard();          // §④ 先装兜底，再装钩
     g_libReady.store(true);
+    // ★ 反篡改绕行必须在这里装（§⑥-b）：C# AOT 校验跑在 GameManagerMono.Start（冷启、功能全关也跑），
+    //   与开关无关 ⇒ 不能放进 SyncHooks（那条路 AnyFeatureOn()==false 时直接 return）。
+    InstallAntiTamperHooks();
+    InstallExitProbeHooks();      // §⑥-c 退出探针：同样只需 ver==35，同样不依赖开关
     SyncHooks();                  // 已 ON 的开关立即装；全关保持 0 hook
     LOGI(TPL_LOG " lib ready (dual-path, lazy hooks)");
     return true;
@@ -1849,7 +2367,7 @@ void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
         // 2.4 同口径：Economy22 的字段/属性/方法一律 il2cpp_field_get_offset 按名现取
         //（delta24 已核 2.4 HotUpdate.dll 名字齐备）⇒ 字段常量零改动，只放行版本门。
         if (g_libVer.load() == 22 || g_libVer.load() == 24 || g_libVer.load() == 32 ||
-            g_libVer.load() == 33) {
+            g_libVer.load() == 33 || g_libVer.load() == 35) {
             // 2.2：菜单回调（Java UI 线程）**只入队**，真正调用发生在 ET.GameManagerMono.Update
             // （Unity 线程）里 drain —— 不在 UI 线程直接碰 il2cpp 对象。
             const unsigned long ut = g_unityTid.load();

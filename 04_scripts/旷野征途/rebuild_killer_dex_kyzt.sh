@@ -4,7 +4,7 @@
 # 用途：3.2 起游戏新增 C# AOT 反篡改 ET.AndroidPackageIntegrity（VerifyInstalledPackageAsync /
 #       VerifyCurrentSigner / VerifyNativeLibraries），比对 base64(SHA256(DER)) 全等 ⇒ 必须让
 #       Java 侧 PackageManager 返回官方 DER。本脚本重建那个 killer dex（注入为 classes9.dex，
-#       序号在框架 dex 之后连续）。
+#       3.5 序号在框架 classes3.dex 之后连续 ⇒ 入包名 classes4.dex）。
 #
 # 为什么不是直接入库 dex：仓库 .gitignore 排除 *.dex（Git 资产=文本），故 killer 以可复现的
 # 参数化 smali 源码入库（assets/kyzt_killer_smali，MT ApkSignatureKillerEx 形态），本脚本在
@@ -14,7 +14,7 @@
 #           13_scratch/kyzt32_killer/rebuild_kyzt_killer.sh 内跑通，本条已提升入库）。
 #
 # 前置条件：
-#   1. 官方底包在位：02_apks/旷野征途/旷野征途_3.2_taptap_official.apk（可用 KYZT_BASE_APK 覆盖）
+#   1. 官方底包在位：02_apks/旷野征途/旷野征途_3.5_taptap_official.apk（可用 KYZT_BASE_APK 覆盖）
 #      ——必须与装机底包同版，否则 #6155/DER 对应关系错、反篡改仍会失败。
 #   2. smali 工具：01_tools/smali/smali-fat.jar + baksmali-fat.jar
 #   3. JDK 17（JAVA_HOME 或 NIXIANG_JAVA17 指向），python3 可执行
@@ -24,14 +24,14 @@
 # 用法：
 #   bash 04_scripts/旷野征途/rebuild_killer_dex_kyzt.sh
 #   KYZT_BASE_APK=/path/to/base.apk bash 04_scripts/旷野征途/rebuild_killer_dex_kyzt.sh
-#   出货时把它交给组包脚本：KYZT_KILLER_DEX=<产物> bash 04_scripts/旷野征途/surgical_kyzt_3.2.sh
+#   出货时把它交给组包脚本：KYZT_KILLER_DEX=<产物> bash 04_scripts/旷野征途/surgical_kyzt_3.5.sh
 # 门禁：官方证书 SHA-256 不匹配即退出（防止把错的 DER 烘进 killer）。
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-BASE_APK="${KYZT_BASE_APK:-$NIXIANG/02_apks/旷野征途/旷野征途_3.2_taptap_official.apk}"
+BASE_APK="${KYZT_BASE_APK:-$NIXIANG/02_apks/旷野征途/旷野征途_3.5_taptap_official.apk}"
 PKG="com.xf.kyzt"
 # 官方证书 DER 的 SHA-256（3.2 底包 apksigner verify --print-certs 实测）
 CERT_SHA256_EXPECT="0a3b782591c7895437472a4768a4754e6487fd27cbe1887697ebc38de41a048f"
@@ -39,6 +39,12 @@ CERT_SHA256_EXPECT="0a3b782591c7895437472a4768a4754e6487fd27cbe1887697ebc38de41a
 SMALI_SRC="$SCRIPT_DIR/assets/kyzt_killer_smali"
 SMALI_JAR="$NIXIANG/01_tools/smali/smali-fat.jar"
 BAKSMALI_JAR="$NIXIANG/01_tools/smali/baksmali-fat.jar"
+# 双机：有的机器只有 2.5.2 拆包后的 baksmali 启动器脚本（无 fat jar）⇒ 回落，避免尾部校验直接崩
+if [[ ! -f "$BAKSMALI_JAR" ]]; then
+  BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
+else
+  BAKSMALI_BIN=jar
+fi
 JAVA="${NIXIANG_JAVA17:-${JAVA_HOME:-/c/Program Files/Microsoft/jdk-17.0.20.101-hotspot}}/bin/java"
 
 # 输出目录固定留在 13_scratch（可重建工作区，不入库）
@@ -117,9 +123,18 @@ PY
 # [3/3] 汇编成 dex + 打印指纹
 echo "[3/3] 汇编 dex"
 "$JAVA" -jar "$SMALI_JAR" assemble -o "$OUT" "$OUTDIR/work/smali"
-"$JAVA" -jar "$BAKSMALI_JAR" list classes "$OUT" | sed -n '1,20p'
-stat -c '  %s B  %n' "$OUT"
-sha256sum "$OUT"
-md5sum "$OUT"
+bsm() {
+  if [[ "$BAKSMALI_BIN" = jar ]]; then
+    "$JAVA" -jar "$BAKSMALI_JAR" "$@"
+  else
+    "$BAKSMALI_BIN" "$@"
+  fi
+}
+bsm list classes "$OUT" | sed -n '1,20p'
+echo "  类数: $(bsm list classes "$OUT" | wc -l | tr -d ' ')"
+# 双机：mac 无 GNU stat/sha256sum/md5sum
+echo "  $(wc -c <"$OUT" | tr -d ' ') B  $OUT"
+if command -v sha256sum >/dev/null 2>&1; then sha256sum "$OUT"; else shasum -a 256 "$OUT"; fi
+if command -v md5sum >/dev/null 2>&1; then md5sum "$OUT"; else md5 -q "$OUT"; fi
 echo
-echo "完成。装机版组包：KYZT_KILLER_DEX=$OUT bash 04_scripts/旷野征途/surgical_kyzt_3.2.sh"
+echo "完成。装机版组包：KYZT_KILLER_DEX=$OUT bash 04_scripts/旷野征途/surgical_kyzt_3.5.sh"

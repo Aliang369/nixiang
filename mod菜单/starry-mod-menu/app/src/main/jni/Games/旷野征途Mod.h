@@ -33,6 +33,9 @@ enum 旷野征途Feat : int {
 
 // 签名与 ModEntry.h 回调一致（Cocos 系需要 vm 挂 evalString；Unity 系忽略）
 bool 旷野征途_TryInit(JavaVM* vm);
+// 3.5：JNI_OnLoad 早期入口 —— 起 detached 线程 5ms 轮询 libil2cpp，映射即调 TryInit
+// （校验在启动后 ~0.1s 就跑，框架 initDelayMs=3s 太晚 ⇒ 必须早装钩）
+void 旷野征途_OnLoad(JavaVM* vm);
 bool 旷野征途_IsReady();
 void 旷野征途_OnFeatureChanged(int featNum, bool enabled);
 void 旷野征途_OnValueChanged(int featNum, int value);
