@@ -361,6 +361,7 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
      --path 13_scratch/{游戏}
    ```
    默认 dry-run，核对路径/大小/Trash 目标后再加 `--apply`。
+   清完跑 `bash 04_scripts/_common/check_cleanup_residue.sh` 复核：七处零残留才可提交，`delivered` 游戏仍有条目即 FAIL（`workspace_health.sh` 第 9 段同一判据）。
    - **唯一输入先移出**：设备只读拉取的官方底包（`09_test/**/base.apk`）、签名私钥等删了就再也拿不到的
      对象，收尾前先移到 `02_apks` 或用户指定位置 ——**不留作七处的例外**。
    - **含已入库(tracked)文件的路径脚本直接拒绝**（如 `06_dumped/**/_复现说明_*.md`、`dynsyms.txt`）：
@@ -472,7 +473,8 @@ AI 装好包 → 告知用户「请测试 X 功能，测完告诉我结果」→
 | `merge_gradle_wrapper.py` | 把发行版分片 jar 合回 `gradle-wrapper.jar` | wrapper jar 缺失/损坏 |
 | `run_audit_tests.sh` ＋ `test_*.py` | 治理回归测试（链接/约束/经验卡/交付 manifest/`archive git` 退出码契约） | 改治理脚本后 `--docs-strict` |
 | `test_archive_git_exit.py` / `test_delivery_manifest.py` | 单项回归：`archive_*` 两入口的退出码契约 / manifest 生成（一次性临时仓库） | 改动这两个环节后 |
-| `workspace_health.sh` | **工作区一屏体检**：冲突标记 / 两个索引新鲜度 / 规则↔门禁映射 / 入口体量 / 文档覆盖率 / 摘要陈旧 / Git 状态 / 产物体积；**红线未过 rc=1** | 月度自查、收尾、或用户问「工作区现在什么状态」 |
+| `workspace_health.sh` | **工作区一屏体检**：冲突标记 / 两个索引新鲜度 / 规则↔门禁映射 / 入口体量 / 文档覆盖率 / 摘要陈旧 / Git 状态 / 产物体积＋收尾残留；**红线未过 rc=1** | 月度自查、收尾、或用户问「工作区现在什么状态」 |
+| `check_cleanup_residue.sh` | **七处零保留检查**：七处一级条目 × `10_docs/_state/games/{游戏}.md` 的 `status` —— `delivered` 有残留即 FAIL、`active/blocked` 为 WARN、根下散落 WARN；`--game` 可单查；**只报不改** | 收尾提交前；`workspace_health.sh` 第 9 段自动调用 |
 | `obfuscate_menu_dex.sh` | **注入 dex 的 R8 混淆入口**：`<jar\|class目录> <输出.dex>`。组件类 / native `FindClass` 目标 / 注入脚本写进游戏 Manifest 的类保留原名，其余改名到 `com.starry.magic.o/**`（仍在 `com/starry` 子树内，`cp -R com/starry` 拷得到）。规则＝`mod菜单/starry-mod-menu/app/inject-dex-rules.pro` | **所有** `*_build_dex.sh` 的 dex 产出步骤（已 11/11 接入）；手工出 dex 时 |
 
 > **脚本可发现性**：`04_scripts/_common/scripts_index.tsv` 由 `gen_scripts_index.py` 生成，

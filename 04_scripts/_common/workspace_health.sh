@@ -17,8 +17,9 @@
 #  红线（任一即 rc=1）：
 #    ① 冲突标记残留  ② _index.md 过期  ③ 脚本索引过期
 #    ④ 规则门禁映射有错  ⑤ AGENTS.md 超硬闸
+#    ⑨ 段内：已交付游戏七处残留（check_cleanup_residue.sh，2026-11-27 加）
 #  提示项（不挡关）：
-#    ⑥ 文档覆盖率  ⑦ 摘要陈旧  ⑧ 未跟踪/脏文件  ⑨ 产物体积
+#    ⑥ 文档覆盖率  ⑦ 摘要陈旧  ⑧ 未跟踪/脏文件  ⑨ 产物体积明细
 # ================================================================
 set -uo pipefail
 
@@ -130,12 +131,21 @@ say "  $branch"
 [ "${untracked:-0}" -gt 50 ] && warn "$untracked 个未跟踪项（根目录散落？用 trash_paths.sh 归位）" || ok "未跟踪 ${untracked:-0} 个"
 [ "${modified:-0}" -gt 0 ] && warn "$modified 个已修改未提交" || ok "无未提交改动"
 
-# ---------- ⑨ 产物体积 ----------
-hdr "9. 产物体积（可清理项）"
-for d in 09_test 13_scratch 06_dumped 07_patched 08_output; do
+# ---------- ⑨ 产物体积 + 收尾残留 ----------
+hdr "9. 产物体积 / 收尾残留"
+for d in 03_decompiled 05_ida 06_dumped 07_patched 09_logs 09_test 13_scratch 08_output; do
   [ -d "$d" ] && printf '  %-12s %s\n' "$d/" "$(du -sh "$d" 2>/dev/null | cut -f1)"
 done
-say "  说明：这些都可再生；保留规则见 _state/规范变更日志.md §归档正文 D"
+say "  说明：这些都可再生；保留规则见 10_docs/tools/05「收尾清理」（七处零保留）"
+if [ -f 04_scripts/_common/check_cleanup_residue.sh ]; then
+  if out=$(bash 04_scripts/_common/check_cleanup_residue.sh 2>&1); then
+    ok "七处无已交付游戏残留"
+    [ "$FULL" = "1" ] && printf '%s\n' "$out" | sed 's/^/      /'
+  else
+    bad "已交付游戏仍有未收尾残留（违反七处零保留）"
+    printf '%s\n' "$out" | grep 'FAIL' | sed 's/^/      /'
+  fi
+fi
 
 # ---------- 汇总 ----------
 printf '\n════════ 结论 ════════\n'

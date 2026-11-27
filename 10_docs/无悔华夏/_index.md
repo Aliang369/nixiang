@@ -13,7 +13,7 @@
 
 ## 入口与说明
 
-- `README.md` — 无悔华夏 3.8.305（九游）— 无壳星光（3KB，2026-09-30 ⏳）
+- `README.md` — 无悔华夏 3.8.305（九游）— 无壳星光（3KB，2026-11-27）
 
 ## 方案与路线
 
@@ -26,12 +26,12 @@
 
 ## 台账
 
-- `台账.md` — 台账（无悔华夏，append-only）（29KB，2026-11-06）
+- `台账.md` — 台账（无悔华夏，append-only）（29KB，2026-11-27）
 
 ## 其他
 
+- `whhx_menu_template.json`（957B，2026-11-27）
 - `whhxbili_menu_template.json`（775B，2026-10-21 ⏳）
-- `whhx_menu_template.json`（957B，2026-09-12 ⏳）
 - `whhxkb_menu_template.json`（559B，2026-09-09 ⏳）
 
 ---
