@@ -57,7 +57,7 @@ LOCAL_SHA="$(shasum -a 256 "$OUT" | awk '{print $1}')"
 [ "$LOCAL_SHA" = "$REMOTE_SHA" ] || { echo "错误: sha256 不符 $LOCAL_SHA != $REMOTE_SHA" >&2; exit 1; }
 
 SO_SHA="$(unzip -p "$OUT" 'lib/arm64-v8a/libil2cpp.so' | shasum -a 256 | awk '{print $1}')"
-SO_SIZE="$(unzip -l "$OUT" 'lib/arm64-v8a/libil2cpp.so' | awk '$4=="lib/arm64-v8a/libil2cpp.so"{print $1; exit}')"
+SO_SIZE="$(unzip -l "$OUT" 'lib/arm64-v8a/libil2cpp.so' | awk '$4=="lib/arm64-v8a/libil2cpp.so" && !seen {print $1; seen=1}')"
 echo "runtime libil2cpp.so size=$SO_SIZE sha256=$SO_SHA"
 python3.11 - "$OUT_DIR/base_odex.json" "$PKG" "$OUT" "$LOCAL_SIZE" "$LOCAL_SHA" "$SO_SIZE" "$SO_SHA" <<'PY'
 import json, sys

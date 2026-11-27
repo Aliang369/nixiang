@@ -1,9 +1,9 @@
 /* 自动生成，请勿手改 —— 由 04_scripts/无悔华夏/whrhx_rebaseline.sh 产出（P0-②）。
- * 生成时间(UTC): 2026-11-05T08:31:17Z
+ * 生成时间(UTC): 2026-11-27T08:26:13Z
  * 来源 dump.cs : dump.cs
- *   sha256      : 7d505716b207bbe6d0a031425d7113816157a22a0d92baf44d6bf8501251ec7f
- * 来源 runtime so: libil2cpp_runtime_20261105.so
- *   sha256      : af1e80fe9431d209ccdccbcbaec9ccbc677eed877bc3c0ada5f20852b517ed73
+ *   sha256      : 8d55946be93f3f673a1b4bf16a71737431cf2cdde01f1cbe8e3c9c25c961fb54
+ * 来源 runtime so: libil2cpp.so
+ *   sha256      : 2a1d493efce8744a5fc985feddbe359470e4a955c0c3a617a6f37edaecac0dd7
  * 站点解析：唯一 40 / 未解析 0；枚举漂移 40；常量条目 40（含 kExpect 行并入 50 条）。
  *
  * 本 so 的 PT_LOAD#0 是 p_offset=0/p_vaddr=0 ⇒ 文件偏移 == RVA == VA，
@@ -21,80 +21,80 @@ struct WhrhxGenExpect {
     const char* tag;
 };
 
-#define WHRHX_GEN_RVA_ADD_RES_CAMPAIGN                 0x58ADC94  /* AddResCampaign, was 0x6EE88B0 */
-#define WHRHX_GEN_RVA_ADD_RES_LEB                      0x5245B58  /* AddRes, was 0x67F0428 */
-#define WHRHX_GEN_RVA_ARMY_CORRECT_LEB                 0x5A467BC  /* ArmyCorrectMgr, was 0x701C990 */
-#define WHRHX_GEN_RVA_ARMY_GET_MAX_CAN_SEND            0x5A40968  /* ArmyGetMaxCanSendNum, was 0x7016B98 */
-#define WHRHX_GEN_RVA_ARMY_GET_MAX_SEND                0x5A40E64  /* ArmyGetMaxSendNum, was 0x7017094 */
-#define WHRHX_GEN_RVA_BATTLE_START                     0x533A238  /* StartBattle, was 0x6921C44 */
-#define WHRHX_GEN_RVA_BATTLE_UPDATE_TIME               0x53345B0  /* UpdateBattleTime, was 0x691BFBC */
-#define WHRHX_GEN_RVA_CHECK_RES_LEB                    0x5249F8C  /* CheckRes, was 0x67F47A8 */
-#define WHRHX_GEN_RVA_COST_RES_LEB                     0x5249DA0  /* CostRes, was 0x67F45BC */
-#define WHRHX_GEN_RVA_COST_SINGLE_LEB                  0x523AB5C  /* CostSingleRes, was 0x67E5470 */
-#define WHRHX_GEN_RVA_COUNTRY_GET_RES_CNT              0x5247260  /* CountryGetResCnt, was 0x67F1B30 */
-#define WHRHX_GEN_RVA_EXTRA_MINISTER_TRY_ACTIVE        0x63DB99C  /* ExtraMinisterTryActive, was 0x790CD04 */
-#define WHRHX_GEN_RVA_EXTRA_MINISTER_UI_EXECUTE        0x63DD170  /* ExtraMinisterUiExecute, was 0x790E4D8 */
-#define WHRHX_GEN_RVA_GET_CITY_MGR_LEB                 0x57EEB4C  /* GetCityData, was 0x6E0FD70 */
-#define WHRHX_GEN_RVA_GET_COUNTRY_MGR_LEB              0x5A4790C  /* GetCountryDataById, was 0x701DAE0 */
-#define WHRHX_GEN_RVA_GET_DELTA_TIME                   0x4EEAD74  /* get_deltaTime, was 0x63CF098 */
-#define WHRHX_GEN_RVA_KB_ADD_RES                       0x5245B58  /* AddRes, was 0x67F0428 */
-#define WHRHX_GEN_RVA_KB_ADD_RES_CAMP                  0x58ADC94  /* AddResCampaign, was 0x6EE88B0 */
-#define WHRHX_GEN_RVA_KB_ARMY_CORRECT                  0x5A467BC  /* ArmyCorrectMgr, was 0x701C990 */
-#define WHRHX_GEN_RVA_KB_CHECK_RES                     0x5249F8C  /* CheckRes, was 0x67F47A8 */
-#define WHRHX_GEN_RVA_KB_COST_SINGLE                   0x523AB5C  /* CostSingleRes, was 0x67E5470 */
-#define WHRHX_GEN_RVA_KB_GET_CITY_MGR                  0x57EEB4C  /* GetCityData, was 0x6E0FD70 */
-#define WHRHX_GEN_RVA_KB_GET_COUNTRY_MGR               0x5A4790C  /* GetCountryDataById, was 0x701DAE0 */
-#define WHRHX_GEN_RVA_KB_GET_DELTA                     0x4EEAD74  /* get_deltaTime, was 0x63CF098 */
-#define WHRHX_GEN_RVA_KB_ON_COUNTDOWN                  0x53343E0  /* OnCountDown, was 0x691BDEC */
-#define WHRHX_GEN_RVA_KB_SET_END                       0x5334A1C  /* BattleSetEnd, was 0x691C428 */
-#define WHRHX_GEN_RVA_KB_START_TIMER                   0x5333FDC  /* StartTimer, was 0x691B9E8 */
-#define WHRHX_GEN_RVA_KB_UPDATE_COST                   0x533493C  /* UpdateBattleCostTime, was 0x691C348 */
-#define WHRHX_GEN_RVA_MINISTER_ADD_FAVOR               0x61DCFB4  /* MinisterAddFavor, was 0x7633D40 */
-#define WHRHX_GEN_RVA_MINISTER_GET_FAVOR               0x5DDE2C4  /* MinisterGetFavorite, was 0x7CD6F58 */
-#define WHRHX_GEN_RVA_MINISTER_TRY_ACTIVE              0x5C6CB7C  /* MinisterTryActive, was 0x72A08B8 */
-#define WHRHX_GEN_RVA_MINISTER_UI_EXECUTE              0x5C6D3CC  /* MinisterUiExecute, was 0x72A1108 */
-#define WHRHX_GEN_RVA_POLICY_CAN_ACTIVE                0x5BC9584  /* PolicyCanActive, was 0x72855B0 */
-#define WHRHX_GEN_RVA_POLICY_CHECK_DISABLE             0x5BD2430  /* PolicyCheckDisable, was 0x728E3EC */
-#define WHRHX_GEN_RVA_POLICY_EXECUTE                   0x5BCF7FC  /* PolicyExecute, was 0x728B7B8 */
-#define WHRHX_GEN_RVA_POLICY_ITEM_SHOW_STATE           0x5BD4438  /* PolicyItemShowState, was 0x72903F4 */
-#define WHRHX_GEN_RVA_POLICY_UI_ACTIVE                 0x57A9288  /* PolicyUiActive, was 0x6DFC098 */
-#define WHRHX_GEN_RVA_POLICY_UI_EXECUTE                0x57AA5A0  /* PolicyUiExecute, was 0x6DFD3B0 */
-#define WHRHX_GEN_RVA_RESEARCH_TECH                    0x6775574  /* ResearchTech, was 0x7B55B0C */
-#define WHRHX_GEN_RVA_TECH_POLICY_RESEARCH             0x5D6D208  /* TechPolicyResearch, was 0x723FA40 */
+#define WHRHX_GEN_RVA_ADD_RES_CAMPAIGN                 0x677F214  /* AddResCampaign, was 0x58ADC94 */
+#define WHRHX_GEN_RVA_ADD_RES_LEB                      0x611C0D0  /* AddRes, was 0x5245B58 */
+#define WHRHX_GEN_RVA_ARMY_CORRECT_LEB                 0x6917D3C  /* ArmyCorrectMgr, was 0x5A467BC */
+#define WHRHX_GEN_RVA_ARMY_GET_MAX_CAN_SEND            0x6911EE8  /* ArmyGetMaxCanSendNum, was 0x5A40968 */
+#define WHRHX_GEN_RVA_ARMY_GET_MAX_SEND                0x69123E4  /* ArmyGetMaxSendNum, was 0x5A40E64 */
+#define WHRHX_GEN_RVA_BATTLE_START                     0x62107B0  /* StartBattle, was 0x533A238 */
+#define WHRHX_GEN_RVA_BATTLE_UPDATE_TIME               0x620AB28  /* UpdateBattleTime, was 0x53345B0 */
+#define WHRHX_GEN_RVA_CHECK_RES_LEB                    0x6120504  /* CheckRes, was 0x5249F8C */
+#define WHRHX_GEN_RVA_COST_RES_LEB                     0x6120318  /* CostRes, was 0x5249DA0 */
+#define WHRHX_GEN_RVA_COST_SINGLE_LEB                  0x61110D4  /* CostSingleRes, was 0x523AB5C */
+#define WHRHX_GEN_RVA_COUNTRY_GET_RES_CNT              0x611D7D8  /* CountryGetResCnt, was 0x5247260 */
+#define WHRHX_GEN_RVA_EXTRA_MINISTER_TRY_ACTIVE        0x72AA0CC  /* ExtraMinisterTryActive, was 0x63DB99C */
+#define WHRHX_GEN_RVA_EXTRA_MINISTER_UI_EXECUTE        0x72AB8A0  /* ExtraMinisterUiExecute, was 0x63DD170 */
+#define WHRHX_GEN_RVA_GET_CITY_MGR_LEB                 0x66C10CC  /* GetCityData, was 0x57EEB4C */
+#define WHRHX_GEN_RVA_GET_COUNTRY_MGR_LEB              0x6918E8C  /* GetCountryDataById, was 0x5A4790C */
+#define WHRHX_GEN_RVA_GET_DELTA_TIME                   0x5CEC798  /* get_deltaTime, was 0x4EEAD74 */
+#define WHRHX_GEN_RVA_KB_ADD_RES                       0x611C0D0  /* AddRes, was 0x5245B58 */
+#define WHRHX_GEN_RVA_KB_ADD_RES_CAMP                  0x677F214  /* AddResCampaign, was 0x58ADC94 */
+#define WHRHX_GEN_RVA_KB_ARMY_CORRECT                  0x6917D3C  /* ArmyCorrectMgr, was 0x5A467BC */
+#define WHRHX_GEN_RVA_KB_CHECK_RES                     0x6120504  /* CheckRes, was 0x5249F8C */
+#define WHRHX_GEN_RVA_KB_COST_SINGLE                   0x61110D4  /* CostSingleRes, was 0x523AB5C */
+#define WHRHX_GEN_RVA_KB_GET_CITY_MGR                  0x66C10CC  /* GetCityData, was 0x57EEB4C */
+#define WHRHX_GEN_RVA_KB_GET_COUNTRY_MGR               0x6918E8C  /* GetCountryDataById, was 0x5A4790C */
+#define WHRHX_GEN_RVA_KB_GET_DELTA                     0x5CEC798  /* get_deltaTime, was 0x4EEAD74 */
+#define WHRHX_GEN_RVA_KB_ON_COUNTDOWN                  0x620A958  /* OnCountDown, was 0x53343E0 */
+#define WHRHX_GEN_RVA_KB_SET_END                       0x620AF94  /* BattleSetEnd, was 0x5334A1C */
+#define WHRHX_GEN_RVA_KB_START_TIMER                   0x620A554  /* StartTimer, was 0x5333FDC */
+#define WHRHX_GEN_RVA_KB_UPDATE_COST                   0x620AEB4  /* UpdateBattleCostTime, was 0x533493C */
+#define WHRHX_GEN_RVA_MINISTER_ADD_FAVOR               0x70AF5C8  /* MinisterAddFavor, was 0x61DCFB4 */
+#define WHRHX_GEN_RVA_MINISTER_GET_FAVOR               0x6CB0844  /* MinisterGetFavorite, was 0x5DDE2C4 */
+#define WHRHX_GEN_RVA_MINISTER_TRY_ACTIVE              0x6B3D0FC  /* MinisterTryActive, was 0x5C6CB7C */
+#define WHRHX_GEN_RVA_MINISTER_UI_EXECUTE              0x6B3D94C  /* MinisterUiExecute, was 0x5C6D3CC */
+#define WHRHX_GEN_RVA_POLICY_CAN_ACTIVE                0x6A9AB04  /* PolicyCanActive, was 0x5BC9584 */
+#define WHRHX_GEN_RVA_POLICY_CHECK_DISABLE             0x6AA39B0  /* PolicyCheckDisable, was 0x5BD2430 */
+#define WHRHX_GEN_RVA_POLICY_EXECUTE                   0x6AA0D7C  /* PolicyExecute, was 0x5BCF7FC */
+#define WHRHX_GEN_RVA_POLICY_ITEM_SHOW_STATE           0x6AA59B8  /* PolicyItemShowState, was 0x5BD4438 */
+#define WHRHX_GEN_RVA_POLICY_UI_ACTIVE                 0x667E808  /* PolicyUiActive, was 0x57A9288 */
+#define WHRHX_GEN_RVA_POLICY_UI_EXECUTE                0x667FB20  /* PolicyUiExecute, was 0x57AA5A0 */
+#define WHRHX_GEN_RVA_RESEARCH_TECH                    0x7683FA4  /* ResearchTech, was 0x6775574 */
+#define WHRHX_GEN_RVA_TECH_POLICY_RESEARCH             0x6C3C788  /* TechPolicyResearch, was 0x5D6D208 */
 
 static const WhrhxGenExpect kExpectGen[] = {
-    {0x4EEAD74, 0xF81E0FF3, "get_deltaTime"},
-    {0x523AB5C, 0xD10283FF, "CostSingleRes"},
-    {0x5245B58, 0xA9BC5FF8, "AddRes"},
-    {0x5247260, 0xA9BE4FF4, "CountryGetResCnt"},
-    {0x5249DA0, 0xD10143FF, "CostRes"},
-    {0x5249F8C, 0xD10183FF, "CheckRes"},
-    {0x5333FDC, 0xD10143FF, "StartTimer"},
-    {0x53343E0, 0xA9BE4FF4, "OnCountDown"},
-    {0x53345B0, 0xD10143FF, "UpdateBattleTime"},
-    {0x533493C, 0xFC1D0FE8, "UpdateBattleCostTime"},
-    {0x5334A1C, 0xD10243FF, "BattleSetEnd"},
-    {0x533A238, 0xD10143FF, "StartBattle"},
-    {0x57A9288, 0xD10303FF, "PolicyUiActive"},
-    {0x57AA5A0, 0xF81D0FF5, "PolicyUiExecute"},
-    {0x57EEB4C, 0xF81D0FF5, "GetCityData"},
-    {0x58ADC94, 0xF81D0FF5, "AddResCampaign"},
-    {0x5A40968, 0xD101C3FF, "ArmyGetMaxCanSendNum"},
-    {0x5A40E64, 0xFC1C0FE8, "ArmyGetMaxSendNum"},
-    {0x5A467BC, 0xD10303FF, "ArmyCorrectMgr"},
-    {0x5A4790C, 0xF81D0FF5, "GetCountryDataById"},
-    {0x5BC9584, 0xA9BC5FF8, "PolicyCanActive"},
-    {0x5BCF7FC, 0xFC1C0FE8, "PolicyExecute"},
-    {0x5BD2430, 0xA9BB67FA, "PolicyCheckDisable"},
-    {0x5BD4438, 0xD104C3FF, "PolicyItemShowState"},
-    {0x5C6CB7C, 0xD101C3FF, "MinisterTryActive"},
-    {0x5C6D3CC, 0xFC1D0FE8, "MinisterUiExecute"},
-    {0x5D6D208, 0xA9BE4FF4, "TechPolicyResearch"},
-    {0x5DDE2C4, 0xF81D0FF5, "MinisterGetFavorite"},
-    {0x61DCFB4, 0xA9BE4FF4, "MinisterAddFavor"},
-    {0x63DB99C, 0xD101C3FF, "ExtraMinisterTryActive"},
-    {0x63DD170, 0xFC1D0FE8, "ExtraMinisterUiExecute"},
-    {0x6775574, 0xF81D0FF5, "ResearchTech"},
+    {0x5CEC798, 0xF81E0FF3, "get_deltaTime"},
+    {0x61110D4, 0xD10283FF, "CostSingleRes"},
+    {0x611C0D0, 0xA9BC5FF8, "AddRes"},
+    {0x611D7D8, 0xA9BE4FF4, "CountryGetResCnt"},
+    {0x6120318, 0xD10143FF, "CostRes"},
+    {0x6120504, 0xD10183FF, "CheckRes"},
+    {0x620A554, 0xD10143FF, "StartTimer"},
+    {0x620A958, 0xA9BE4FF4, "OnCountDown"},
+    {0x620AB28, 0xD10143FF, "UpdateBattleTime"},
+    {0x620AEB4, 0xFC1D0FE8, "UpdateBattleCostTime"},
+    {0x620AF94, 0xD10243FF, "BattleSetEnd"},
+    {0x62107B0, 0xD10143FF, "StartBattle"},
+    {0x667E808, 0xD10303FF, "PolicyUiActive"},
+    {0x667FB20, 0xF81D0FF5, "PolicyUiExecute"},
+    {0x66C10CC, 0xF81D0FF5, "GetCityData"},
+    {0x677F214, 0xF81D0FF5, "AddResCampaign"},
+    {0x6911EE8, 0xD101C3FF, "ArmyGetMaxCanSendNum"},
+    {0x69123E4, 0xFC1C0FE8, "ArmyGetMaxSendNum"},
+    {0x6917D3C, 0xD10303FF, "ArmyCorrectMgr"},
+    {0x6918E8C, 0xF81D0FF5, "GetCountryDataById"},
+    {0x6A9AB04, 0xA9BC5FF8, "PolicyCanActive"},
+    {0x6AA0D7C, 0xFC1C0FE8, "PolicyExecute"},
+    {0x6AA39B0, 0xA9BB67FA, "PolicyCheckDisable"},
+    {0x6AA59B8, 0xD104C3FF, "PolicyItemShowState"},
+    {0x6B3D0FC, 0xD101C3FF, "MinisterTryActive"},
+    {0x6B3D94C, 0xFC1D0FE8, "MinisterUiExecute"},
+    {0x6C3C788, 0xA9BE4FF4, "TechPolicyResearch"},
+    {0x6CB0844, 0xF81D0FF5, "MinisterGetFavorite"},
+    {0x70AF5C8, 0xA9BE4FF4, "MinisterAddFavor"},
+    {0x72AA0CC, 0xD101C3FF, "ExtraMinisterTryActive"},
+    {0x72AB8A0, 0xFC1D0FE8, "ExtraMinisterUiExecute"},
+    {0x7683FA4, 0xF81D0FF5, "ResearchTech"},
 };
 static const size_t kExpectGenCount = sizeof(kExpectGen) / sizeof(kExpectGen[0]);
 

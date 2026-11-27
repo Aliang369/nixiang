@@ -8,15 +8,21 @@
 set -euo pipefail
 
 NIXIANG="${NIXIANG:-/Users/aliang/Documents/nixiang}"
-TAG="${RUN_TAG:-20261105}"
 GAME_DIR="$NIXIANG/06_dumped/无悔华夏4399"
+# 不写死轮次 tag：优先 RUN_TAG，否则取最新 runtime_* 目录（旧版默认 20261105，
+# 与新轮次 runtime_20261127 不一致会让清理对着不存在的目录跑空/报错）。
+if [ -n "${RUN_TAG:-}" ]; then
+  TAG="$RUN_TAG"
+else
+  TAG="$(ls -1dt "$GAME_DIR"/runtime_* 2>/dev/null | head -1 | sed 's|.*/runtime_||' || true)"
+  TAG="${TAG:-20261105}"
+fi
 RUN_DIR="$GAME_DIR/runtime_$TAG"
 REALDEX="$RUN_DIR/realdex"
 
-echo "== 保留清单（业务 DEX，来自 biz_dex.json）=="
-[ -f "$REALDEX/biz_dex.json" ] || { echo "ERROR: 缺 biz_dex.json: $REALDEX" >&2; exit 1; }
-
-echo "== 删除可再生的拆包/底包/中间对象（先打印再删）=="
+echo "== 非业务 dex 清理（保留清单来自 biz_dex.json）=="
+# 收尾期 realdex 可能已被七处清零：此时本阶段只做剩余可再生大件的幂等清理，不算失败。
+if [ -f "$REALDEX/biz_dex.json" ]; then
 python3.11 - "$REALDEX" "$NIXIANG" <<'PY'
 import json, os, sys
 from pathlib import Path
@@ -31,6 +37,11 @@ for t in targets:
     t.unlink()
 print('  boot/非业务 dex 删除 %d 个，保留 %d 个业务 dex' % (len(targets), len(keep)))
 PY
+else
+  echo "  (realdex 已不存在：收尾零保留已生效，跳过 dex 清理)"
+fi
+
+echo "== 删除可再生的拆包/底包/中间对象（先打印再删）=="
 
 for p in "$RUN_DIR/pkg/base.odex.apk" "$RUN_DIR/pkg/base_odex.tar" \
          "$NIXIANG/03_decompiled/无悔华夏4399" \
@@ -51,5 +62,5 @@ done
 
 echo "== 收尾体量 =="
 du -sh "$RUN_DIR" "$REALDEX" 2>/dev/null || true
-ls -la "$REALDEX" | head -12
+{ ls -la "$REALDEX" 2>/dev/null || true; } | head -12
 echo "CLEANUP_DONE"

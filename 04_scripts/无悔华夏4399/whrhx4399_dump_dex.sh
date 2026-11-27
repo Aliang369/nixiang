@@ -97,7 +97,13 @@ def parse(p):
         didx = struct.unpack_from('<I', b, tid_off + cidx * 4)[0]
         if didx >= sid_n: continue
         soff = struct.unpack_from('<I', b, sid_off + didx * 4)[0]
-        n, o = uleb(b, soff); end = b.index(b'\x00', o)
+        if soff >= len(b): continue
+        # 2026-11-27：Android 16 boot dex（ver 039）里部分 string data 不带 NUL 终止符，
+        # 直接解析会 IndexError/ValueError 把整个筛选步骤打挂 ⇒ 单条 descriptor 跳过即可。
+        try:
+            n, o = uleb(b, soff); end = b.index(b'\x00', o)
+        except (IndexError, ValueError):
+            continue
         desc = b[o:end].decode('utf-8', 'replace').lstrip('L').rstrip(';')
         pref['/'.join(desc.split('/')[:2])] += 1
     return {'ver': ver, 'size': len(b), 'header_size': fsz, 'complete': len(b) == fsz,
@@ -106,7 +112,11 @@ def parse(p):
 
 rows, seen, biz = [], {}, []
 for p in sorted(root.glob('*.dex')):
-    info = parse(p)
+    try:
+        info = parse(p)
+    except Exception as exc:            # 单个坏文件不许拖死整阶段
+        print('  ! 跳过 %s：%s: %s' % (p.name, type(exc).__name__, exc))
+        continue
     if not info: continue
     if info['sha256'] in seen: continue
     seen[info['sha256']] = p.name

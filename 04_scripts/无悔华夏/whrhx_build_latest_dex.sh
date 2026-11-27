@@ -9,7 +9,13 @@
 #
 # 产物：07_patched/无悔华夏/menu_latest_<date>/classes2.dex + MENU_SOURCE.txt
 #
-# 用法：bash 04_scripts/无悔华夏/whrhx_build_latest_dex.sh
+# 用法：
+#   九游：bash 04_scripts/无悔华夏/whrhx_build_latest_dex.sh
+#   4399（无壳，乐变 LBApplication）：
+#     WHRHX_SUPER_CLASS='Lcom/excelliance/open/LBApplication;' \
+#     WHRHX_DEX_OUT_DIR=$PWD/07_patched/无悔华夏4399/menu_latest_<date> \
+#     WHRHX_DEX_NAME=classes4.dex WHRHX_DEX_LABEL='4399 m4399' \
+#     bash 04_scripts/无悔华夏/whrhx_build_latest_dex.sh
 set -euo pipefail
 
 trap 'rc=$?; echo "ERROR: whrhx_build_latest_dex.sh line ${LINENO} rc=${rc}" >&2' ERR
@@ -31,8 +37,11 @@ export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 [[ -x "$SMALI" ]] || { echo "ERROR: $SMALI missing" >&2; exit 1; }
 [[ -n "$JAVA_HOME" ]] || { echo "ERROR: JDK 17 not found" >&2; exit 1; }
 command -v apktool >/dev/null || { echo "ERROR: apktool missing" >&2; exit 1; }
-[[ -f "$STARRY_SRC/app/src/main/java/com/starry/magic/ota/OtaSoStamp.java" ]] \
-  || { echo "ERROR: OtaSoStamp.java missing（本轮 OTA 守卫修复未在工作区）" >&2; exit 1; }
+# OTA 已于 2026-11-24 退役（commit e08b8ba1，OtaSoStamp/PlayOtaManager/OTA JNI 全部移除）：
+# OtaSoStamp.java 不在源码树属正常状态，此处不再硬断言，只在残留时提示；产物校验同样不要求该类。
+if [[ -f "$STARRY_SRC/app/src/main/java/com/starry/magic/ota/OtaSoStamp.java" ]]; then
+  echo "  note: OtaSoStamp.java 仍在工作区（OTA 已退役，产物不要求该类）"
+fi
 
 WORK="$(mktemp -d /tmp/whrhx_latest_dex.XXXXXX)"
 trap 'rm -rf "$WORK"; rc=$?; [ $rc -eq 0 ] || echo "ERROR: whrhx_build_latest_dex.sh rc=$rc" >&2' EXIT
@@ -85,7 +94,7 @@ for a, b in repls:
         t = t.replace(a, b)
         hits.append(a.split("->")[-1].split("(")[0])
 if SUPER not in t:
-    raise SystemExit("ERROR: StarryApp missing MyApplication super")
+    raise SystemExit("ERROR: StarryApp missing expected super " + SUPER)
 if ".method protected attachBaseContext" not in t:
     t = t.rstrip() + """
 
@@ -104,7 +113,7 @@ if ".method protected attachBaseContext" not in t:
 """
     print("  StarryApp +attachBaseContext loadLibrary")
 p.write_text(t, encoding="utf-8")
-print("  StarryApp patched -> MyApplication, 替换命中:", hits)
+print("  StarryApp patched -> " + SUPER + ", 替换命中:", hits)
 PY
 
 echo "[4/5] smali assemble → classes2.dex"
@@ -118,27 +127,35 @@ from pathlib import Path
 import os, sys
 dex = Path(sys.argv[1]).read_bytes()
 smali_root = Path(sys.argv[2])
+SUPER = os.environ.get('SUPER_CLASS', 'Lcom/excelliance/open/LBApplication;').encode()
+# 必需项：只有壳父类一条。OTA 已于 2026-11-24 退役（commit e08b8ba1），
+# OtaSoStamp / build-stamp 字面量 / keep OTA 日志 / nativeGetBuildStamp 全部不存在属预期。
 checks = [
+    (SUPER, '壳父类'),
+]
+# OTA 退役项：存在才校验（旧 so/旧源码回潮时能立刻看出来），缺失不算失败。
+ota_retired = [
     (b'STARRYSTAMP1:EPOCH=', 'OtaSoStamp 戳字面量'),
-    (b'keep OTA: ', 'OTA 守卫保留日志'),  # 2026-10-21：源码改为 "keep OTA: " + why，格式串不再是字面量
-    (b'nativeGetBuildStamp', '新桥接声明'),
+    (b'keep OTA: ', 'OTA 守卫保留日志'),
+    (b'nativeGetBuildStamp', 'build-stamp 桥接声明'),
     (b'com/starry/magic/ota/OtaSoStamp', 'OtaSoStamp 类描述符'),
-    (os.environ.get('SUPER_CLASS', 'Lcom/netease/nis/wrapper/MyApplication;').encode(), '壳父类'),
 ]
 for needle, label in checks:
     if needle not in dex:
         raise SystemExit(f'ERROR: dex 缺 {label} ({needle!r})')
     print(f'  ok {label}')
-if b'ota_apk_last_update_time' in dex:
-    print('  note: dex 仍含 ota_apk_last_update_time 字符串（Preferences 遗留常量，已无调用方）')
-if not (smali_root / 'com/starry/magic/ota/OtaSoStamp.smali').is_file():
-    raise SystemExit('ERROR: OtaSoStamp.smali 未生成')
+hit = [label for needle, label in ota_retired if needle in dex]
+print('  OTA 退役项（存在才校验）命中：' + (', '.join(hit) if hit else '无（预期）'))
+if (smali_root / 'com/starry/magic/ota/OtaSoStamp.smali').is_file():
+    print('  note: OtaSoStamp.smali 仍在（OTA 已退役，不再要求）')
 print('  class files =', len(list(smali_root.rglob('*.smali'))))
 PY
 
 if [[ -x "$BT_DEXDUMP" ]]; then
   "$BT_DEXDUMP" -f "$OUT_DEX" > "$WORK/dexdump.txt" 2>/dev/null || true
-  for name in nativeGetBuildStamp nativeVerifyOtaSig nativeApplyPlayPatch nativeGetPinnedCert; do
+  # nativeGetBuildStamp / nativeVerifyOtaSig / nativeApplyPlayPatch 随 OTA 于 2026-11-24 删除；
+  # 现役 JNI 只剩下列名字（与 ModBridge.java 的 native 声明一致）。
+  for name in nativeGetPinnedCert nativeInit nativeGetAuthGameId; do
     grep -Fq "$name" "$WORK/dexdump.txt" || { echo "ERROR: dexdump 缺 $name" >&2; exit 1; }
   done
   echo "  dexdump native 声明校验通过"
@@ -149,11 +166,12 @@ from pathlib import Path
 import hashlib, os, sys
 dex, out, count = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
 b = dex.read_bytes()
-SUPER_CLASS = os.environ.get('SUPER_CLASS', 'Lcom/netease/nis/wrapper/MyApplication;')
-out.write_text(f"""无悔华夏 3.8.280（九游 aligames）菜单 dex — 重建于 {__import__('datetime').date.today()}
+SUPER_CLASS = os.environ.get('SUPER_CLASS', 'Lcom/excelliance/open/LBApplication;')
+LABEL = os.environ.get('WHRHX_DEX_LABEL', '九游 aligames')
+out.write_text(f"""无悔华夏 3.8.280（{LABEL}）菜单 dex — 重建于 {__import__('datetime').date.today()}
 ================================================================
-来源：mod菜单/starry-mod-menu 工作区（含 OTA 守卫 build-stamp 修复：
-  OtaSoStamp.java / PlayOtaManager.invalidateOtaIfApkUpdated 重写 / ModBridge.nativeGetBuildStamp）
+来源：mod菜单/starry-mod-menu 工作区（OTA 已于 2026-11-24 退役，commit e08b8ba1：
+  OtaSoStamp / PlayOtaManager / OTA JNI 已删除，本 dex 不含 OTA 守卫代码）
 构建：{dex.parent} （rsync 隔离副本，不动工作区）
   JAVA_HOME=jdk-17 ./gradlew assembleRelease --console=plain
   apktool d → 汇总 smali*/com/starry → {count} 个 .smali
@@ -161,8 +179,8 @@ out.write_text(f"""无悔华夏 3.8.280（九游 aligames）菜单 dex — 重�
 产物：classes2.dex  {len(b)}B
   sha256 {hashlib.sha256(b).hexdigest()}
   md5    {hashlib.md5(b).hexdigest()}
-校验：STARRYSTAMP1:EPOCH= 字面量 / keep OTA: apkSoStamp= 新守卫日志 /
-  nativeGetBuildStamp 桥接声明 / com.starry.magic.ota.OtaSoStamp 类 / NIS 壳父类 —— 全部命中
+校验：壳父类 {SUPER_CLASS} —— 必需命中；OTA 退役项（STARRYSTAMP1:EPOCH= /
+  keep OTA: / nativeGetBuildStamp / OtaSoStamp 类）存在才校验，缺失属预期
 """, encoding='utf-8')
 print(f"  MENU_SOURCE.txt -> {out}")
 PY

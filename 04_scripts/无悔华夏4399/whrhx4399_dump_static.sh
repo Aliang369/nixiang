@@ -7,7 +7,16 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 NIXIANG_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 FETCH_JSON="$SCRIPT_DIR/fetched_apk.json"
 GAME="无悔华夏4399"
-VERSION="3.8.280"
+# VERSION 来源：fetched_apk.json 的 version_name（真机实取的当前版本）；解析不到才回落 3.8.305。
+VERSION="$(python3 - "$FETCH_JSON" <<'PY'
+import json, sys
+try:
+    print(json.load(open(sys.argv[1], encoding="utf-8")).get("version_name") or "3.8.305")
+except Exception:
+    print("3.8.305")
+PY
+)"
+[[ -n "$VERSION" ]] || VERSION="3.8.305"
 DECOMP_ROOT="$NIXIANG_ROOT/03_decompiled/$GAME/$VERSION"
 DUMP_ROOT="$NIXIANG_ROOT/06_dumped/$GAME/$VERSION"
 AAPT2="${AAPT2:-$HOME/Library/Android/sdk/build-tools/36.0.0/aapt2}"
@@ -38,7 +47,12 @@ extract_entry "lib/arm64-v8a/libil2cpp.so" "$DUMP_ROOT/libil2cpp.so"
 extract_entry "lib/arm64-v8a/libxlua.so" "$DUMP_ROOT/libxlua.so"
 extract_entry "lib/arm64-v8a/libunity.so" "$DUMP_ROOT/libunity.so"
 extract_entry "lib/arm64-v8a/libnesec.so" "$DUMP_ROOT/libnesec.so"
-extract_entry "lib/arm64-v8a/libNetHTProtect.so" "$DUMP_ROOT/libNetHTProtect.so"
+# libNetHTProtect.so 为可选条目：该版本包内可能不存在，存在才提取。
+if [[ -n "$(unzip -l "$APK" "lib/arm64-v8a/libNetHTProtect.so" 2>/dev/null | grep -F "libNetHTProtect.so" || true)" ]]; then
+  extract_entry "lib/arm64-v8a/libNetHTProtect.so" "$DUMP_ROOT/libNetHTProtect.so"
+else
+  echo "    跳过（包内无该 so）: lib/arm64-v8a/libNetHTProtect.so"
+fi
 extract_entry "assets/bin/Data/Managed/Metadata/global-metadata.dat" "$DUMP_ROOT/global-metadata.packed.dat"
 extract_entry "assets/SYResRoot/version.json" "$DUMP_ROOT/version.json"
 extract_entry "assets/SYResRoot/RawBytes/ScriptData/bytes/Assembly-CSharp.patch.bytes" \

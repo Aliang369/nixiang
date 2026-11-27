@@ -43,19 +43,19 @@ enum : uintptr_t {
     // ★ 2026-09-23 热更重校：以下"官版"值即官方 so（APK 内置 221MB）在新构建下的真身，
     //   乐变 OTA 那份 201MB 与本簇 RVA 同值（两者同构建）；旧值整体作废。
     RVA_BATTLE_SET_END    = 0x33951C8,  // BattleControlMgr.SetEnd(bool,bool,int,int,int)
-    RVA_BATTLE_START      = 0x533A238,  // BattleControlMgr.StartBattle
-    RVA_BATTLE_UPDATE_TIME = 0x53345B0, // BattleControlMgr.UpdateBattleTime
-    RVA_GET_DELTA_TIME    = 0x4EEAD74,  // UnityEngine.Time.get_deltaTime()
+    RVA_BATTLE_START      = 0x62107B0,  // BattleControlMgr.StartBattle
+    RVA_BATTLE_UPDATE_TIME = 0x620AB28, // BattleControlMgr.UpdateBattleTime
+    RVA_GET_DELTA_TIME    = 0x5CEC798,  // UnityEngine.Time.get_deltaTime()
     // 乐变热更后常见 190MB libil2cpp——官方 RVA 序言 miss，用下列对照
     // 九游 3.8.280 乐变 201MB（sha c04afff4…，2026-09-23 OTA 热更落地）
-    RVA_COST_SINGLE_LEB   = 0x523AB5C,  // CountryData.CostSingleRes(CostResData,bool)  ins D10283FF
-    RVA_COST_RES_LEB      = 0x5249DA0,  // CountryData.CostRes(List<CostResData>)      ins D10143FF
-    RVA_CHECK_RES_LEB     = 0x5249F8C,  // CountryData.CheckRes(List<CostResData>,int) ins D10183FF
+    RVA_COST_SINGLE_LEB   = 0x61110D4,  // CountryData.CostSingleRes(CostResData,bool)  ins D10283FF
+    RVA_COST_RES_LEB      = 0x6120318,  // CountryData.CostRes(List<CostResData>)      ins D10143FF
+    RVA_CHECK_RES_LEB     = 0x6120504,  // CountryData.CheckRes(List<CostResData>,int) ins D10183FF
     RVA_GET_DELTA_LEB     = 0x8BB9860,  // 与官版同址（本次热更后不再分叉）
     RVA_ON_BATTLE_END_LEB = 0x3BDDBBC,  // BattleUtil.OnBattleEnd(bool)  ins F81D0FF5（官方 SetEnd 页为 0）
     // 资源发放 + 玩家身份
-    RVA_ADD_RES_LEB       = 0x5245B58,  // CountryData.AddRes(resType, cnt, isTrading)  ins A9BC5FF8
-    RVA_ADD_RES_CAMPAIGN  = 0x58ADC94,  // CampaignData.AddRes(resType, cnt)            ins F81D0FF5
+    RVA_ADD_RES_LEB       = 0x611C0D0,  // CountryData.AddRes(resType, cnt, isTrading)  ins A9BC5FF8
+    RVA_ADD_RES_CAMPAIGN  = 0x677F214,  // CampaignData.AddRes(resType, cnt)            ins F81D0FF5
     RVA_COUNTRY_ID_OFF    = 0xE0,       // CountryData 国家 id 字段偏移
     RVA_MGR_COUNTRY_ID_OFF = 0x30,      // CountryDataMgr.m_countryId（IsPlayerCountry 反汇编比对源）
     // 2026-08-30 v23 零身份钩子（乐变库带导出表，IsPlayerCountry 的 Dobby 钩 4/4 崩溃 → 永久禁钩）：
@@ -72,57 +72,57 @@ enum : uintptr_t {
     RVA_UPDATE_BATTLE_LEB  = 0x3394D5C,
     RVA_SET_END_LEB        = 0x33951C8,
     RVA_START_BATTLE_LEB   = 0x339A9E4,
-    RVA_ARMY_CORRECT_LEB   = 0x5A467BC,  // CountryDataMgr.CorrectArmyData()：军队校正总口（周期重算，钩后同步回钉）
-    RVA_GET_COUNTRY_MGR_LEB = 0x5A4790C, // CountryDataMgr.GetCountryDataById(int) → 捕获 this
-    RVA_GET_CITY_MGR_LEB    = 0x57EEB4C, // CityDataMgr.GetCityData(int) → 捕获 this
+    RVA_ARMY_CORRECT_LEB   = 0x6917D3C,  // CountryDataMgr.CorrectArmyData()：军队校正总口（周期重算，钩后同步回钉）
+    RVA_GET_COUNTRY_MGR_LEB = 0x6918E8C, // CountryDataMgr.GetCountryDataById(int) → 捕获 this
+    RVA_GET_CITY_MGR_LEB    = 0x66C10CC, // CityDataMgr.GetCityData(int) → 捕获 this
 
     // ── 好游快爆 com.syyx.whrhx · 乐变 223.7MB（sha 1646c8bb…，8/20 构建）──
     // 2026-08-30 活内存 dump：metadata v24.5 变体(32段/method 64B token@+52/type 92B/image 40B)
     // + gap 区 CodeGenModule methodPointers（idx=rid-1，get_deltaTime 序言 f81e0ff3 与九游互证）。
     // 8/20 构建重构：CountryData.CostRes/CanAddArmy 删除；BattleControlMgr.StartBattle/UpdateBattleTime
     // 改名（候选 StartTimer/OnCountDown/UpdateBattleCostTime，Trace 分辨）；QF.Singleton getter 泛型化。
-    RVA_KB_COST_SINGLE     = 0x523AB5C,  // CountryData.CostSingleRes
-    RVA_KB_CHECK_RES       = 0x5249F8C,  // CountryData.CheckRes
-    RVA_KB_ADD_RES         = 0x5245B58,  // CountryData.AddRes
-    RVA_KB_ADD_RES_CAMP    = 0x58ADC94,  // CampaignData.AddRes
-    RVA_KB_ARMY_CORRECT    = 0x5A467BC,  // CountryDataMgr.CorrectArmyData
-    RVA_KB_GET_DELTA       = 0x4EEAD74,  // Time.get_deltaTime（九游 0x8BD2100 + 0x34）
-    RVA_KB_SET_END         = 0x5334A1C,  // BattleControlMgr.SetEnd（同名沿用）
-    RVA_KB_ON_COUNTDOWN    = 0x53343E0,  // BattleControlMgr.OnCountDown（tick 候选1）
-    RVA_KB_UPDATE_COST     = 0x533493C,  // BattleControlMgr.UpdateBattleCostTime（tick 候选2）
-    RVA_KB_START_TIMER     = 0x5333FDC,  // BattleControlMgr.StartTimer（开战候选）
+    RVA_KB_COST_SINGLE     = 0x61110D4,  // CountryData.CostSingleRes
+    RVA_KB_CHECK_RES       = 0x6120504,  // CountryData.CheckRes
+    RVA_KB_ADD_RES         = 0x611C0D0,  // CountryData.AddRes
+    RVA_KB_ADD_RES_CAMP    = 0x677F214,  // CampaignData.AddRes
+    RVA_KB_ARMY_CORRECT    = 0x6917D3C,  // CountryDataMgr.CorrectArmyData
+    RVA_KB_GET_DELTA       = 0x5CEC798,  // Time.get_deltaTime（九游 0x8BD2100 + 0x34）
+    RVA_KB_SET_END         = 0x620AF94,  // BattleControlMgr.SetEnd（同名沿用）
+    RVA_KB_ON_COUNTDOWN    = 0x620A958,  // BattleControlMgr.OnCountDown（tick 候选1）
+    RVA_KB_UPDATE_COST     = 0x620AEB4,  // BattleControlMgr.UpdateBattleCostTime（tick 候选2）
+    RVA_KB_START_TIMER     = 0x620A554,  // BattleControlMgr.StartTimer（开战候选）
     RVA_KB_ON_BATTLE_END   = 0x3629344,  // LockStepMgr.OnBattleEnd（首指令 B 跳板，resolve-only）
-    RVA_KB_GET_COUNTRY_MGR = 0x5A4790C,  // CountryDataMgr.GetCountryDataById → 捕获 this
-    RVA_KB_GET_CITY_MGR    = 0x57EEB4C,  // CityDataMgr.GetCityData → 捕获 this
+    RVA_KB_GET_COUNTRY_MGR = 0x6918E8C,  // CountryDataMgr.GetCountryDataById → 捕获 this
+    RVA_KB_GET_CITY_MGR    = 0x66C10CC,  // CityDataMgr.GetCityData → 捕获 this
 
     // ── 2026-09-23 乐变 OTA 热更后重校（新 dump.cs + libil2cpp 首指令逐点实锤）──
     // 旧值全部作废：OTA 换掉了运行时 libil2cpp.so，RVA 整体漂移。
-    RVA_RESEARCH_TECH          = 0x6775574,  // MengHuaRecordMgr.ResearchTech(int)
-    RVA_TECH_POLICY_RESEARCH   = 0x5D6D208,  // MengHuaTechPolicyData.Research()
+    RVA_RESEARCH_TECH          = 0x7683FA4,  // MengHuaRecordMgr.ResearchTech(int)
+    RVA_TECH_POLICY_RESEARCH   = 0x6C3C788,  // MengHuaTechPolicyData.Research()
     RVA_POLICY_GET_DATA        = 0x3C506AC,  // PolicyDataMgr.GetPolicyData(int)
     RVA_POLICY_UPDATE_TIME     = 0x3C51A6C,  // PolicyDataMgr.UpdatePolicyTime(float,bool,bool)  ← 2→3 参
     RVA_POLICY_FINISH_ANYWAY   = 0x3C538B8,  // PolicyDataMgr.FinishPolicyTimeAnyway(int)
-    RVA_POLICY_EXECUTE         = 0x5BCF7FC,  // PolicyDataMgr.ExecutePolicy(int,float,bool,bool) ← 3→4 参
-    RVA_POLICY_UI_EXECUTE      = 0x57AA5A0,  // GameUI.PolicyUI.ExecutePolicy(int)
+    RVA_POLICY_EXECUTE         = 0x6AA0D7C,  // PolicyDataMgr.ExecutePolicy(int,float,bool,bool) ← 3→4 参
+    RVA_POLICY_UI_EXECUTE      = 0x667FB20,  // GameUI.PolicyUI.ExecutePolicy(int)
     // 名臣科研入口（上一轮漏做）：与 PolicyUI 并列的另外两个政策面板
-    RVA_MINISTER_UI_EXECUTE       = 0x5C6D3CC,  // GameUI.MinisterPolicyUI.ExecutePolicy(int)
-    RVA_EXTRA_MINISTER_UI_EXECUTE = 0x63DD170,  // GameUI.ExtraMinisterPolicyUI.ExecutePolicy(int)
+    RVA_MINISTER_UI_EXECUTE       = 0x6B3D94C,  // GameUI.MinisterPolicyUI.ExecutePolicy(int)
+    RVA_EXTRA_MINISTER_UI_EXECUTE = 0x72AB8A0,  // GameUI.ExtraMinisterPolicyUI.ExecutePolicy(int)
     // 国家政策面板的「资源不足」资源门（在内联于 ActivePolicy，不走 CountryData.CheckRes）：
     // PolicyUI.ActivePolicy 内 → CanActive 早退 → GetResCnt(21/22) 对比 GetSpecialResCostList → ShowPopUI
-    RVA_POLICY_UI_ACTIVE      = 0x57A9288,  // GameUI.PolicyUI.ActivePolicy()  ins D10303FF
-    RVA_POLICY_CAN_ACTIVE     = 0x5BC9584,  // PolicyDataMgr.CanActive(int,bool,bool,bool) ins A9BC5FF8
-    RVA_COUNTRY_GET_RES_CNT   = 0x5247260,  // CountryData.GetResCnt(eSpecialResType) → int ins A9BE4FF4
+    RVA_POLICY_UI_ACTIVE      = 0x667E808,  // GameUI.PolicyUI.ActivePolicy()  ins D10303FF
+    RVA_POLICY_CAN_ACTIVE     = 0x6A9AB04,  // PolicyDataMgr.CanActive(int,bool,bool,bool) ins A9BC5FF8
+    RVA_COUNTRY_GET_RES_CNT   = 0x611D7D8,  // CountryData.GetResCnt(eSpecialResType) → int ins A9BE4FF4
     // 名臣两侧：TryActivePolicy → PolicyDataMgr.CheckPolicyDisable(学习条件) → ShowPopUI(条件文案)
     // 实测：名臣面板默认也提示「资源不足」，执行完一项资源够的政策后因条件重算才放开；科技面板则始终不放
-    RVA_MINISTER_TRY_ACTIVE        = 0x5C6CB7C,  // GameUI.MinisterPolicyUI.TryActivePolicy() ins D101C3FF
-    RVA_EXTRA_MINISTER_TRY_ACTIVE  = 0x63DB99C,  // GameUI.ExtraMinisterPolicyUI.TryActivePolicy() ins D101C3FF
-    RVA_POLICY_CHECK_DISABLE       = 0x5BD2430,  // PolicyDataMgr.CheckPolicyDisable(int) → int ins 0xA9BB67FA
+    RVA_MINISTER_TRY_ACTIVE        = 0x6B3D0FC,  // GameUI.MinisterPolicyUI.TryActivePolicy() ins D101C3FF
+    RVA_EXTRA_MINISTER_TRY_ACTIVE  = 0x72AA0CC,  // GameUI.ExtraMinisterPolicyUI.TryActivePolicy() ins D101C3FF
+    RVA_POLICY_CHECK_DISABLE       = 0x6AA39B0,  // PolicyDataMgr.CheckPolicyDisable(int) → int ins 0xA9BB67FA
     // 「能不能点」的真门（2026-09-23 续修）：条目显示/可点状态由它返回
     // 调用者 PolicyItem.CheckShowState @0x389AB0C（+0x124 处 bl 本函数，返回值存 PolicyItem+0x104）
     // ← 列表构建 PolicyItem.InitPolicyItem +0x120、点击 PolicyUI.OnClickPolicyItem +0xF4
     // 函数内 0x3C5C8E0 cmp/0x3C5C8E4 b.ge → 0x3C5C8E8 orr w20,wzr,#7(ResNotEnough)
     //                                      / 0x3C5C8F0 orr w20,wzr,#2(CanExecute)
-    RVA_POLICY_ITEM_SHOW_STATE     = 0x5BD4438,  // PolicyDataMgr.GetPolicyItemShowState(int,float) ins D104C3FF
+    RVA_POLICY_ITEM_SHOW_STATE     = 0x6AA59B8,  // PolicyDataMgr.GetPolicyItemShowState(int,float) ins D104C3FF
 
     // ── 2026-10-11 本机运行时 so 重校（sha256 79adda77…、201,368,952B；dump=06_dumped/无悔华夏/current_20261011）──
     // 说明：上面 0923 那批锚点基准是 c04afff4…，本机再热更后已整体漂移（旧值首指令不符 →
@@ -130,10 +130,10 @@ enum : uintptr_t {
     //       ★ 2026-10-11 二次重校（P0-②）：整张枚举已由 04_scripts/无悔华夏/whrhx_rebaseline.sh
     //       --apply 依据 dump.cs + 本机运行时 so 全部改写为实测值（36 个常量），期望首指令
     //       不再写在这里 —— 统一由自动生成的 WhrhxRvaGen.h 的 kExpectGen[] 提供。
-    RVA_ARMY_GET_MAX_CAN_SEND  = 0x5A40968,  // CountryData.CountryArmyData.GetMaxCanSendNum(int,bool,int,bool,long,bool) → long
-    RVA_ARMY_GET_MAX_SEND      = 0x5A40E64,  // CountryData.CountryArmyData.GetMaxSendNum(eBattleType,int) → long
-    RVA_MINISTER_GET_FAVOR     = 0x5DDE2C4,  // MinisterPlayMgr.GetMinisterFavorite(int) → int
-    RVA_MINISTER_ADD_FAVOR     = 0x61DCFB4,  // MinisterPlayMgr.MinisterPlayData.AddFavor(int)
+    RVA_ARMY_GET_MAX_CAN_SEND  = 0x6911EE8,  // CountryData.CountryArmyData.GetMaxCanSendNum(int,bool,int,bool,long,bool) → long
+    RVA_ARMY_GET_MAX_SEND      = 0x69123E4,  // CountryData.CountryArmyData.GetMaxSendNum(eBattleType,int) → long
+    RVA_MINISTER_GET_FAVOR     = 0x6CB0844,  // MinisterPlayMgr.GetMinisterFavorite(int) → int
+    RVA_MINISTER_ADD_FAVOR     = 0x70AF5C8,  // MinisterPlayMgr.MinisterPlayData.AddFavor(int)
 };
 
 static constexpr size_t kOffCountryMoney  = 0x118;

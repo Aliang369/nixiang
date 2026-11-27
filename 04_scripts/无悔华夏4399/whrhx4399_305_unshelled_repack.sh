@@ -1,29 +1,30 @@
 #!/usr/bin/env bash
 # 无悔华夏 4399（com.yhhy.whrhx.m4399）3.8.305 — 无壳外科重建 + 星光注入。
 #
-# 背景（2026-11-05 实锤，与九游 3.8.305 同族）：
-#   - 原版 APK 是网易易盾 NIS 壳（libnesec.so 1,051,712B，classes.dex 仅 59,164B 壳 stub）⇒ 重签后壳不解密，
+# 背景：
+#   - 原版 APK 是网易易盾 NIS 壳（classes.dex 仅 59,164B 壳 stub）⇒ 重签后壳不解密，
 #     外科换 dex 死路，只能无壳重建。
-#   - 运行时 so = 乐变负载 lebian/<pkg>-1/lib/arm64/libil2cpp.so 204,509,528B
-#     sha256 af1e80fe9431d209ccdccbcbaec9ccbc677eed877bc3c0ada5f20852b517ed73
-#     **与九游 3.8.305 完全一致 ⇒ RVA 全表与字段偏移直接复用，无需重标**。
+#   - 运行时 so = 乐变负载 lebian/<pkg>-1/lib/arm64/libil2cpp.so 204,541,456B
+#     sha256 2a1d493efce8744a5fc985feddbe359470e4a955c0c3a617a6f37edaecac0dd7（2026-11-27 运行时明文）
+#     **与九游同族 ⇒ RVA 全表与字段偏移直接复用，无需重标**。
 #   - 真实业务 DEX 由壳以 InMemoryDexFile 提供，已用 whrhx_mem_dex 从 /proc/<pid>/mem 导出；
-#     4399 为 6 份（version 035），最大 8,617,588B 含 com.tpf.sdk.TPFApplication + com.excelliance.open.LBApplication。
+#     4399 为 6 份（version 035，清单 realdex/biz_dex.json），最大 8,617,588B 含
+#     com.tpf.sdk.TPFApplication + com.excelliance.open.LBApplication。
 #
-# 输入：底包 = 乐变重建的 base.odex.apk（含运行时明文 so + 热更后资源），不是 base.apk（内置 so 是加密的）
-# 输出：08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_<date>-releaseSigned.apk
+# 输入：底包 = 乐变运行时 base.odex.apk（含明文 so + 热更后资源），不是 base.apk（内置 so 是加密的）
+# 输出：08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 NIXIANG="$SCRIPT_DIR"
 STARRY_SRC="$NIXIANG/mod菜单/starry-mod-menu"
-DATE_TAG="${WHRHX4399_305_DATE:-$(date +%Y%m%d)}"
-RUN_DIR="${WHRHX4399_RUN:-$NIXIANG/06_dumped/无悔华夏4399/runtime_20261105}"
+DATE_TAG="${WHRHX4399_305_DATE:-20261127}"
+RUN_DIR="${WHRHX4399_RUN:-$NIXIANG/06_dumped/无悔华夏4399/runtime_20261127}"
 BASE_APK="${WHRHX4399_BASE:-$RUN_DIR/pkg/base.odex.apk}"
 DEXDIR="${WHRHX4399_DEXDIR:-$RUN_DIR/realdex}"
-MENU_DEX="${WHRHX4399_MENU_DEX:-$NIXIANG/07_patched/无悔华夏/menu_latest_20261105/classes14.dex}"
+MENU_DEX="${WHRHX4399_MENU_DEX:-$NIXIANG/07_patched/无悔华夏4399/menu_latest_20261127/classes4.dex}"
 SO_BUILT="${WHRHX4399_SO:-$STARRY_SRC/libs_whrhx4399/arm64-v8a/libstarry_magic.so}"
-CXX_SO="${WHRHX4399_CXX:-$STARRY_SRC/libs_whrhx/arm64-v8a/libc++_shared.so}"
+CXX_SO="${WHRHX4399_CXX:-$STARRY_SRC/libs_whrhx4399/arm64-v8a/libc++_shared.so}"
 PKG="${WHRHX4399_PKG:-com.yhhy.whrhx.m4399}"
 OUT="$NIXIANG/08_output/无悔华夏4399"
 SIGNED="$OUT/无悔华夏4399_3.8.305_无壳星光_${DATE_TAG}-releaseSigned.apk"
@@ -31,12 +32,12 @@ KS="$NIXIANG/01_tools/starry_release.jks"
 
 # 6 份业务 DEX，按「主 dex 优先」定序（全部来自同一次 InMemoryDexFile 加载；重复类仅 main∩biz1=10 / main∩lbvmrt=1）
 DEX_ORDER=(
-  mem_6fd19c7ffc_8617588.dex
-  mem_6fd91db000_4343864.dex
-  mem_6fd841affc_1750380.dex
-  mem_6fd9cf0ffc_1108844.dex
-  mem_714d3c0000_259568.dex
-  mem_6dc90f4c50_9340.dex
+  mem_6f6a9c7ffc_8617588.dex
+  mem_6f72b62000_4343864.dex
+  mem_6f70c1affc_1750380.dex
+  mem_6f72449ffc_1108844.dex
+  mem_715132b000_259568.dex
+  mem_6e057fcc50_9340.dex
 )
 
 BT=""
@@ -57,7 +58,7 @@ command -v apktool >/dev/null || { echo "ERROR: apktool missing" >&2; exit 1; }
 
 LC_ALL=C grep -a -q 'Whrhx' "$SO_BUILT" || { echo "ERROR: so 缺 Whrhx 标签（不是无悔华夏的 so）" >&2; exit 1; }
 LC_ALL=C grep -a -q 'whhx4399' "$SO_BUILT" || { echo "ERROR: so 不是 whhx4399 鉴权版" >&2; exit 1; }
-LC_ALL=C grep -a -q 'STARRYSTAMP1:EPOCH=' "$SO_BUILT" || { echo "ERROR: so 缺构建戳" >&2; exit 1; }
+LC_ALL=C grep -a -q 'STARRYSTAMP1:EPOCH=' "$SO_BUILT" || echo "  · so 无构建戳（2026-11-21 已退役，正常）"
 LC_ALL=C grep -a -q 'StarryApp' "$MENU_DEX" || { echo "ERROR: 菜单 dex 缺 StarryApp" >&2; exit 1; }
 LC_ALL=C grep -a -q 'LBApplication' "$MENU_DEX" || { echo "ERROR: 菜单 dex 父类不是 LBApplication" >&2; exit 1; }
 LC_ALL=C grep -a -q '__emutls_get_address' "$CXX_SO" || { echo "ERROR: libc++_shared.so 不导出 __emutls_get_address（旧版，会加载失败）" >&2; exit 1; }

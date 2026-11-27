@@ -33,13 +33,13 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-11-05 17:21:22",
+      "done_at": "2026-11-27 15:53:38",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.305_m4399_from_device.apk": {
           "md5": "d14e18439b6f4e4e2c28e4a2fcedb608"
         },
         "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/fetched_apk.json": {
-          "md5": "6d2547a8a28b9a77f1e30ff5b0b85962"
+          "md5": "87247acd637a5e1f2a3492640540d266"
         }
       }
     },
@@ -60,7 +60,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-11-05 17:21:48",
+      "done_at": "2026-11-27 15:54:20",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/check_summary.json": {
           "md5": "5d6953f5afe9a027b6c4fdc9652b980c"
@@ -68,7 +68,7 @@
       },
       "inputs": {
         "/Users/aliang/Documents/nixiang/02_apks/无悔华夏4399/无悔华夏4399_3.8.305_m4399_from_device.apk": "d14e18439b6f4e4e2c28e4a2fcedb608",
-        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/fetched_apk.json": "6d2547a8a28b9a77f1e30ff5b0b85962"
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/fetched_apk.json": "87247acd637a5e1f2a3492640540d266"
       }
     },
     {
@@ -84,23 +84,40 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.280/libil2cpp.so"
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.305/libil2cpp.so"
         },
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.280/global-metadata.packed.dat"
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.305/global-metadata.packed.dat"
         },
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/03_decompiled/无悔华夏4399/3.8.280/manifest.xmltree"
+          "path": "/Users/aliang/Documents/nixiang/03_decompiled/无悔华夏4399/3.8.305/manifest.xmltree"
         },
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.280/static_hashes.json"
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.305/static_hashes.json"
         }
       ],
       "status": "done",
-      "done_at": "2026-09-14 19:09:27"
+      "done_at": "2026-11-27 16:17:26",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.305/libil2cpp.so": {
+          "md5": "415be4f4375cfca1abb55d79d60d10da"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.305/global-metadata.packed.dat": {
+          "md5": "8033122f48be717ac71e1598a02ea66c"
+        },
+        "/Users/aliang/Documents/nixiang/03_decompiled/无悔华夏4399/3.8.305/manifest.xmltree": {
+          "md5": "397a9f32bc6d8f48137aefc4795fb1c8"
+        },
+        "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/3.8.305/static_hashes.json": {
+          "md5": "3128c6e68e2433b36b3747676fe20818"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/check_summary.json": "5d6953f5afe9a027b6c4fdc9652b980c"
+      }
     },
     {
       "id": "build_so",
@@ -132,8 +149,7 @@
           "pattern": "[Whrhx]"
         }
       ],
-      "status": "done",
-      "done_at": "2026-09-15 20:48:09",
+      "status": "pending",
       "note": "2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_*\n2026-09-30 收尾清理: /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so; 原 md5=947a5afe9e75e8cc60098ef3c0bd31e3\n2026-11-05 修正: verify 由 not_exists 还原为 file_exists（真产物语义，3 条）"
     },
     {
@@ -272,12 +288,20 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/pkg/base.odex.apk"
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261127/pkg/base.odex.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-11-05 17:24:00",
-      "notes": "底包内运行时 libil2cpp.so 204,509,528B sha256 af1e80fe… 与九游 3.8.305 完全一致 ⇒ RVA 全表复用。"
+      "notes": "底包内运行时 libil2cpp.so 204,509,528B sha256 af1e80fe… 与九游 3.8.305 完全一致 ⇒ RVA 全表复用。",
+      "done_at": "2026-11-27 16:23:55",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261127/pkg/base.odex.apk": {
+          "md5": "6b36d212614297a4ee01de3252ab95f6"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏4399/check_summary.json": "5d6953f5afe9a027b6c4fdc9652b980c"
+      }
     },
     {
       "id": "dump_dex",
@@ -292,11 +316,10 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/realdex/biz_dex.json"
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261127/realdex/biz_dex.json"
         }
       ],
-      "status": "done",
-      "done_at": "2026-11-05 17:26:00",
+      "status": "pending",
       "notes": "4399 与九游不同：业务 DEX 只有 6 份（035），主 dex 8,617,588B 含 com.tpf.sdk.TPFApplication + com.excelliance.open.LBApplication；61 个唯一候选中其余全是 Android 16 boot dex（039）。"
     },
     {
@@ -313,12 +336,20 @@
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-11-05 17:29:00",
-      "notes": "manifest: MyApplication→StarryApp（父类 LBApplication）+ StarryInitProvider（authorities com.yhhy.whrhx.m4399.starryinit）+ MenuService；LEBIAN_APPLICATION 原样保留。"
+      "notes": "manifest: MyApplication→StarryApp（父类 LBApplication）+ StarryInitProvider（authorities com.yhhy.whrhx.m4399.starryinit）+ MenuService；LEBIAN_APPLICATION 原样保留。",
+      "done_at": "2026-11-27 16:41:25",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk": {
+          "md5": "4d98fbd450fcaa518cf9eed3e7642569"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/libs_whrhx4399/arm64-v8a/libstarry_magic.so": "1ee169f887db3a1801f8c9e1a8e23c1a"
+      }
     },
     {
       "id": "install_305",
@@ -329,16 +360,24 @@
       "preflight": [
         "/Users/aliang/Documents/nixiang/04_scripts/无悔华夏/whrhx_clean_reinstall.sh"
       ],
-      "command": "WHRHX_PKG=com.yhhy.whrhx.m4399 WHRHX_APK=\"$NIXIANG/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk\" WHRHX_SILENT=1 bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_clean_reinstall.sh\" --uninstall",
+      "command": "WHRHX_PKG=com.yhhy.whrhx.m4399 WHRHX_APK=\"$NIXIANG/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk\" WHRHX_SILENT=1 bash \"$NIXIANG/04_scripts/无悔华夏/whrhx_clean_reinstall.sh\" --uninstall",
       "verify": [
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "done_at": "2026-11-05 17:32:00",
-      "notes": "复用九游的参数化清装脚本（WHRHX_PKG/WHRHX_APK 覆盖），设备 base.apk md5 与产物一致、运行 so md5 一致。"
+      "notes": "复用九游的参数化清装脚本（WHRHX_PKG/WHRHX_APK 覆盖），设备 base.apk md5 与产物一致、运行 so md5 一致。",
+      "done_at": "2026-11-27 16:47:49",
+      "artifacts": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk": {
+          "md5": "4d98fbd450fcaa518cf9eed3e7642569"
+        }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk": "4d98fbd450fcaa518cf9eed3e7642569"
+      }
     },
     {
       "id": "cleanup",
@@ -353,28 +392,26 @@
       "verify": [
         {
           "type": "not_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/pkg/base.odex.apk"
+          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261127/pkg/base.odex.apk"
         },
         {
           "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/realdex/biz_dex.json"
-        },
-        {
-          "type": "file_exists",
-          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk"
+          "path": "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk"
         }
       ],
       "status": "done",
-      "notes": "收官清理（305 线）：删 06_dumped/无悔华夏4399/runtime_20261105/pkg（1.6G 底包，可从设备重拉）与非业务 boot dex，保留 realdex/biz_dex.json + 6 份业务 DEX、08_output 正式包、09_test 预检证据与验收日志。",
-      "done_at": "2026-11-05 17:49:35",
+      "notes": "收官清理（305 线）：第一阶段删 06_dumped/无悔华夏4399/runtime_20261127/pkg（1.6G 底包，可从设备重拉）与非业务 boot dex；收尾期七处（03/05/06/07/09_logs/09_test/13_scratch）按 tools/05「收尾清理」全清，realdex 业务 DEX 同样清零（可再生：dump_dex 阶段重跑），本阶段只校验 pkg 不存在 + 08_output 正式包存在。",
+      "done_at": "2026-11-27 17:22:06",
       "artifacts": {
-        "/Users/aliang/Documents/nixiang/06_dumped/无悔华夏4399/runtime_20261105/realdex/biz_dex.json": {
-          "md5": "f880cb026519d9d3db047dcb447788b5"
-        },
-        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261105-releaseSigned.apk": {
-          "md5": "b5a1bb3185594114fb18e151eeab365d"
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk": {
+          "md5": "4d98fbd450fcaa518cf9eed3e7642569"
         }
-      }
+      },
+      "inputs": {
+        "/Users/aliang/Documents/nixiang/08_output/无悔华夏4399/无悔华夏4399_3.8.305_无壳星光_20261127-releaseSigned.apk": "4d98fbd450fcaa518cf9eed3e7642569"
+      },
+      "failed_at": "2026-11-27 17:21:43",
+      "error": "命令退出码 1（详见日志尾部）"
     }
   ]
 }
