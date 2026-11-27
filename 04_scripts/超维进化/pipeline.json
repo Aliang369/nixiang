@@ -1,0 +1,148 @@
+{
+  "game": "超维进化",
+  "version": "2.2 / vc12 / com.grinning.beta.yszl（TapTap 渠道）；热更 0.3.51",
+  "notes": "2026-11-27 接入。Cocos Creator 2.x（不是 Unity/IL2CPP），十项功能全走 JS splice（se::evalString hook），native 只有反篡改中和。底包 sha256 bcea444d…（176,559,657 B，TapTap 官方原版，与上一轮同包）；热更 0.3.51 game.js 3,156,043 B / sha256 28b3a9cf…。构建入口＝私有 mk Android_cwjh.mk（公共 Android.mk 不动）+ scripts/surgical_cwjh_win.sh（Windows 版，蓝本 mac 版 surgical_cwjh_2.2.sh）。装机策略 overlay_only：常态同签名覆盖；首次从官方原版切星光包是异签名，必须显式 --allow-uninstall 卸载一次（只此一次）。设备：真机 96f0d883（arm64 原生）。雷电 emulator-5554 对本包不可用：原版正常，装星光包即 cocos_jni_env_init 后约 10ms 被 signal 9 杀成重启循环（反篡改中和抢不过），详见 10_docs/超维进化/超维进化_2.2_0.3.51_复刻记录.md §8。",
+  "params": {
+    "game_id": "cwjh",
+    "package": "com.grinning.beta.yszl",
+    "tag": "cwjh",
+    "serial": "96f0d883",
+    "version": "2.2",
+    "version_code": 12
+  },
+  "env": {
+    "SERIAL": "96f0d883",
+    "NIXIANG": "/e/nixiang",
+    "ANDROID_NDK_HOME": "/e/nixiang/01_tools/android-sdk/ndk/android-ndk-r27c"
+  },
+  "install_policy": "overlay_only",
+  "workdir": "13_scratch/cwjh_build",
+  "stages": [
+    {
+      "id": "check_apk",
+      "name": "官包核对（02_apks 底包 + sha256 对照）",
+      "requires": [],
+      "command": "B=\"$NIXIANG/02_apks/超维进化/超维进化_taptap_原版_20261127_vc12.apk\"; ls -l \"$B\" && sha256sum \"$B\"",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "02_apks/超维进化/超维进化_taptap_原版_20261127_vc12.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-27 20:36:00"
+    },
+    {
+      "id": "anchor",
+      "name": "锚点重校（分析阶段，产出落 10_docs）",
+      "requires": [
+        "check_apk"
+      ],
+      "command": "echo '锚点表见 10_docs/超维进化/超维进化_2.2_0.3.51_复刻记录.md §4'",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "10_docs/超维进化/超维进化_2.2_0.3.51_复刻记录.md"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-27 21:20:00"
+    },
+    {
+      "id": "build_so",
+      "name": "构建 libstarry_magic.so（arm64，私有 mk + 独立 obj）",
+      "requires": [
+        "anchor"
+      ],
+      "command": "cd \"/e/nixiang/mod菜单/starry-mod-menu/app/src/main/jni\" && \"$ANDROID_NDK_HOME/ndk-build.cmd\" NDK_PROJECT_PATH=../.. APP_BUILD_SCRIPT=./Android_cwjh.mk NDK_APPLICATION_MK=./Application.mk APP_ABI=arm64-v8a NDK_OUT=../../obj_cwjh NDK_LIBS_OUT=../../libs_cwjh -j4",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "mod菜单/starry-mod-menu/app/src/libs_cwjh/arm64-v8a/libstarry_magic.so"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-27 20:54:00"
+    },
+    {
+      "id": "surgical",
+      "name": "外科组装（底包 → 星光包，含 classes4/classes3/classes.dex/Manifest）",
+      "requires": [
+        "build_so"
+      ],
+      "command": "cd \"/e/nixiang/mod菜单/starry-mod-menu\" && bash scripts/surgical_cwjh_win.sh",
+      "verify": [
+        {
+          "type": "file_exists",
+          "path": "08_output/超维进化/超维进化_2.2_surgical-releaseSigned.apk"
+        }
+      ],
+      "status": "done",
+      "done_at": "2026-11-27 22:01:00"
+    },
+    {
+      "id": "sign",
+      "name": "签名校验（脚本内联 apksigner v2，此处只复核证书）",
+      "requires": [
+        "surgical"
+      ],
+      "command": "\"$NIXIANG/01_tools/android-sdk/build-tools/android-15/apksigner.bat\" verify --print-certs \"$NIXIANG/08_output/超维进化/超维进化_2.2_surgical-releaseSigned.apk\" | head -6",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-11-27 22:01:00"
+    },
+    {
+      "id": "device_ready",
+      "name": "设备准备（真机 96f0d883）",
+      "requires": [],
+      "command": "adb -s \"$SERIAL\" get-state && adb -s \"$SERIAL\" shell getprop ro.product.model",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-11-27 21:40:00"
+    },
+    {
+      "id": "install",
+      "name": "装机（overlay_only；异签名首次需 --allow-uninstall）",
+      "requires": [
+        "sign",
+        "device_ready"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/install_guard.sh\" 超维进化 --cmd \"adb -s $SERIAL install -r -d $NIXIANG/08_output/超维进化/超维进化_2.2_surgical-releaseSigned.apk\" || exit $?; adb -s \"$SERIAL\" install -r -d \"$NIXIANG/08_output/超维进化/超维进化_2.2_surgical-releaseSigned.apk\"",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-11-27 21:41:00"
+    },
+    {
+      "id": "precheck",
+      "name": "装机后运行时预检（L2 机器关，全过才请用户上手）",
+      "requires": [
+        "install"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/post_install_precheck.sh\" --game 超维进化 --serial \"$SERIAL\"",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-11-27 21:42:00"
+    },
+    {
+      "id": "archive",
+      "name": "收官归档（文档 + 状态 + 白名单提交并推送）",
+      "requires": [
+        "precheck"
+      ],
+      "command": "echo '按 AGENTS.md 收尾口令：白名单 add → archive_scoped_git.sh 提交并 push origin/main'",
+      "verify": [],
+      "status": "done",
+      "done_at": "2026-11-27 21:50:00"
+    },
+    {
+      "id": "archive_close",
+      "name": "状态收口（archive_close_git.sh 校验游戏范围无漏提交）",
+      "requires": [
+        "archive"
+      ],
+      "command": "bash \"$NIXIANG/04_scripts/_common/archive_close_git.sh\" --game 超维进化",
+      "verify": [],
+      "status": "pending"
+    }
+  ]
+}
