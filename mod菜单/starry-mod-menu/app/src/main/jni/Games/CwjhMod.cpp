@@ -38,6 +38,16 @@
  *          （f0-f9），miss 一律 LOGW 留痕（吸取 20260921「静默跳过」排查最久的教训）。
  *   证据闭环：运行时 splice #2/#3 len 2809690→2811917（+2227）与旧代码主机离线逐字节同值；
  *          修复后主机离线 = +2555（gate 8/9 各 1）。
+ *
+ *  【20261127 热更重校（0.3.51，game.js 3,156,043 B / sha256 28b3a9cf…；patch 0.1.86→0.3.51）】
+ *   漂移面：① _timer 增加 pause 判空，旧整段锚点 miss；② calcDmgWithTar 形参重排为
+ *          (i, s, n, r, a, o, c) —— 受击方 = s、攻击者 = n，防御/抗性/闪避三处的受击方
+ *          变量由 i/e 统一改为 s；③ 防御行变量 o→c、抗性行 c→h，且两行尾部钳制串完全相同
+ *          （裸钳制锚点不再唯一，沿用旧⑤锚点会串改④护甲）⇒ 一律改「累减行 + 钳制行」两行整块；
+ *          ⑥ 闪避行 e/i → s/n；④doDmg 变薄包装器（转 _tryMergeDmg/_doDmgNow），首参=伤害、
+ *          三参=攻击者不变，注入点仍在包装器入口，语义等价。
+ *   实测 splice（主机离线，node --check PASS）：3,123,969 → 3,126,560（+2591）；
+ *          f0/f1=1 f2=3 f3=1+2 f4=1 f5=1 f6=1 f7=1 f8/f9=1（doDmg dmg=e atk=n）。
  * ================================================================ */
 
 #include "CwjhMod.h"
@@ -230,7 +240,9 @@ static bool NeedsCombatSplice(const char* s, size_t n) {
     if (has("\"org.cocos2dx.javascript.AppActivity\",\"get_ret\"")) return false; // 已拼
     // 战斗文件识别：_timer 回复 tick / adsPlay / doDmg 三签名（doDmg 供 ⑧ 秒杀/无敌）
     return has("_timer() {\nthis.recHp();") ||
+           has("if (!e || !e.pause) {\nthis.recHp();") ||           // 0.3.51 热更（timer 加 pause 判空）
            has("async adsPlay(t, e, i = \"\")") ||
+           has("doDmg(e, s, n, r, a, o, c, h, l, _ = !0") ||  // 0.3.51 热更（14 参包装器）
            has("doDmg(r, a, o, c, h, l, _, d, m, u = !0") ||  // 0.2.9x+ 热更
            has("doDmg(e, r, a, o, c, h, l, _, d, m = !0") ||   // 0.2.83
            has("doDmg(e, n, r, a, o, c, h, l, _, d = !0");     // 2.1 首发/2.2 内置
@@ -258,13 +270,18 @@ static std::string SpliceCombatJs(const char* src) {
         auto gated = [](const char* gate, const char* fn) {
             return std::string("if(") + gate + "&&this.sideType==1)this." + fn + "();\n";
         };
-        static const char* kAnchor = "_timer() {\nthis.recHp();\nthis.recSp();\n}";
-        std::string rep = "_timer() {\n";
-        for (int i = 0; i < CWJH_HP_TICK_MULT - 1; i++) rep += gated(CWJH_GATE(0), "recHp");
-        rep += "this.recHp();\n";
-        for (int i = 0; i < CWJH_SP_TICK_MULT - 1; i++) rep += gated(CWJH_GATE(1), "recSp");
-        rep += "this.recSp();\n}";
-        size_t hits = ReplaceAll(s, kAnchor, rep.c_str());
+        // 0.3.51：_timer 增加 pause 判空（const e=…combat; if(!e||!e.pause){…}），旧整段锚点 miss
+        // ⇒ 锚 guard 头 + 体内两行，追加调用落在 guard 内（暂停期不回血，与引擎语义一致）；
+        // 旧形态（≤0.3.16，无 guard）保留为回落。
+        static const char* kAnchor = "if (!e || !e.pause) {\nthis.recHp();\nthis.recSp();";
+        static const char* kAnchorOld = "_timer() {\nthis.recHp();\nthis.recSp();\n}";
+        std::string tail;
+        for (int i = 0; i < CWJH_HP_TICK_MULT - 1; i++) tail += gated(CWJH_GATE(0), "recHp");
+        tail += "this.recHp();\n";
+        for (int i = 0; i < CWJH_SP_TICK_MULT - 1; i++) tail += gated(CWJH_GATE(1), "recSp");
+        tail += "this.recSp();";
+        size_t hits = ReplaceAll(s, kAnchor, ("if (!e || !e.pause) {\n" + tail).c_str());
+        if (!hits) hits = ReplaceAll(s, kAnchorOld, ("_timer() {\n" + tail + "\n}").c_str());
         if (hits) LOGI("[Cwjh] splice f0/f1 timer hits=%zu", hits);
         else LOGW("[Cwjh] splice f0/f1 timer anchor missed");
     }
@@ -314,11 +331,20 @@ static std::string SpliceCombatJs(const char* src) {
 
     // ④ 高防御：护甲减伤 AMR +15pp（己方受击方；沿用引擎自己的钳制作为上限，不另设 0.95）
     {
-        // 形态C（0.3.5+，20260921 二次热更）：变量改名 o，上限改成函数 StatusDef.getMinEdr(this)
-        static const char* kAmrC = "o = Math.min(Math.max(o, -1), t.StatusDef.getMinEdr(this));";
-        std::string repC = std::string(kAmrC) + "\nif(" CWJH_GATE(
+        // 0.3.5/0.3.16：变量 o，上限 StatusDef.getMinEdr(this)（保留为回落）
+        static const char* kAmrOld = "o = Math.min(Math.max(o, -1), t.StatusDef.getMinEdr(this));";
+        std::string repOld = std::string(kAmrOld) + "\nif(" CWJH_GATE(
             4) "&&i.sideType==1){o+=.15;o=Math.min(o,t.StatusDef.getMinEdr(this));}";
+        // 0.3.51：AMR 行变量 o→c，且与⑤抗性行尾部钳制串相同（裸钳制行已不唯一）
+        // ⇒ 锚「BKA 累减行 + 钳制行」两行整块；受击方变量 = s（calcDmgWithTar(i,s,n,r,a,o,c)）
+        static const char* kAmrC =
+            "c -= this.getPropVal(\"BKA\") + (this.getPropVal(\"SK_BKA\", \"0\") || 0) + "
+            "(n && this.getPropVal(\"SK_BKA\", n.idKey) || 0);\n"
+            "c = Math.min(Math.max(c, -1), t.StatusDef.getMinEdr(this));";
+        std::string repC = std::string(kAmrC) + "\nif(" CWJH_GATE(
+            4) "&&s.sideType==1){c+=.15;c=Math.min(c,t.StatusDef.getMinEdr(this));}";
         size_t hits = ReplaceAll(s, kAmrC, repC.c_str());
+        hits += ReplaceAll(s, kAmrOld, repOld.c_str());
         // 形态A（钳 0.9）：r = Math.min(Math.max(r, -1), .9);（e=受击方）
         static const char* kAmrA = "r = Math.min(Math.max(r, -1), .9);";
         std::string repA = std::string(kAmrA) + "\nif(" CWJH_GATE(
@@ -335,10 +361,14 @@ static std::string SpliceCombatJs(const char* src) {
 
     // ⑤ 高抗性：抗性净值 ×2（己方受击方；钳制后叠加，沿用引擎钳制作上限）
     {
-        // 形态C（0.3.5+）：变量改名 c，上限 StatusDef.getMinEdr(this)
-        static const char* kResC = "c = Math.min(Math.max(c, -1), t.StatusDef.getMinEdr(this));";
+        // 0.3.51：抗性行变量 c→h；裸钳制行「c = Math.min(…)」在 0.3.51 已属于④护甲，
+        // 沿用旧锚点会串改防御 ⇒ 改锚「BKE 累减行 + 钳制行」两行整块（受击方 = s）
+        static const char* kResC =
+            "h -= (this.getPropVal(\"BKE\", r.toString()) || 0) + (this.getPropVal(\"BKE\", \"0\") || 0) + "
+            "(this.getPropVal(\"SK_BKE\", \"0\") || 0) + (n && this.getPropVal(\"SK_BKE\", n.idKey) || 0);\n"
+            "h = Math.min(Math.max(h, -1), t.StatusDef.getMinEdr(this));";
         std::string repC = std::string(kResC) + "\nif(" CWJH_GATE(
-            5) "&&i.sideType==1){c*=2;c=Math.min(c,t.StatusDef.getMinEdr(this));}";
+            5) "&&s.sideType==1){h*=2;h=Math.min(h,t.StatusDef.getMinEdr(this));}";
         size_t hits = ReplaceAll(s, kResC, repC.c_str());
         // 形态A（钳 0.9）
         static const char* kResA = "a = Math.min(Math.max(a, -1), .9);";
@@ -356,10 +386,16 @@ static std::string SpliceCombatJs(const char* src) {
 
     // ⑥ 高闪避：闪避值 +CWJH_DODGE_BONUS（己方受击方；对面命中仍会抵消，引擎 roll 封顶保留为安全网）
     {
-        // 形态A：s = e.getPropVal("DGC") 行后
+        // 0.3.51：DGC 行受击方 e→s、攻击方 i→n（let r = s.getPropVal("DGC"); r += s.trigger(…))
+        static const char* kDdgC =
+            "let r = s.getPropVal(\"DGC\");\n"
+            "r += s.trigger(skill.TriggerTiming.PreDodge, n, s, r);";
+        std::string repC = std::string(kDdgC) + "\nif(" CWJH_GATE(6) "&&s.sideType==1)r+=" CWJH_DODGE_BONUS ";";
+        size_t hits = ReplaceAll(s, kDdgC, repC.c_str());
+        // 形态A（≤0.3.16）：s = e.getPropVal("DGC") 行后
         static const char* kDdgA = "s += e.trigger(skill.TriggerTiming.PreDodge, i, e, s);";
         std::string repA = std::string(kDdgA) + "\nif(" CWJH_GATE(6) "&&e.sideType==1)s+=" CWJH_DODGE_BONUS ";";
-        size_t hits = ReplaceAll(s, kDdgA, repA.c_str());
+        hits += ReplaceAll(s, kDdgA, repA.c_str());
         // 形态B
         static const char* kDdgB = "n += i.trigger(skill.TriggerTiming.PreDodge, s, i, n);";
         std::string repB = std::string(kDdgB) + "\nif(" CWJH_GATE(6) "&&i.sideType==1)n+=" CWJH_DODGE_BONUS ";";

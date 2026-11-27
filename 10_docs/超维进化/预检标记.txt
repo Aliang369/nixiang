@@ -1,4 +1,4 @@
-# 超维进化预检标记（2026-10-06，0.3.16 热更重校轮）
+# 超维进化预检标记
 # 类别|ERE
 pkg|com.grinning.beta.yszl
 menu_load|StarryMagic|\[Cwjh\]

@@ -2,7 +2,7 @@
   "template_id": "cwjh",
   "name": "超维进化",
   "package": "com.grinning.beta.yszl",
-  "source": "Games/CwjhMod.cpp",
+  "source": "Games/CwjhMod.h CWJH_FEAT_* + Main.cpp g_featureList(STARRY_GAME_CWJH)",
   "features": [
     {
       "feat_num": 0,
