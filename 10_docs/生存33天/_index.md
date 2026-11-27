@@ -17,7 +17,7 @@
 
 ## 其他
 
-- `sc33_menu_template.json`（531B，2026-10-17 ⏳）
+- `sc33_menu_template.json`（531B，2026-11-27）
 
 ---
 
