@@ -23,12 +23,24 @@
   * 全量恒在 archive_index.md ＋ games/*.md，随时可查、可重建；归档不等于删数据。
   * 挂起闸（--stale-days，2026-11-09 补）：active/blocked 超该天数无更新即视为「挂起」，
     不再顶格占工作集（旧行为下 9 月的 blocked 永久占据前几行，把近两周更新的游戏挤出 30 行配额）。
+  * 活跃度（2026-11-27 起）＝git 提交时间自动判定，不再信人工维护的 `updated`：`git_last_active()` 一次
+    `git log` 批量建 path→ts 索引（不是每游戏一次子进程），每个游戏取 `04_scripts/{游戏}/`、
+    `10_docs/{游戏}/`、`10_docs/_state/games/{游戏}.md` 三处的最新提交日。取不到（非 git 仓库、
+    浅克隆、git 不存在、该游戏无提交）才回退 frontmatter `updated`；两者都没有按「最旧」处理（进挂起）。
+    日期列显示的是同一个「有效活跃日」，`--check` 仍是纯数据函数（git 日期只在提交时变）。
+  * 活跃度口径（2026-11-27 二轮，被批量提交污染后收口）：git 日期必须证明「这个游戏真被改过」，
+    故两处排除——① 生成物路径（任何 `_index.md`、`04_scripts/_common/scripts_index.tsv`、
+    `10_docs/_state/current.md`、`10_docs/_state/archive_index.md`）是索引/清单刷新的产物，命中即丢
+    弃该行；② 一条 commit 若触及 ≥ `BULK_COMMIT_GAME_DIRS`（20）个不同游戏，判为批量/工具提交，
+    **整条 commit 的路径都不参与活跃度**。不做这两步时，三次全仓生成物刷新（b88e9617 / 864cab80 /
+    d5a6e918）会把 110/110 个游戏的活跃日一律拉到 11 月下旬，「近 14 天活跃」等于「上次跑全仓工具的时间」。
   * 缺 frontmatter 是硬错误（--check rc=1）：否则新加的 games/x.md 忘写头部，会从两份索引双双
     消失且无人发现。frontmatter 解析同时兼容 CRLF（Win 端编辑器存 CRLF 时只认 LF 会整篇失败）。
 """
 import argparse
 import datetime
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -43,6 +55,25 @@ ICON = {"active": "🟡", "blocked": "⚠️", "delivered": "✅"}
 # 静默掉出两份索引（.gitattributes 的 eol=lf 只在提交时归一化，救不了工作区里那一份）。
 FM_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.S)
 SKIP_FILES = {"README.md", "infrastructure.md"}  # 目录说明，不是游戏
+# 活跃度来源（2026-11-27）：这两个顶层目录覆盖游戏的脚本与文档；游戏级状态文件按精确路径单独匹配。
+GIT_ACTIVITY_PATHS = ("04_scripts", "10_docs")
+GIT_TIMEOUT = 60  # 秒；超时即回退 frontmatter，不让索引生成卡死
+# 生成物路径（2026-11-27 二轮）：索引/清单刷新的产物，只说明「跑过一次工具」，不代表游戏活跃；
+# 命中即整行丢弃——既不记活跃度，也不参与下面批量提交的「游戏数」计数。
+GENERATED_PATHS = frozenset((
+    "04_scripts/_common/scripts_index.tsv",
+    "10_docs/_state/current.md",
+    "10_docs/_state/archive_index.md",
+))
+# 批量提交闸（2026-11-27 二轮）：一条 commit 触及 ≥ 该数量的不同游戏即判为批量/工具提交，
+# 整条 commit 的路径都不记活跃度。为什么是 20：单游戏正常改动只碰自己那一两处
+# （04_scripts/{游戏}/、10_docs/{游戏}/，偶尔加自己的状态文件）；跨游戏重构实测 4–12 个
+# （d6db2cad=4、2e504f5c=6、4476426c=12）；而全仓生成物刷新动辄上百——实测 b88e9617=124、
+# 864cab80=109、d5a6e918=103（补 101 份 frontmatter）、2026-09-09 全仓=52。20 落在
+# 「正常跨游戏改动」与「全仓刷新」之间，挡得住生成物污染，又不会把正常改动误判成批量。
+BULK_COMMIT_GAME_DIRS = 20
+# 被批量闸挡掉的提交数（只用于 main 汇报，不参与判定）。
+BULK_SKIPPED_COMMITS = 0
 
 HEAD = """<!-- GENERATED: 由 04_scripts/_common/gen_state_index.py 生成，禁止手改 -->
 
@@ -127,43 +158,227 @@ def load():
     return items, bad
 
 
+def _parse_date(s):
+    """frontmatter 里的日期；"history"/空/坏格式一律 None。"""
+    try:
+        return datetime.date.fromisoformat((s or "").strip())
+    except ValueError:
+        return None
+
+
+def _is_generated(path):
+    """生成物路径：索引/清单刷新的产物，不代表该游戏有进展。
+
+    口径（2026-11-27 二轮）：① 任何 `_index.md`（按文件名判，不分目录层级）；
+    ② `04_scripts/_common/scripts_index.tsv`（脚本清单）；③ `10_docs/_state/current.md`、
+    `10_docs/_state/archive_index.md`（本脚本与同类生成器的输出）。命中即整行丢弃。
+    """
+    return path.rsplit("/", 1)[-1] == "_index.md" or path in GENERATED_PATHS
+
+
+def _activity_keys(path):
+    """把一条 git 路径折叠成「游戏活跃键」，与三个前缀一一对应。
+
+    04_scripts/{游戏}/…            -> "04_scripts/{游戏}"
+    10_docs/{游戏}/…               -> "10_docs/{游戏}"
+    10_docs/_state/games/{游戏}.md -> 原样（精确文件）
+    生成物（见 `_is_generated`）与其它路径（10_docs 顶层散文件、10_docs/tools/…、
+    04_scripts/_common/…）不产生键，不参与活跃度。
+    """
+    if _is_generated(path):
+        return ()
+    if path.startswith("04_scripts/"):
+        parts = path.split("/", 2)
+        if len(parts) == 3:            # 必须落在子目录里，顶层散文件不算
+            return ("04_scripts/" + parts[1],)
+        return ()
+    if path.startswith("10_docs/"):
+        parts = path.split("/", 3)
+        if len(parts) >= 3 and parts[1] == "_state" and parts[2] == "games":
+            if len(parts) == 4 and parts[3].endswith(".md") and "/" not in parts[3]:
+                return ("10_docs/_state/games/" + parts[3],)
+            return ()
+        if len(parts) >= 3:
+            return ("10_docs/" + parts[1],)
+    return ()
+
+
+def _game_ident(path):
+    """路径 → 它归属的「游戏」，只用于批量提交阈值计数（不是活跃度键）。
+
+    04_scripts/{游戏}/…         -> "04_scripts/{游戏}"
+    10_docs/{游戏}/…            -> "10_docs/{游戏}"
+    10_docs/_state/games/{游戏}.md -> "doc:{游戏}"
+    生成物、公共目录（下划线的 `_common`/`_state`/`_templates` 等）与其它路径 -> None
+
+    状态文件按文件名算「同一个游戏」：否则「一次补齐 101 份 frontmatter」这类整仓提交因为不碰游戏
+    目录，游戏数会是 0 而漏判——实测 d5a6e918 就是这样把 110 个游戏的活跃日拉到 11-09 的。
+    """
+    if _is_generated(path):
+        return None
+    if path.startswith("04_scripts/"):
+        parts = path.split("/", 2)
+        if len(parts) == 3 and not parts[1].startswith("_"):
+            return "04_scripts/" + parts[1]
+        return None
+    if path.startswith("10_docs/"):
+        parts = path.split("/", 3)
+        if len(parts) >= 3 and parts[1] == "_state":
+            if parts[2] == "games" and len(parts) == 4 and parts[3].endswith(".md"):
+                return "doc:" + parts[3]
+            return None
+        if len(parts) >= 3 and not parts[1].startswith("_"):
+            return "10_docs/" + parts[1]
+    return None
+
+
+def _git_log_raw():
+    """一次 git log 的原始字节；任何异常/rc!=0/空输出都返回 None（不抛，由调用方回退）。"""
+    cmd = (["git", "-C", str(ROOT), "log", "--pretty=format:__%ct", "--name-only", "--"]
+           + list(GIT_ACTIVITY_PATHS))
+    try:
+        proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                              timeout=GIT_TIMEOUT)
+    except FileNotFoundError:
+        print("提示: 未找到 git 可执行文件，活跃度回退 frontmatter updated", file=sys.stderr)
+        return None
+    except (OSError, subprocess.SubprocessError) as exc:
+        print("提示: git log 调用失败（%s），活跃度回退 frontmatter updated" % exc, file=sys.stderr)
+        return None
+    if proc.returncode != 0:
+        err = proc.stderr.decode("utf-8", "replace").strip().splitlines()
+        print("提示: git log rc=%d（%s），活跃度回退 frontmatter updated"
+              % (proc.returncode, err[0] if err else "无 stderr"), file=sys.stderr)
+        return None
+    if not proc.stdout.strip():
+        print("提示: git log 输出为空（浅克隆/新仓库？），活跃度回退 frontmatter updated",
+              file=sys.stderr)
+        return None
+    return proc.stdout
+
+
+def _iter_commits(raw):
+    """把一次 `git log` 输出解析成 (提交时间戳, 该提交的路径列表) 的迭代器。
+
+    输出形如 `__1712345678` 头行 + 若干路径行。必须按 commit 成块处理：活跃度是 per-path
+    的，但「这条提交是不是批量/工具提交」只有看完整条提交触及多少个游戏才能判。
+    """
+    ts, paths = 0, []
+    for line in raw.decode("utf-8", "replace").splitlines():
+        if line.startswith("__"):
+            try:
+                nxt = int(line[2:])
+            except ValueError:
+                nxt = 0
+            if ts and paths:
+                yield ts, paths
+            ts, paths = nxt, []
+            continue
+        line = line.strip()
+        if line and ts:
+            paths.append(line)
+    if ts and paths:
+        yield ts, paths
+
+
+def git_last_active() -> dict:
+    """按 git 提交时间给出每个游戏的最后活跃日（date），替代人工 updated。
+
+    口径（2026-11-27 二轮，后人一看就懂）：
+      * 排除生成物：任何 `_index.md`、`04_scripts/_common/scripts_index.tsv`、
+        `10_docs/_state/current.md`、`10_docs/_state/archive_index.md` —— 索引/清单刷新
+        只说明「跑过工具」，不代表该游戏有进展；命中即丢弃该行，不记进任何游戏。
+      * 排除批量提交：一条 commit 触及 ≥ `BULK_COMMIT_GAME_DIRS`（20）个不同游戏
+        （`04_scripts/{g}/`、`10_docs/{g}/` 的目录名 ∪ `10_docs/_state/games/{g}.md` 的文件名），
+        判为批量/工具提交，整条 commit 的路径都不参与活跃度。原因：单游戏正常改动只碰 1–3 处，
+        全仓生成物刷新动辄上百（实测 b88e9617=124 / 864cab80=109 / d5a6e918=103），不设阈值则
+        「近 14 天活跃」等于「上次跑全仓工具的时间」，挂起闸恒 0。
+    一次 git log 批量建 path→ts 索引，避免 110 次子进程；无 git/浅克隆时返回 {} 由调用方回退 frontmatter。
+    """
+    global BULK_SKIPPED_COMMITS
+    raw = _git_log_raw()
+    if raw is None:
+        return {}
+    idx = {}
+    skipped = 0
+    for ts, paths in _iter_commits(raw):
+        idents, keys = set(), []
+        for p in paths:
+            gid = _game_ident(p)
+            if gid:
+                idents.add(gid)
+            keys.extend(_activity_keys(p))
+        if len(idents) >= BULK_COMMIT_GAME_DIRS:
+            skipped += 1              # 批量/工具提交：整条丢弃，一条路径都不记
+            continue
+        # 输出是最新在前：某键首次出现即其最新提交，后续更旧的 ts 不会覆盖（省内存也省比较）。
+        for key in keys:
+            if ts > idx.get(key, 0):
+                idx[key] = ts
+    BULK_SKIPPED_COMMITS = skipped
+    if not idx:
+        print("提示: git log 里没有可解析的提交路径，活跃度回退 frontmatter updated", file=sys.stderr)
+        return {}
+    out = {}
+    for f in sorted(GAMES.glob("*.md")):
+        if f.name in SKIP_FILES:
+            continue
+        best = max(idx.get("04_scripts/" + f.stem, 0),
+                   idx.get("10_docs/" + f.stem, 0),
+                   idx.get("10_docs/_state/games/" + f.name, 0))
+        if best:
+            out[f.stem] = datetime.date.fromtimestamp(best)  # 本地日期
+    return out
+
+
+def attach_activity(items):
+    """给每个 item 挂 _active（有效活跃日，date 或 None）与 _active_src（git|updated|none）。
+
+    git 有日期就以 git 为准（忽略 frontmatter updated，人工声明不再参与判定）；
+    取不到才回退 updated；两者都没有＝最旧，active/blocked 直接进挂起。
+    """
+    git_dates = git_last_active()
+    for it in items:
+        d = git_dates.get(it["_file"][:-3])
+        src = "git"
+        if d is None:
+            d = _parse_date(it.get("updated"))
+            src = "updated" if d else "none"
+        it["_active"] = d
+        it["_active_src"] = src
+    return git_dates
+
+
 def sort_key(item):
     # 注意：调用方用 sorted(..., reverse=True)，故这里取负号把 active/blocked 顶到最前、
     # history 沉到最后；日期字段保持原样，reverse 后即为降序。
     st = item.get("status", "delivered")
     pri = 0 if st in ("active", "blocked") else 1
-    upd = item.get("updated", "")
-    hist = 0 if upd != "history" else 1
-    return (-pri, -hist, upd)
+    d = item.get("_active")
+    nodate = 1 if d is None else 0   # 没有活跃日的（原 history 条目）沉到最后
+    return (-pri, -nodate, d.isoformat() if d else "")
 
 
 def render_row(item):
     title = item.get("title") or item["game"]
-    upd = item.get("updated", "history")
-    upd = "历史" if upd == "history" else upd
+    d = item.get("_active")          # 有效活跃日：git 优先，回退 updated；都没有显示「历史」
+    upd = d.isoformat() if d else "历史"
     icon = ICON.get(item.get("status", "delivered"), "")
     text = " ".join((item.get("one_line") or "").split()) or "（待补一句话状态）"
     return "| [%s](games/%s) | %s | %s %s |" % (title, item["_file"], upd, icon, text)
 
 
 def build(items, days, limit, stale_days):
-    dates = []
-    for it in items:
-        try:
-            dates.append(datetime.date.fromisoformat(it.get("updated", "")))
-        except ValueError:
-            continue
+    dates = [it["_active"] for it in items if it.get("_active")]
     today = datetime.date.today()
-    # 基准日取「数据里的最新 updated」而不是今天：否则每天零点后窗口滑动，没人改文件也会
+    # 基准日取「数据里的最新活跃日」而不是今天：否则每天零点后窗口滑动，没人改文件也会
     # 让 --check 报不一致（生成物必须是纯数据函数，才能幂等、才能挂进 preflight）。
+    # 活跃日来自 git 提交时间时同样成立：git 日期只在提交时变，不是运行时刻的读数。
     base = max(dates) if dates else today
     cutoff = base - datetime.timedelta(days=days)
 
     def as_date(it):
-        try:
-            return datetime.date.fromisoformat(it.get("updated", ""))
-        except ValueError:
-            return None
+        return it.get("_active")
 
     hot, stale = [], []
     for it in items:
@@ -220,6 +435,7 @@ def main():
         print("ERROR: 找不到 %s" % GAMES, file=sys.stderr)
         return 2
     items, bad = load()
+    attach_activity(items)   # 先挂有效活跃日（git 优先），build/render 全都读它
 
     stale_days = args.stale_days if args.stale_days > 0 else 10 ** 6
     cur, arc, shown, overflow, stale = build(items, args.days, args.limit, stale_days)
@@ -261,6 +477,12 @@ def main():
             fh.write(text)
     print("✓ %s：%d 行 / %d B" % (CURRENT.name, len(shown), len(cur.encode("utf-8"))))
     print("✓ %s：%d 行 / %d B" % (ARCHIVE.name, len(items), len(arc.encode("utf-8"))))
+    n_git = len([i for i in items if i.get("_active_src") == "git"])
+    n_upd = len([i for i in items if i.get("_active_src") == "updated"])
+    print("  活跃日来源：git 提交时间 %d 个 / frontmatter updated %d 个 / 无日期 %d 个"
+          % (n_git, n_upd, len(items) - n_git - n_upd))
+    print("  活跃度口径：排除生成物路径（_index.md / scripts_index.tsv / current.md / archive_index.md）"
+          " + 跳过 %d 条批量提交（≥%d 个游戏）" % (BULK_SKIPPED_COMMITS, BULK_COMMIT_GAME_DIRS))
     n_act = len([i for i in items if i.get("status") in ("active", "blocked")])
     print("  真源 %d 个游戏；active/blocked %d 个；挂起 %d 个；超限 %d 个（均在 archive）"
           % (len(items), n_act, len(stale), len(overflow)))

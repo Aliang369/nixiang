@@ -528,6 +528,6 @@ native 自读）、热重载做法、四条验收与可 grep 的日志锚点都�
 - **审查边界**：改完代码或用户要求「按边界审 / 自查」⇒ 按 `skill/re-implement/code-review-checklist.md` 走一轮；纯文档修改只核对范围/链接/规则冲突/授权。一轮输出结论即停，不借审查扩大任务；仅修已确认问题，修复后复查该问题与直接影响面。
 - **"可测试"装机门禁**：静态·构建检查 + 包结构与签名 + 测试授权 + 证据采集 + 恢复方案，**已知阻断问题不得装机**。「运行验证」以目标版本实际日志、功能开关与回归结果判定；「可交付」须满足对应运行证据，**不以构建成功替代**；缺证据列 CLAIM / VERDICT / EVIDENCE。
 - **产物生命周期**：`02_apks/`、dump、`08_output/`、构建产物、热更样本、JS 解密产物的保留/清理/入库规则正文＝`10_docs/tools/05_…`「收尾清理」（2026-11-25 起七处全清；历史口径见《规范变更日志》§归档正文 D）；裁剪唯一正式包走 `prune_output_final.sh` / `finalize_game_delivery.sh`（**禁手工重造**）；菜单模板照抄 `_templates/menu_template.example.json`，收尾按 `_menu_template` §3 自检字段集严格相等。
-- **状态索引维护**：`current.md` 是生成物，由 `gen_state_index.py` 从 `games/*.md` 头部 frontmatter（`status/updated/one_line`）生成，`preflight --check` 校验。只放当前工作集，全量在 `archive_index.md`。收尾改状态＝改该游戏 frontmatter 再重跑生成器；单游戏摘要 >12 KB 时旧轮次下沉 `history/`。纯评估/文档维护不改游戏状态。
+- **状态索引维护**：`current.md` 是生成物，由 `gen_state_index.py` 从 `games/*.md` 头部 frontmatter 生成，`preflight --check` 校验；活跃日取 git 提交时间（排除生成物与批量提交），frontmatter 的 `updated` 仅作无 git 历史时兜底。只放当前工作集，全量在 `archive_index.md`。收尾改状态＝改该游戏 frontmatter 再重跑生成器；单游戏摘要 >12 KB 时旧轮次下沉 `history/`。纯评估/文档维护不改游戏状态。
 - **经验生命周期细化**：登记＝`_state/pending_experience.md`，机检＝`audit_experience_registry.py`；「合并」只并入已有唯一权威章节，不新造同类文件；复盘结构见 `_templates/会话复盘模板.md`。
 - **加固停用件清单**：`harden_apk.py` / `harden_gate.sh` / `harden_coverage.py` 与 `pre_install_gate.sh` 查11 已按 2026-10-27 用户裁决撤销强制；脚本暂留因三款已接入游戏的出包脚本仍调用（硬删断包），**新游戏不再要求加固**。
