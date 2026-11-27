@@ -6,9 +6,13 @@
  *  15.0.0/d8f3b（2026-10-31）：单位枚举 gA→CA、属性枚举 PS.MOV_SPEED→NS.MOV_SPEED，
  *                 伤害尾锚回到 i.target.damage=E}（局部变量名又变回 E）；
  *                 无限技能 / onStageCheat 两锚点文本未变。
- *  16.0.0/c00f5（2026-11-14）：单位枚举 CA→FA、属性枚举 NS.MOV_SPEED→JS.MOV_SPEED，
+ *  16.0.0/c00f5（2026-11-14）：单位枚举与属性枚举各改一次名（旧名见 git 历史），
  *                 伤害尾锚 i.target.damage=E} → i.target.damage=P}；
- *                 自动挂机 getService 服务单例 ix/sT → Sx/bT（本轮唯一改名的锚点）。
+ *                 自动挂机 getService 服务单例改名（本轮唯一改名的锚点）。
+ *  16.0.0/98b49（2026-11-27）：热更换 bundle，命名空间整体重混淆、语义零变化。
+ *                 符号：TI/Pw/Ix/yB —— 单位类型枚举 TI、属性枚举 Pw.MOV_SPEED、
+ *                 挂机服务 Ix.getService(yB)。旧单位枚举名在 98b49 里已被 MagicSprite
+ *                 占用（比较恒为 false、静默失效），故 FA→TI 硬改、不留回退。
  * ================================================================ */
 
 #include "MwdlMod.h"
@@ -160,35 +164,35 @@ static std::string SpliceCombatJs(const char* src) {
     static char kPickAllRepl[700];
     static bool once = false;
     if (!once) {
-        // get_val(1) 伤害倍率滑块 + get_ret(2) 无敌 — 16.0.0/c00f5 尾锚 i.target.damage=P}
+        // get_val(1) 伤害倍率滑块 + get_ret(2) 无敌 — 16.0.0/98b49 尾锚 i.target.damage=P}
         snprintf(
             kKhHook, sizeof(kKhHook),
-            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===FA.Hero||"
-            "_su.unitType===FA.Summon||_su.unitType===FA.Guardian||"
-            "_su.unitType===FA.Player||_su.unitType===FA.ParasyteGuardian)){"
+            "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===TI.Hero||"
+            "_su.unitType===TI.Summon||_su.unitType===TI.Guardian||"
+            "_su.unitType===TI.Player||_su.unitType===TI.ParasyteGuardian)){"
             "var _dm=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",1);"
             "_dm>1&&(P*=Math.min(_dm,1000))}"
-            "if(_su&&_su.unitType===FA.Monster&&"
+            "if(_su&&_su.unitType===TI.Monster&&"
             "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){P=0}"
             "i.target.damage=P}",
             kAct, kAct);
-        // get_val(3)：移速倍率 — MoveSpeed getter（16.0.0/c00f5 为 JS.MOV_SPEED）
+        // get_val(3)：移速倍率 — MoveSpeed getter（16.0.0/98b49 为 Pw.MOV_SPEED）
         snprintf(
             kSpdRepl, sizeof(kSpdRepl),
             "/*starry_mwdl_spd*/function(n){try{var "
             "m=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",3);"
-            "m>1&&(this.unitType===FA.Hero||this.unitType===FA.Summon||"
-            "this.unitType===FA.Guardian||this.unitType===FA.Player||"
-            "this.unitType===FA.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
-            "n}.call(this,this.AttributeComponent.getAttr(JS.MOV_SPEED)*t)}",
+            "m>1&&(this.unitType===TI.Hero||this.unitType===TI.Summon||"
+            "this.unitType===TI.Guardian||this.unitType===TI.Player||"
+            "this.unitType===TI.ParasyteGuardian)&&(n*=m)}catch(_e){}return "
+            "n}.call(this,this.AttributeComponent.getAttr(Pw.MOV_SPEED)*t)}",
             kAct);
         // get_ret(4)：无限技能 — 插在 SkillComponent.tick 前
         snprintf(
             kTickHook, sizeof(kTickHook),
             "/*starry_mwdl_uls*/ jsb.reflection.callStaticMethod("
-            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===FA.Hero||"
-            "this.unitType===FA.Summon||this.unitType===FA.Guardian||"
-            "this.unitType===FA.Player||this.unitType===FA.ParasyteGuardian)&&"
+            "\"%s\",\"get_ret\",\"(I)Z\",4)&&(this.unitType===TI.Hero||"
+            "this.unitType===TI.Summon||this.unitType===TI.Guardian||"
+            "this.unitType===TI.Player||this.unitType===TI.ParasyteGuardian)&&"
             "(this.SkillComponent.reduceAllSkillColdDown(1e9),"
             "this.ActiveSkillComponent&&this.ActiveSkillComponent.reduceAllSkillColdDown(1e9)), ",
             kAct);
@@ -197,7 +201,7 @@ static std::string SpliceCombatJs(const char* src) {
         // 到 undefined.mode（tryFightBonus）并每帧抛 TypeError，把「挑战成功」卡死（2026-10-31 实测）。
         snprintf(
             kAutoFightRepl, sizeof(kAutoFightRepl),
-            "/*starry_mwdl_af*/checkAutoFightSetting=function(){var t=Sx.getService(bT);if("
+            "/*starry_mwdl_af*/checkAutoFightSetting=function(){var t=Ix.getService(yB);if("
             "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",5)||t.enabled){",
             kAct);
         snprintf(
@@ -219,19 +223,19 @@ static std::string SpliceCombatJs(const char* src) {
         return s.find(tag) != std::string::npos;
     };
 
-    // --- 伤害结算（伤害倍率 + 无敌）：16.0.0/c00f5 尾锚 i.target.damage=P} ---
+    // --- 伤害结算（伤害倍率 + 无敌）：16.0.0/98b49 尾锚 i.target.damage=P} ---
     // 注：该锚点尾部是混淆后的伤害局部变量名（a1e47=E / bffa2=P / d8f3b=E），
     //     与 hook 文本强耦合，不做旧锚回退（回退会拼出引用未声明变量的 JS）。
     if (!already("starry_mwdl_kh") && s.find("i.target.damage=P}") != std::string::npos) {
         size_t p = s.find("i.target.damage=P}");
         s.replace(p, strlen("i.target.damage=P}"), kKhHook);
-        LOGI("[Mwdl] spliced damage (16.0.0/c00f5)");
+        LOGI("[Mwdl] spliced damage (16.0.0/98b49)");
     }
 
-    // --- MoveSpeed（移动速度：16.0.0/c00f5 为 JS.MOV_SPEED；旧枚举名仅作同代回退）---
+    // --- MoveSpeed（移动速度：16.0.0/98b49 为 Pw.MOV_SPEED；NS/RS/vS 旧枚举名仅作同代回退）---
     if (!already("starry_mwdl_spd")) {
         static const char* kSpdFroms[] = {
-            "this.AttributeComponent.getAttr(JS.MOV_SPEED)*t}",
+            "this.AttributeComponent.getAttr(Pw.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(NS.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(RS.MOV_SPEED)*t}",
             "this.AttributeComponent.getAttr(vS.MOV_SPEED)*t}",
@@ -269,7 +273,7 @@ static std::string SpliceCombatJs(const char* src) {
     // --- 自动挂机：强开服务分支（AI 自动走位）+ 掐掉战后 tryFightNext（防 undefined.mode 卡死）---
     if (!already("starry_mwdl_af")) {
         const char* kAf =
-            "checkAutoFightSetting=function(){var t=Sx.getService(bT);if(t.enabled){";
+            "checkAutoFightSetting=function(){var t=Ix.getService(yB);if(t.enabled){";
         size_t p = s.find(kAf);
         if (p != std::string::npos) {
             s.replace(p, strlen(kAf), kAutoFightRepl);

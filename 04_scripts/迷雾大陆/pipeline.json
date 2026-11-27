@@ -80,16 +80,7 @@
           "pattern": "\"ok\": true"
         }
       ],
-      "status": "done",
-      "done_at": "2026-11-14 14:27:33",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_16.0.0.json": {
-          "md5": "06c7d0b09219360eb36a9db4bdea3c71"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/04_scripts/迷雾大陆/official_apk.json": "959cceea138ee5d1f84bd0fccd15966d"
-      }
+      "status": "pending"
     },
     {
       "id": "build_so",
@@ -119,16 +110,7 @@
           "pattern": "JNI_OnLoad"
         }
       ],
-      "status": "done",
-      "done_at": "2026-11-14 14:09:04",
-      "artifacts": {
-        "../../libs_mwdl/arm64-v8a/libstarry_magic.so": {
-          "md5": "b215f03d0604852dcb832db8932b512f"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/06_dumped/迷雾大陆/anchor_check_16.0.0.json": "06c7d0b09219360eb36a9db4bdea3c71"
-      }
+      "status": "pending"
     },
     {
       "id": "surgical",
@@ -147,15 +129,11 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-11-14 14:46:55",
+      "done_at": "2026-11-27 20:00:53",
       "artifacts": {
         "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_16.0.0_surgical-releaseSigned.apk": {
-          "md5": "a4e9411d17fb67dc22b3a1e92ab97c27",
-          "changed": true
+          "md5": "ef081f66f299c4f991923cfbe98eecd9"
         }
-      },
-      "inputs": {
-        "../../libs_mwdl/arm64-v8a/libstarry_magic.so": "b215f03d0604852dcb832db8932b512f"
       }
     },
     {
@@ -187,7 +165,7 @@
         }
       ],
       "status": "done",
-      "done_at": "2026-11-14 14:27:42",
+      "done_at": "2026-11-27 19:50:24",
       "artifacts": {}
     },
     {
@@ -205,16 +183,7 @@
           "path": "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_16.0.0_surgical-releaseSigned.apk"
         }
       ],
-      "status": "done",
-      "done_at": "2026-11-14 14:48:27",
-      "artifacts": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_16.0.0_surgical-releaseSigned.apk": {
-          "md5": "a4e9411d17fb67dc22b3a1e92ab97c27"
-        }
-      },
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_16.0.0_surgical-releaseSigned.apk": "a4e9411d17fb67dc22b3a1e92ab97c27"
-      }
+      "status": "pending"
     },
     {
       "id": "verify_install",
@@ -229,12 +198,7 @@
           "path": "/Users/aliang/Documents/nixiang/04_scripts/迷雾大陆/pipeline.json"
         }
       ],
-      "status": "done",
-      "done_at": "2026-11-14 14:48:28",
-      "artifacts": {},
-      "inputs": {
-        "/Users/aliang/Documents/nixiang/08_output/迷雾大陆/迷雾大陆_16.0.0_surgical-releaseSigned.apk": "a4e9411d17fb67dc22b3a1e92ab97c27"
-      }
+      "status": "pending"
     },
     {
       "id": "archive",
