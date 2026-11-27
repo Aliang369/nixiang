@@ -1,0 +1,20 @@
+{
+  "game_dir": "/Users/aliang/Documents/nixiang/08_output/失落城堡2",
+  "keep": "失落城堡2_1.0.3_surgical-releaseSigned.apk",
+  "keep_size": 1091356924,
+  "keep_md5": "3dccb0b0962cf2cf9ecb78fbdcc337c0",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "失落城堡2_1.0.3_starry.apk",
+      "size": 1091356924,
+      "md5": "3dccb0b0962cf2cf9ecb78fbdcc337c0"
+    },
+    {
+      "name": "失落城堡2_1.0.3_surgical-releaseSigned.apk.idsig",
+      "size": 8603163,
+      "md5": "be565c7feaa68d4153fc1b752f19e747"
+    }
+  ],
+  "removed_count": 2
+}

@@ -9,9 +9,20 @@
 # 依赖的本地产物（不入库，按 10_docs/失落城堡2 文档的 dump 流程产出）：
 #   09_test/失落城堡2/meta/global-metadata.dat   明文 metadata（v31）
 #   09_test/失落城堡2/meta_mem.bin                metadata 映射原件（含 0x150 字节前缀）
-#   09_test/失落城堡2/bss1.bin   VA 0x729a91f000  libil2cpp [anon:.bss]（含 codeGenModules）
-#   09_test/失落城堡2/bss2.bin   VA 0x729b3cc000  libil2cpp [anon:.bss]（含 methodPointers 数组）
+#   09_test/失落城堡2/bss1.bin   libil2cpp [anon:.bss]（含 codeGenModules）
+#   09_test/失落城堡2/bss2.bin   libil2cpp [anon:.bss]（含 methodPointers 数组）
 #   09_test/失落城堡2/libil2cpp_dumped.so        内存重建 so（offset == vaddr）
+#
+# 地址口径（ASLR 每次开机变，只对当次 dump 有效）：默认值是历史 dump 的口径，
+# **不要为了某轮 dump 改默认值**；改用环境变量覆盖：
+#   SLCB2_BASE     加载基址（VA = BASE + RVA）     默认 0x72876b8000
+#   SLCB2_BSS1_VA  bss1.bin 对应的 VA               默认 0x729a91f000
+#   SLCB2_BSS2_VA  bss2.bin 对应的 VA               默认 0x729b3cc000
+#   SLCB2_TEXT     代码段区间，逗号分隔起止 VA       默认 0x728ddc4000,0x729a91c000
+# 例（本轮 2026-11-27 dump）：
+#   SLCB2_BASE=0x6f05e5e000 SLCB2_BSS1_VA=0x6f190c5000 \
+#   SLCB2_BSS2_VA=0x6f19b72000 SLCB2_TEXT=0x6f0c56a000,0x6f190c2000 \
+#   python3 04_scripts/失落城堡2/il2cpp_static.py map
 #
 # 用法：
 #   python3 04_scripts/失落城堡2/il2cpp_static.py map                     # 重建 rva_map.tsv
@@ -28,12 +39,31 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 G = os.path.join(ROOT, "09_test", "失落城堡2")
 META = os.path.join(G, "meta", "global-metadata.dat")
 SO = os.path.join(G, "libil2cpp_dumped.so")
-BSS1, BSS1_VA = os.path.join(G, "bss1.bin"), 0x729A91F000
-BSS2, BSS2_VA = os.path.join(G, "bss2.bin"), 0x729B3CC000
+BSS1 = os.path.join(G, "bss1.bin")
+BSS2 = os.path.join(G, "bss2.bin")
 OUT = os.path.join(G, "analysis")
 MAP = os.path.join(OUT, "rva_map.tsv")
-BASE = 0x72876B8000          # 该 dump 的加载基址（VA = BASE + RVA）
-TEXT = (0x728DDC4000, 0x729A91C000)
+
+
+def _env_int(name, default):
+    """环境变量覆盖（不设 ⇒ 返回默认，旧行为不变）"""
+    v = os.environ.get(name, "").strip()
+    return int(v, 0) if v else default
+
+
+def _env_range(name, default):
+    """环境变量覆盖成二元组，格式 "0xAAA,0xBBB"（不设 ⇒ 返回默认）"""
+    v = os.environ.get(name, "").strip()
+    if not v:
+        return default
+    a, b = (x.strip() for x in v.split(","))
+    return int(a, 0), int(b, 0)
+
+
+BASE = _env_int("SLCB2_BASE", 0x72876B8000)            # 该 dump 的加载基址（VA = BASE + RVA）
+BSS1_VA = _env_int("SLCB2_BSS1_VA", 0x729A91F000)
+BSS2_VA = _env_int("SLCB2_BSS2_VA", 0x729B3CC000)
+TEXT = _env_range("SLCB2_TEXT", (0x728DDC4000, 0x729A91C000))
 
 # metadata header 字段顺序（v31）
 HDR_FIELDS = [

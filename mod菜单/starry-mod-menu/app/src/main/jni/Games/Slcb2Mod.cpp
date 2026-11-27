@@ -223,6 +223,7 @@ enum SlotKind {
     K_SCALE_INV,       // 入口 → cave：乘 0 后回放序言（无敌 0x110649CC）
     K_RESULT,          // 只改结果指令（免CD / 不耗蓝，带副作用的函数禁止整段跳过）
     K_STUB9999,        // 入口 → cave：mov w0,#9999; ret（货币读侧 pin）
+    K_STUB_FBIG,       // 入口 → cave：ldr s0,=9999.0f; ret（当前冷却读侧 pin，float 返回）
 };
 
 struct HookSlot {
@@ -242,7 +243,14 @@ static const HookSlot kSlots[] = {
     { "DmgMul",     0x110829A0UL, SLCB2_FEAT_DMG,     K_SCALE_DMG, 0,            0,          0          },
     // ── 2 无敌：玩家受伤函数入口，同上形状（入口 `fmov s8,s0`），cave 里乘 0.0f ⇒ 返 0。
     { "Inv",        0x110649CCUL, SLCB2_FEAT_INV,     K_SCALE_INV, 0,            0,          0          },
-    // ── 3 无限技能·免CD：返回 bool（尾部 `cset w0,ge`）；把结果指令改成 `mov w0,#1`。
+    // ── 3 无限技能·免CD（2026-11-27 二次修正，定案）：本作的「技能 CD」不是时间轴，
+    //    而是「可用次数 + 次数回复」：CDLogic 维护 CurUseNum / MaxUseNum / mCurCDValue，
+    //    Skill_Logic::IsCDOK 判的就是 `CDLogic.get_CurUseNum() > 0`（0x118e1c34 bl + cmp/b.le），
+    //    UI 的转圈 `CDLogic.UIFunc_GetCD_Time` 也只在 CurUseNum==0 时才去算剩余时间
+    //    （0x118dc8bc cbz w0）。因此把 `get_CurUseNum` 读侧 pin 成 99，
+    //    一次性让「能放」和「UI 不转圈」同时成立；写侧 SpendUseNum 照常扣真实字段，读侧恒 99。
+    //    （前两版挂 PowerCurCoolDown / CoolDownFinish 结果指令均无效：那两个不是判定点。）
+    { "SkillUseNum", 0x118DA974UL, SLCB2_FEAT_SKILL,  K_STUB9999,  0,            0x6DBD23E9u, 99        },
     { "SkillCd",    0x10CE8C24UL, SLCB2_FEAT_SKILL,   K_RESULT,    0x10CE8C80UL, 0x1A9FB7E0u, 0x52800020u },
     // ── 3 无限技能·不耗蓝：返回 int32（尾部 `csel w0,w8,w9,eq`，**不是 float**；
     //    首版按 float 返 w0 垃圾 ⇒ 战斗闪退，勿回退）。结果指令改 `mov w0,wzr`。
@@ -315,6 +323,29 @@ static bool PatchJumpSlot(int i) {
     if (!ReadU32Guarded(sl.tag, va, &w0)) return false;
     if ((w0 & 0xFC000000u) == 0x14000000u) return false;   // 已是 b（我们或跳板）→ 稍后再判
 
+    // ---- 浮点常量 stub（当前冷却：ldr s0,=9999.0f; ret）----
+    if (sl.kind == K_STUB_FBIG) {
+        if (sl.oldW && w0 != sl.oldW) return false;
+        void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 16);
+        if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 16B cave", i, sl.tag); return false; }
+        g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 16);
+        float big = 9999.0f;
+        uint32_t code[3];
+        code[0] = 0x1C000040u;                       // ldr s0, [pc, #8] → cave+8
+        code[1] = 0xD65F03C0u;                       // ret
+        std::memcpy(&code[2], &big, 4);              // 9999.0f 字面量
+        if (!WriteCode(sc, code, 12)) return false;
+        int64_t d = (int64_t)((uintptr_t)sc - (uintptr_t)va);
+        if ((d & 3) || d > (128LL << 20) || d < -(128LL << 20)) return false;
+        uint32_t bi = 0x14000000u | ((uint32_t)((d >> 2) & 0x03FFFFFFu));
+        memcpy(g_slotSaved[i], &w0, 4);
+        if (!WriteCode(va, &bi, 4)) return false;
+        g_slotTarget[i] = va; g_lastHookTarget = va;
+        LOGI(TPL_LOG " slot[%d] %s stub 已装：入口 0x%08X → cave %p（ldr s0,=%.1f; ret）",
+             i, sl.tag, bi, sc, (double)big);
+        return true;
+    }
+
     // ---- 常量 stub（货币：mov w0,#9999; ret）----
     if (sl.kind == K_STUB9999) {
         // 入口指纹（hook-rules §22 第 4 步）：oldW 非 0 时必须与现读字面量一致，
@@ -323,7 +354,7 @@ static bool PatchJumpSlot(int i) {
         void* sc = g_slotCave[i] ? g_slotCave[i] : FindCodeCave(va, 16);
         if (!sc) { LOGW(TPL_LOG " slot[%d] %s 找不到 16B cave", i, sl.tag); return false; }
         g_slotCave[i] = sc; CaveReserve((uintptr_t)sc, 16);
-        const uint32_t imm = 9999u;
+        const uint32_t imm = sl.newW ? sl.newW : 9999u;   // newW 非 0 时当立即数用（货币 9999 / 技能次数 99）
         uint32_t code[2];
         code[0] = 0x52800000u | ((imm & 0xFFFFu) << 5);   // mov w0, #9999
         code[1] = 0xD65F03C0u;                             // ret

@@ -2,7 +2,7 @@
   "template_id": "slcb2",
   "name": "失落城堡2",
   "package": "com.leiting.slcb2",
-  "source": "Games/Slcb2Entry.cpp GameMod_Get",
+  "source": "Games/Slcb2Entry.cpp GameMod_Get（modern 注册表，authGameId=slcb2）；featureList 下标 0/4 为 Category 占位、不上传；底包 1.0.3/vc10 签名 CN=lt md5 3ef96590cdd652d6911a3f10674fc1c0",
   "features": [
     {
       "feat_num": 1,

@@ -54,7 +54,7 @@ NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 KS="$NIXIANG/01_tools/starry_release.jks"
 
-ORIG_APK="${STARRY_ORIG_APK:-$NIXIANG/02_apks/${GAME}/${GAME}_${VER}_leiting_original.apk}"
+ORIG_APK="${STARRY_ORIG_APK:-$NIXIANG/02_apks/${GAME}/${GAME}_taptap_installed_base.apk}"
 OUT="$NIXIANG/08_output/${GAME}"
 SIGNED="$OUT/${GAME}_${VER}_surgical-${BUILD_TYPE}Signed.apk"
 ALIAS_APK="$OUT/${GAME}_${VER}_starry.apk"
@@ -124,8 +124,9 @@ grep -a -q "\[$TAG\]" "$SO_BUILT" || { echo "ERROR: so 无 [$TAG] 标签（仍�
 for stale in '\[Yimo\]' '\[Cxswz\]' '\[Wxsj' '\[Jjdm\]' '\[Gyzw\]' '\[Hxwj\]' '\[Sjzz\]'; do
   grep -a -q "$stale" "$SO_BUILT" && { echo "ERROR: so 仍含上一款游戏标签 $stale"; exit 1; }
 done
+# 2026-11-21 起 CertPinned.h 为空、签名伪装改走 MT killer dex ⇒ 反向断言：so 内**不得**再含烘焙证书
 CERT_N=$(grep -a -c 'BEGIN CERTIFICATE' "$SO_BUILT" || true)
-[[ "${CERT_N:-0}" -ge 1 ]] || { echo "ERROR: so 内无烘焙证书（授权 fail-closed）"; exit 1; }
+[[ "${CERT_N:-0}" -eq 0 ]] || { echo "ERROR: so 仍含烘焙证书 CERT_N=${CERT_N}（证书注入已下线）"; exit 1; }
 echo "  so ok: $(md5 -q "$SO_BUILT") $(stat -f%z "$SO_BUILT") B (tag=$TAG cert=$CERT_N)"
 mkdir -p "$STARRY_SRC/app/src/main/jniLibs/arm64-v8a"
 cp -f "$SO_BUILT" "$STARRY_SRC/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so"
