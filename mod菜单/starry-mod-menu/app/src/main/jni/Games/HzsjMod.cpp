@@ -53,7 +53,12 @@ static constexpr size_t OFF_SKILL_CD = 16;
 static constexpr size_t OFF_PGSI_COIN = 32;
 static constexpr size_t OFF_PGSI_CRYSTAL = 44;
 static constexpr int32_t DMG_CAP = 999999;
-static constexpr int32_t CURRENCY_VAL = 999999;
+/** 货币（金币/魂晶）回填目标值 = 游戏侧合法上限 0x3E7(999)。
+ *  依据（2026-11-27 逆向，assets/Asset/hotfix 的 Assembly-CSharp）：ChangeCoinAction/ChangeCrystalAction
+ *  用 Mathf.Clamp(old+delta, lb, 0x3e7)、SetCoinAction/SetCrystalAction 用 Mathf.Min(value, 0x3e7)，
+ *  四处独立钳制互证；全 IL 无 999999 常量。写 >999 会让游戏把 delta 重算为 999-旧值（如 -999000）
+ *  并入本局统计，服务端结算据此判作弊（106001）。此处原为 999999，已按设计改为 999。 */
+static constexpr int32_t CURRENCY_VAL = 999;
 static constexpr int32_t PROT_SALT = 0x13579BDF;
 static constexpr int32_t PROT_MAGIC = 0x5A17C0DE;
 
@@ -448,25 +453,57 @@ static bool WriteProtectedIntChecked(void* obj, size_t off, int32_t value, const
     return true;
 }
 
+/** 货币回填（2026-11-27 重构：值域锁 999，只补不写大）。
+ *  规则：coin / crystal 各自独立判定 —— 读到当前值 < CURRENCY_VAL(999) 才回填，>= 999 一律跳过；
+ *  永不写 >999（写大值会让游戏把 delta 重算成负数并入本局统计 ⇒ 服务端 106001）。
+ *  回读失败（ProtectedInt 三元组不合法）按旧行为直接写以保韧性，日志串带 /rdfail 以便区分。 */
 static bool WriteCurrencyAt(void* obj, const char* tag) {
     if (!obj || !SoftPtr(obj)) return false;
     if (!CurrencyOn()) return false;
-    bool wrote = false;
-    if (g_infCoin.load()) {
-        WriteProtectedIntChecked(obj, g_offCoin, CURRENCY_VAL, "coin");
-        wrote = true;
+    const bool infCoin = g_infCoin.load();
+    const bool infCrystal = g_infCrystal.load();
+    if (!infCoin && !infCrystal) return false;
+
+    bool refilled = false;
+    int32_t coinBefore = -1, cryBefore = -1;
+    if (infCoin) {
+        if (!g_offCoin) {
+            LOGI("[Hzsj] CURR skip coin: offset unresolved");
+        } else {
+            int32_t cur = 0;
+            bool readable = ReadProtectedInt(obj, g_offCoin, &cur);
+            coinBefore = readable ? cur : -1;
+            if (!readable || cur < CURRENCY_VAL) {
+                WriteProtectedIntChecked(obj, g_offCoin, CURRENCY_VAL, readable ? "coin" : "coin/rdfail");
+                refilled = true;
+            }
+        }
     }
-    if (g_infCrystal.load()) {
-        WriteProtectedIntChecked(obj, g_offCrystal, CURRENCY_VAL, "crystal");
-        wrote = true;
+    if (infCrystal) {
+        if (!g_offCrystal) {
+            LOGI("[Hzsj] CURR skip crystal: offset unresolved");
+        } else {
+            int32_t cur = 0;
+            bool readable = ReadProtectedInt(obj, g_offCrystal, &cur);
+            cryBefore = readable ? cur : -1;
+            if (!readable || cur < CURRENCY_VAL) {
+                WriteProtectedIntChecked(obj, g_offCrystal, CURRENCY_VAL, readable ? "crystal" : "crystal/rdfail");
+                refilled = true;
+            }
+        }
     }
-    if (wrote) {
-        uint32_t n = g_currWrote.fetch_add(1) + 1;
-        if (n <= 8 || (n % 40) == 0)
-            LOGI("[Hzsj] CURR#%u %s obj=%p coin@%zu cry@%zu =%d (ProtectedInt)", n, tag ? tag : "?", obj,
-                 g_offCoin, g_offCrystal, CURRENCY_VAL);
+    if (!refilled) return false;   // 已是满值：不发写流量、不改玩家正常消费轨迹
+
+    uint32_t n = g_currWrote.fetch_add(1) + 1;
+    if (n <= 8 || (n % 40) == 0) {
+        LOGI("[Hzsj] CURR#%u %s obj=%p coin@%zu cry@%zu =%d cap=%d (ProtectedInt)", n, tag ? tag : "?", obj,
+             g_offCoin, g_offCrystal, CURRENCY_VAL, CURRENCY_VAL);
+        LOGI("[Hzsj] CURR_REFILL#%u coin %d->%d cry %d->%d (infCoin=%d infCry=%d)", n,
+             coinBefore, infCoin ? CURRENCY_VAL : coinBefore,
+             cryBefore, infCrystal ? CURRENCY_VAL : cryBefore,
+             infCoin ? 1 : 0, infCrystal ? 1 : 0);
     }
-    return wrote;
+    return true;
 }
 
 
@@ -482,7 +519,7 @@ static bool IsKlass(void* obj, void* klass) {
 
 /**
  * v14 战斗直写（货币同模式，零方法 hook）：
- *   无敌  = 己方 bft.health = 999999（ProtectedInt 自洽）
+ *   无敌  = 己方 bft.health = 当前 maxHealth（ProtectedInt 自洽，差值恒 0 不污染承伤统计）
  *   秒杀  = 敌方 bft.health/maxHealth/extraHealthPoint = 0（enemyBftUIDisplay.bft）
  *   卡牌  = 己方各容器 items：cooldown=0、deltaCost=-99999（免费+免 CD）
  * 字段偏移全部运行时按名解析（ilspy 源码核对字段名，2026-09-03）。
@@ -505,10 +542,29 @@ static void ApplyBattleTick(uint32_t t) {
             if (IsKlass(myBft, g_clsBft)) {
                 uint8_t isP = ReadU8(myBft, g_offBftIsP);
                 if (isP) {
-                    WriteProtectedIntChecked(myBft, g_offBftHealth, 999999, "inv");
-                    static uint32_t invLog = 0;
-                    uint32_t n = ++invLog;
-                    if (n <= 4 || (n % 200) == 0) LOGI("[Hzsj] INV#%u myBft=%p health=999999", n, myBft);
+                    // 2026-11-27：血量域无常量上限（合法域 CombatValueLimit.Max=10,000,000），写 999999
+                    // 不会被裁，但受击时游戏重算「Max(Min(h+Δ,maxHp),0) − 旧h」会得到百万级假承伤并记入
+                    // RecordPlayerRealHealthDamage（污染结算统计）⇒ 改为与 maxHealth 对齐，差值恒 0。
+                    static uint32_t invSkip = 0;
+                    int32_t maxHp = 0;
+                    if (!g_offBftMaxHp || !ReadProtectedInt(myBft, g_offBftMaxHp, &maxHp) ||
+                        maxHp <= 0 || maxHp > 10000000) {
+                        uint32_t s = ++invSkip;   // 解码垃圾值/偏移未解析：本 tick 不写，避免把血量写成垃圾
+                        if (s <= 4 || (s % 200) == 0)
+                            LOGI("[Hzsj] INV_SKIP#%u maxHp=%d (读取异常/越界)", s, maxHp);
+                    } else {
+                        int32_t cur = 0;
+                        if (!ReadProtectedInt(myBft, g_offBftHealth, &cur)) cur = 0;
+                        if (cur < maxHp) {        // 已满血：不发写流量，保留正常受伤/回血轨迹
+                            WriteProtectedIntChecked(myBft, g_offBftHealth, maxHp, "inv");
+                            static uint32_t invLog = 0;
+                            uint32_t n = ++invLog;
+                            if (n <= 4 || (n % 200) == 0) {
+                                LOGI("[Hzsj] INV#%u myBft=%p health=%d maxHp=%d", n, myBft, maxHp, maxHp);
+                                LOGI("[Hzsj] INV_REFILL#%u myBft=%p health %d->%d (maxHealth)", n, myBft, cur, maxHp);
+                            }
+                        }
+                    }
                 }
             }
         }

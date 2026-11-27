@@ -1,0 +1,14 @@
+{
+  "template_id": "hzsj",
+  "name": "魂坠深境",
+  "package": "com.chillyroom.containerofsoul.yw",
+  "source": "Games/HzsjEntry.cpp kHzsjFeatures / Games/HzsjMod.h HzsjFeat HZSJ_FEAT_* + Main.cpp STARRY_GAME_HZSJ",
+  "features": [
+    {"feat_num": 1, "name": "秒杀"},
+    {"feat_num": 2, "name": "无敌"},
+    {"feat_num": 3, "name": "无限卡牌"},
+    {"feat_num": 4, "name": "无限金币"},
+    {"feat_num": 5, "name": "无限魂晶"},
+    {"feat_num": 7, "name": "自动胜利"}
+  ]
+}

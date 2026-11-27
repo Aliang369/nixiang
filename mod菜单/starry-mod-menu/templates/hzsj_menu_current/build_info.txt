@@ -1,9 +1,9 @@
 game      : 魂坠深境 (hzsj)
 dex       : classes5.dex
-built_at  : 2026-10-29 03:31:15
-javac     : C:/Program Files/Microsoft/jdk-17.0.20.101-hotspot/bin/javac.exe
-d8        : C:\Users\Administrator\AppData\Local/Android/Sdk/build-tools/35.0.0/d8.bat
-androidjar: /c/Users/Administrator/AppData/Local/Android/Sdk/platforms/android-36/android.jar
-source    : /e/nixiang/mod菜单/starry-mod-menu/app/src/main/java
-sha256    : 80f1c27a33c8fdf573bb4831c4a51995895e2b3821d926de04ac4586edb48aa7
-source_commit: a27f8f219412754ae3577b8096404818edbec8ef
+built_at  : 2026-11-27 21:25:24
+javac     : /Users/aliang/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home/bin/javac
+d8        : /Users/aliang/Library/Android/sdk/build-tools/36.0.0/d8
+androidjar: /Users/aliang/Library/Android/sdk/platforms/android-36/android.jar
+source    : /Users/aliang/Documents/nixiang/mod菜单/starry-mod-menu/app/src/main/java
+sha256    : f57e94fc22dd972242abb79a3996e4bc4b11d507ba4fc854ab6e6f3dd8325891
+source_commit: c0fd0f8e8bb882bd0a47ae7729cf7dd9679e6c84

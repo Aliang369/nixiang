@@ -2,7 +2,7 @@
 # ================================================================
 #  魂坠深境 (com.chillyroom.containerofsoul.yw) — 星光外科组装
 #  （新菜单 provider-only 路线，照 surgical_zzz_3.2.0.sh）；
-#  **同一脚本管三代底包：VERSION=1.1.1（旧星光底包）/ 1.1.2 / 1.1.3（官方 TapTap 原包）**
+#  **同一脚本管四代底包：VERSION=1.1.1（旧星光底包）/ 1.1.2 / 1.1.3 / 1.1.7（官方 TapTap 原包）**
 #
 #  背景：旧包（f191e461，2026-09-10 gradle+smali 注入路线）把菜单 smali 混进了
 #  classes5.dex，靠 Activity onCreate 插桩拉起。新路线改为「新菜单 dex + Manifest
@@ -41,7 +41,7 @@
 #  签名：01_tools/starry_release.jks（CN=StarryMagic，alias starry）——禁换（卡密指纹）
 #
 #  用法:
-#    bash scripts/surgical_hzsj_1.1.1.sh                    # 出包（默认 1.1.2 官方底包）
+#    bash scripts/surgical_hzsj_1.1.1.sh                    # 出包（默认 1.1.7 官方底包）
 #    HZSJ_VERSION=1.1.1 bash scripts/surgical_hzsj_1.1.1.sh  # 出旧代包
 #    STARRY_INSTALL=1 SERIAL=f9a116a2 bash ...              # 出包+装机（同签 -r）
 # ================================================================
@@ -54,7 +54,7 @@ source "${STARRY_SRC}/../../04_scripts/_common/env.sh"
 
 NIXIANG="${NIXIANG_ROOT}"
 GAME="魂坠深境"
-VERSION="${HZSJ_VERSION:-1.1.3}"
+VERSION="${HZSJ_VERSION:-1.1.7}"
 PKG="com.chillyroom.containerofsoul.yw"
 AUTHORITY="${PKG}.starryinit"
 SERIAL="${SERIAL:-127.0.0.1:16416}"
@@ -83,7 +83,15 @@ case "${VERSION}" in
     DEX_ADD_NAME="${HZSJ_DEX_NAME:-classes5.dex}"     # 官方原包只到 dex4
     LEGACY_MENU_DEX=""                                # 官方包无 com/starry，免清理
     ;;
-  *) echo "ERROR: 未知 HZSJ_VERSION=${VERSION}（只支持 1.1.1 / 1.1.2 / 1.1.3）" >&2; exit 1 ;;
+  1.1.7)
+    # 2026-11-27 官方 TapTap 1.1.7 / vc45（947,889,995 B；结构同 1.1.3：4 dex /
+    # 无 libc++_shared / metadata v31 / Factory=CoreComponentFactory / extractNativeLibs=true）。
+    BASE_DEFAULT="${NIXIANG}/02_apks/${GAME}/${GAME}_1.1.7_device_official.apk"
+    BASE_MD5_EXPECT="${HZSJ_BASE_MD5:-4c8f1192fa45acbe5071b78e28d6a139}"
+    DEX_ADD_NAME="${HZSJ_DEX_NAME:-classes5.dex}"     # 官方原包只到 dex4
+    LEGACY_MENU_DEX=""                                # 官方包无 com/starry，免清理
+    ;;
+  *) echo "ERROR: 未知 HZSJ_VERSION=${VERSION}（只支持 1.1.1 / 1.1.2 / 1.1.3 / 1.1.7）" >&2; exit 1 ;;
 esac
 
 BASE_APK="${HZSJ_BASE_APK:-${BASE_DEFAULT}}"

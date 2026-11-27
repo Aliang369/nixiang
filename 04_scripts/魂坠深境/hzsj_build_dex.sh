@@ -126,8 +126,8 @@ package com.starry.magic;
 public final class BuildConfig {
     private BuildConfig() {}
     public static final boolean DEBUG = false;
-    public static final String  VERSION_NAME = "1.1.3";
-    public static final int     VERSION_CODE = 44;
+    public static final String  VERSION_NAME = "1.1.7";
+    public static final int     VERSION_CODE = 45;
 }
 EOF
 
