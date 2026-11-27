@@ -1,11 +1,11 @@
 name	kind	bytes	summary	status	refs
 archive_close_git.sh	sh	5142	archive_close：生成机器交付 manifest，并把 manifest 与管线状态一起收口。	used	27
 archive_scoped_git.sh	sh	15267	通用收官 Git 固化：只暂存显式白名单路径，禁止把其他会话改动带入提交。	used	132
-audit_experience_registry.py	py	7785	Audit the structured metadata of experience cards.	used	37
+audit_experience_registry.py	py	7785	Audit the structured metadata of experience cards.	used	42
 audit_game_docs_coverage.py	py	8636	-*- coding: utf-8 -*-	used	14
 audit_rule_gate_map.py	py	4762	-*- coding: utf-8 -*-	used	15
 audit_with_waivers.sh	sh	4859	audit_with_waivers.sh — 框架入口审计「已知豁免」包装器（2026-10-15 山海幻境 4.3 复盘 P0-4）	used	20
-audit_workspace_docs.py	py	24176	Read-only, standard-library documentation and file-byte audit.	used	48
+audit_workspace_docs.py	py	24176	Read-only, standard-library documentation and file-byte audit.	used	52
 axml_inspect.py	py	11423	-*- coding: utf-8 -*-	used	38
 bash32_check.sh	sh	8221	bash32_check.sh — macOS bash 3.2 兼容门禁（伊莫 1.0.1 会话复盘 P1-3）	used	56
 check_cleanup_residue.sh	sh	4454	check_cleanup_residue.sh — 七处目录「收尾零保留」机器检查	used	7
@@ -96,11 +96,11 @@ starry_prefs_edit.sh	sh	15701	starry_prefs_edit.sh — 星光 mod 偏好文件�
 start_frida_server.sh	sh	1191	启动魔改 Frida server（phantom-frida，旧名 start_florida_server.sh 已替换）	used	10
 state_digest.sh	sh	4479	state_digest.sh — 大状态文档「分片速读」摘要器	used	14
 test_archive_git_exit.py	py	9816	Exit-code contract tests for the two archive git entry points. Run python3 -B.	used	2
-test_audit_experience_registry.py	py	7816	Tests for experience metadata audit; use disposable markdown fixtures.	used	10
+test_audit_experience_registry.py	py	7816	Tests for experience metadata audit; use disposable markdown fixtures.	used	11
 test_audit_workspace_docs.py	py	22154	Temporary-fixture tests. Run with python3 -B to avoid bytecode files.	used	8
 test_delivery_manifest.py	py	2407	Offline tests for delivery manifest generation using disposable Git repositories.	used	1
 test_push_main_rewrite.py	py	6173	Tests for git_push_main.sh's HTTPS-route URL rewrite. Run with python3 -B.	used	2
 trash_paths.sh	sh	14533	安全隔离清理：默认只预演；--apply 才把显式路径移动到 macOS Trash 下的隔离目录。	used	106
 verify_installed_apk.sh	sh	4680	verify_installed_apk.sh — 装机完整性校验（防"装了旧包"假成功）	used	164
 with_timeout.sh	sh	2229	with_timeout.sh — 超时垫片（macOS 无 GNU `timeout`）	used	7
-workspace_health.sh	sh	7019	workspace_health.sh — 工作区一屏体检（月度/收尾时跑一次）	used	9
+workspace_health.sh	sh	7859	workspace_health.sh — 工作区一屏体检（月度/收尾时跑一次）	used	12

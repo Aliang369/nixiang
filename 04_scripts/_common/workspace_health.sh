@@ -18,6 +18,7 @@
 #    ① 冲突标记残留  ② _index.md 过期  ③ 脚本索引过期
 #    ④ 规则门禁映射有错  ⑤ AGENTS.md 超硬闸
 #    ⑨ 段内：已交付游戏七处残留（check_cleanup_residue.sh，2026-11-27 加）
+#    ⑩ 文档引用完整性：断链 / 经验卡 evidence 与 merged_commit（2026-11-27 加）
 #  提示项（不挡关）：
 #    ⑥ 文档覆盖率  ⑦ 摘要陈旧  ⑧ 未跟踪/脏文件  ⑨ 产物体积明细
 # ================================================================
@@ -144,6 +145,25 @@ if [ -f 04_scripts/_common/check_cleanup_residue.sh ]; then
   else
     bad "已交付游戏仍有未收尾残留（违反七处零保留）"
     printf '%s\n' "$out" | grep 'FAIL' | sed 's/^/      /'
+  fi
+fi
+
+# ---------- ⑩ 文档引用完整性 ----------
+hdr "10. 文档引用完整性（证据不得指向已删产物）"
+if [ -z "$PY" ]; then
+  warn "无 python，跳过文档审计"
+else
+  if out=$($PY -B 04_scripts/_common/audit_workspace_docs.py audit 2>&1); then
+    ok "相对链接完整（0 断链）"
+  else
+    bad "文档存在断链（指向已删产物或链接层级写错）"
+    printf '%s\n' "$out" | grep 'missing-link' | head -5 | sed 's/^/      /'
+  fi
+  if out=$($PY -B 04_scripts/_common/audit_experience_registry.py 2>&1); then
+    ok "经验卡 evidence/targets 可解析、merged 有 commit"
+  else
+    bad "经验卡审计有 invalid 卡"
+    printf '%s\n' "$out" | grep '^FAIL' | head -5 | sed 's/^/      /'
   fi
 fi
 

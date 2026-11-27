@@ -7,6 +7,7 @@
   占用表：多机持有冲突 / 本机重复行收敛 / --audit 检出重复与多机
 全部在临时目录跑（`NIXIANG_ROOT` / `NIXIANG_CLAIM_ROOT`），不碰真实仓库与心跳。
 """
+import datetime
 import os
 import shutil
 import subprocess
@@ -59,7 +60,10 @@ class HeartbeatTests(unittest.TestCase):
         self.assertIn('心跳缺失', out)
 
     def test_peer_fresh_passes(self):
-        self.peer_file('- 体检时间: 2026-10-27 12:00\n- 结果: PASS=20 WARN=0 FAIL=0\n')
+        # 2026-11-27：原写死 '2026-10-27 12:00'（写测试当天＝新鲜），随日期推移必然超过 7 天
+        # 而恒红（时间炸弹）。改用当前时间，语义仍是「刚体检过」。
+        stamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
+        self.peer_file('- 体检时间: %s\n- 结果: PASS=20 WARN=0 FAIL=0\n' % stamp)
         out = self.twin()
         self.assertIn('未过期', out)
         self.assertIn('无 FAIL', out)
