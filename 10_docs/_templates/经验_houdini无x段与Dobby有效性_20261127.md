@@ -11,13 +11,13 @@ approved_at: 2026-11-27
 approval_ref: "10_docs/独奏骑士/复刻_1.1.768_雷电模拟器_20261127.md（修前 resolve 循环行 + 修后 hooked 行 + 三项计数）"
 merged_ref: "skill/re-implement/hook-rules.md#30.2, skill/re-implement/hook-rules.md#30.4, skill/starry-mod/SKILL.md#出包自检步骤 5/6"
 merged_at: 2026-11-27
-merged_commit: aa4d37c6
+merged_commit: fb590ac6
 ---
 
 # 经验候选卡：houdini 转译环境下 arm64 库在 maps 里没有 `x` 段，按文件偏移换算 VA 不能只认可执行段
 
 > 证据定位：`10_docs/独奏骑士/复刻_1.1.768_雷电模拟器_20261127.md` 「环境差异」节（maps 权限实测 + 修前/修后日志对照）。
-> 现状：`status: merged`（2026-11-27 按 §4 门槛自动合并，class: tech）。落点见 frontmatter `merged_ref`；合并提交 `aa4d37c6`。
+> 现状：`status: merged`（2026-11-27 按 §4 门槛自动合并，class: tech）。落点见 frontmatter `merged_ref`；合并提交 `fb590ac6`。
 
 ## 0. 一句话
 
@@ -87,5 +87,5 @@ merged_commit: aa4d37c6
 - 门槛状态：**已合并**（2026-11-27，tech 自批 auto:tech-promote；证据齐 + 落点明确）。
 - 落地状态：已合并 → `hook-rules.md` §30.2（区间覆盖即成立 + `x` 段仅排序偏好 + 无 `x` 段 fallback）／
   §30.3（静默失败形态判据）／§30.4（环境记录加 maps 段权限集合）；`starry-mod/SKILL.md` 出包自检步骤 6（game_id 字节断言）。
-- 合并提交：`aa4d37c6`（收尾白名单提交）。
+- 合并提交：`fb590ac6`（收尾白名单提交，rebase 后哈希）。
 - 重新验证触发：换模拟器/翻译层、宿主 ABI 变化、或首次遇到「无 x 段且装钩失败」。
