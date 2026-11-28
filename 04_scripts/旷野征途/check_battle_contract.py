@@ -21,6 +21,11 @@ ApplyHp 3.5 锚点（rva 0x10B848 / body 1610B / fat 12 / maxstack 5 / locals 8 
 「审计/特权未调用」一项按**调用形态**判（不出现 "get_isGod" 字符串字面量、不出现 get_isGod( 调用），
 注释里记录访问器名字（合同需要）不算调用。
 
+3.6（2026-11-28）新增段：ET.AndroidPackageIntegrity 反篡改两挂点 —— VerifyPackageContents
+（file 0x2B7DD40 / RVA 0x2B81D40 / 序言 0xD10203FF）与 VerifyCurrentSigner（file 0x2B7D518 /
+RVA 0x2B81518 / 序言 0xD10183FF），两者都恒返回 true；另锁 ver==36 版本门、独立槽表
+kIntegritySlots、幂等标记、TryInit 里装在 SyncHooks 之前、size 66,383,744、探针表 36 在 33 前。
+
 注意边界：①是静态文本约束（防"改一处忘一处"），②是规则级 fixture；
 两者都**不能**替代运行时验证（真机未测）。
 """
@@ -49,8 +54,8 @@ checks = [
   # ---- 3.3 合同（2026-11-25；底包 libil2cpp 66,297,952 B / HotUpdate sha256 3c21663c…34280）----
   ("3.3 挂点常量", "kOff33Show   = 0x1CFF134u" in t and "kOff33Interp = 0x19F8A30u" in t
                    and "kSize33Lib = 66297952ull" in t),
-  # 3.5 起 3.3 不再是表首（3.5 首插表首），只断言 3.3 仍在探针表里且分支还在。
-  ("3.3 探针表 + 分支", "{33, kOff33Show}" in t and "if (pr.ver == 33) {" in t
+  # 3.5/3.6 都在 33 之前插表首 ⇒ 3.3 不再首插，只断言 3.3 仍在探针表里且分支还在。
+  ("3.3 探针表（36/35 之后）+ 分支", "{33, kOff33Show}" in t and "if (pr.ver == 33) {" in t
                           and "verprobe 3.3 cond" in t),
   ("3.3 版本门放行", "verHook == 33" in t and "g_libVer.load() == 33" in t
                     and "(ver == 33) ? kOff33Timescale" in t),
@@ -60,7 +65,7 @@ checks = [
   # ---- 3.5 合同（2026-11-28 静态实测；底包 libil2cpp 66,377,504 B / sha256 26d210e1…4f6c）----
   ("3.5 挂点常量", "kOff35Show   = 0x1D04B30u" in t and "kOff35Interp = 0x19FE258u" in t
                    and "kOff35Timescale = 0x37CA8F0u" in t and "kSize35Lib = 66377504ull" in t),
-  ("3.5 探针表首 + 分支", "{{35, kOff35Show}" in t and "if (pr.ver == 35) {" in t
+  ("3.5 探针表（36 之后）+ 分支", "{35, kOff35Show}" in t and "if (pr.ver == 35) {" in t
                           and "verprobe 3.5 cond show=%d interp=%d size=%d/%llu" in t
                           and "fsz35 == kSize35Lib" in t),
   ("3.5 两处版本门放行", "verHook == 35" in t and "g_libVer.load() == 35" in t
@@ -86,11 +91,12 @@ checks = [
                         and "Hooked_VerifyPackageContents" in t
                         and "antitamper: skip ver=%d" in t
                         and "MODHIT tag=AntiTamper which=%s" in t),
-  ("反篡改/退出探针都装在 lib ready、不在懒装门内",
-   "    InstallAntiTamperHooks();\n    InstallExitProbeHooks();" in t
+  ("反篡改/退出探针都装在 lib ready、不在懒装门内（verGate==35 分支）",
+   "if (verGate == 35) {\n        InstallAntiTamperHooks();" in t
+   and "InstallExitProbeHooks();" in t
    and t.count("InstallAntiTamperHooks()") == 2 and t.count("InstallExitProbeHooks()") == 2
-   and t.index("    InstallExitProbeHooks();")
-       < t.index("    SyncHooks();", t.index("    InstallExitProbeHooks();"))),
+   and t.index("InstallExitProbeHooks();")
+       < t.index("    SyncHooks();", t.index("InstallExitProbeHooks();"))),
   # 3.5 退出探针（2026-11-28）：反篡改两钩 MODHIT=0 ⇒ 抓真正发起退出的方法（Application.Quit 路径）
   ("3.5 退出探针常量/序言", "kOff35RequestExit  = 0x2B8E1DCu" in t
                             and "kOff35RevConfirm   = 0x2B8E620u" in t
@@ -158,6 +164,26 @@ checks = [
                            and "IL_021C" in t and "IL_0249" in t),
   ("2.4 历史合同保留", "body=1265 B" in t and "IL_0173" in t and "IL_0197" in t),
   ("落血语义注释", "set_curHp(curHp + intDmg)" in t),
+  # ---- 3.6 合同（2026-11-28；底包 libil2cpp 66,383,744 B / vc36；ET.AndroidPackageIntegrity）----
+  # 反篡改两挂点：VerifyPackageContents（内容校验）+ VerifyCurrentSigner（签名校验），双双恒返回 true。
+  # 约束的是「地址口径 + 序言校验字 + 只改内存不 patch 磁盘」这条实现路线，不是运行时效果（真机未测）。
+  ("3.6 反篡改挂点（file offset + 序言）",
+   "kOff36IntegrityContents = 0x2B7DD40u" in t
+   and "kOff36IntegritySigner   = 0x2B7D518u" in t
+   and "kInsnIntegrityContents  = 0xD10203FFu" in t
+   and "kInsnIntegritySigner    = 0xD10183FFu" in t
+   and "0x2B81D40" in t and "0x2B81518" in t),          # RVA 对照（file = RVA - 0x4000）
+  ("3.6 反篡改版本门 + 无门控安装",
+   "if (ver != 36) {" in t                                # 版本门：其它版本不硬套旧偏移
+   and "static HookSlot kIntegritySlots[] = {" in t       # 独立槽表，未混入 kSlots[]
+   and "if (g_integrityDone.load()) return 0;" in t       # 幂等标记
+   and 'LOGI(TPL_LOG " integrity hooks: ok=%d dead=%d ver=%d"' in t
+   and "if (verGate == 36) {" in t                       # 3.6 版本门（与 3.5 的 35 分支互斥）
+   and t.index("        InstallIntegrityHooks();") < t.index("    SyncHooks();")  # 装在 SyncHooks 之前（绕开 AnyFeatureOn）
+   and "kSize36Lib = 66383744ull" in t
+   and t.index("{36, kOff36Show}") < t.index("{35, kOff35Show}")
+   and t.index("{35, kOff35Show}") < t.index("{33, kOff33Show}")
+   and t.index("{33, kOff33Show}") < t.index("{32, kOff32Show}")),
 ]
 
 CLAMP = -2.1474835e9

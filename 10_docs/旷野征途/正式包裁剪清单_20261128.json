@@ -1,0 +1,20 @@
+{
+  "game_dir": "E:/nixiang/08_output/旷野征途",
+  "keep": "旷野征途_3.6_starry-releaseSigned.apk",
+  "keep_size": 179903306,
+  "keep_md5": "f2846c17d551b2ee4fc9159b4f523ffd",
+  "mode": "--apply",
+  "removed": [
+    {
+      "name": "旷野征途_3.6_starry-releaseSigned.apk.idsig",
+      "size": 1426971,
+      "md5": "4a0a2f06bbf14646228777879ed19808"
+    },
+    {
+      "name": "旷野征途_3.6_starry-unsigned.apk",
+      "size": 179768613,
+      "md5": "46d856aa8d0e6c087db93e43b9431b5a"
+    }
+  ],
+  "removed_count": 2
+}

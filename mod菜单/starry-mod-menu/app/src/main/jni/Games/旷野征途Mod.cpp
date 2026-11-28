@@ -202,7 +202,7 @@ static void  LogHookDiag(const char* tag, void* target, void* orig, int installe
 static uintptr_t kRvaShowInternal = 0x1C8A9AC;   // 1.8 实测（file）
 static uintptr_t kRvaHandleNative = 0x1C8A724;   // 1.8 实测（file，只调不挂）
 static uintptr_t kRvaEnterInterp  = 0x19876a8;   // 1.8 实测（file）
-static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2 / 24=2.4 / 32=3.2 / 33=3.3 / 35=3.5
+static std::atomic<int> g_libVer{0};             // 0=未知 / 18=1.8 / 22=2.2 / 24=2.4 / 32=3.2 / 33=3.3 / 35=3.5 / 36=3.6
 
 // 3.2 指纹常量（2026-11-24 静态实测；全部 **file offset**，VA = file + 0x4000）
 static const uintptr_t kOff32Show   = 0x1CFC6D0u;  // ShowInternal（VA 0x1D006D0，序言 0xF81E0FFE）
@@ -217,6 +217,26 @@ static const uintptr_t kOff33Show   = 0x1CFF134u;  // ShowInternal（VA 0x1D0313
 static const uintptr_t kOff33Interp = 0x19F8A30u;  // EnterFrameFromInterpreter（VA 0x19FCA30，序言 0xF81D0FFE）
 static const uintptr_t kOff33Timescale = 0x37B9344u;    // Time::set_timeScale（VA 0x37BD344，序言 0xFC1E0FE8）
 static const unsigned long long kSize33Lib = 66297952ull;  // libil2cpp.so 66,297,952 B（sha256 bbf9fc30…97a004）
+
+// 3.6 指纹常量（2026-11-28 静态实测；全部 **file offset**，段表 delta LOAD1(.text)=0x4000，VA = file + 0x4000）
+//   底包 libil2cpp.so 66,383,744 B / sha256 cd83a34d…33323（旷野征途_3.6_taptap_official.apk，vc36，单 ABI arm64-v8a）
+static const uintptr_t kOff36Show   = 0x1D050FCu;  // ShowInternal（VA 0x1D090FC，序言 0xF81E0FFE）
+static const uintptr_t kOff36HandleNative = 0x1D04E74u;  // HandleNativeEvent（VA 0x1D08E74，序言 0xD10183FF；只记录不挂）
+static const uintptr_t kOff36Timescale = 0x37CC0F8u;     // Time::set_timeScale（VA 0x37D00F8，序言 0xFC1E0FE8）
+static const uintptr_t kOff36Interp = 0x19FE82Cu;  // EnterFrameFromInterpreter（VA 0x1A0282C，序言 0xF81D0FFE）
+static const unsigned long long kSize36Lib = 66383744ull;  // libil2cpp.so 66,383,744 B（sha256 cd83a34d…33323）
+
+// 3.6 反篡改两挂点（2026-11-28 静态实测；Namespace=ET / class AndroidPackageIntegrity / TypeDefIndex 10254）
+//   ① VerifyPackageContents(string apkPath, long versionCode, string abi, bool verifyFileIndex)
+//      RVA 0x2B81D40 / file 0x2B7DD40 / 序言 0xD10203FF；唯一调用者 <VerifyInstalledPackageAsync>b__0（尾调用）
+//   ② VerifyCurrentSigner(AndroidJavaObject info, bool modern)
+//      RVA 0x2B81518 / file 0x2B7D518 / 序言 0xD10183FF；Task.Run 之前的同步路径
+// 两处恒返回 true ⇒ 内容校验 + 签名校验整体放行；只改内存，不动磁盘字节
+// （patch libil2cpp 会让 .bin/.audit 的 RSA 白名单失配）。
+static const uintptr_t kOff36IntegrityContents = 0x2B7DD40u;   // VA 0x2B81D40，序言 0xD10203FF
+static const uintptr_t kOff36IntegritySigner   = 0x2B7D518u;   // VA 0x2B81518，序言 0xD10183FF
+static const uint32_t  kInsnIntegrityContents  = 0xD10203FFu;  // 装钩前序言校验字（不符即拒绝，不盲挂）
+static const uint32_t  kInsnIntegritySigner    = 0xD10183FFu;  // 装钩前序言校验字（不符即拒绝，不盲挂）
 
 // 3.5 指纹常量（2026-11-28 静态实测；全部 **file offset**，VA = file + 0x4000）
 //   底包 libil2cpp.so 66,377,504 B / sha256 26d210e1e9e93a6d27c6cb56b78671fa47f724d5dfca907f9fad920601ce4f6c
@@ -241,15 +261,41 @@ static int DetectLibVersion() {
     //   2.4 在 2.2 探针 0x1CA9130 处 = 0xB4000D96（≠0xF81E0FFE，不会误判成 2.2）
     //   2.4 在 1.8 探针 0x1C8A9AC 处 = 0x97F951DD（≠0xF81E0FFE）
     // 3.2 单点序言不足（0xF81E0FFE 在段内多处同构）⇒ 三点取二，见下。
-    // 3.5 首插表首（2026-11-28）：3.5 与 3.3 的三个首字一模一样（同段结构），
-    //   只能靠「3.5 的地址表 + 文件大小 66,377,504」区分 ⇒ 3.5 必须先试，3.3 分支原样保留。
-    static const Probe probes[] = {{35, kOff35Show}, {33, kOff33Show}, {32, kOff32Show}, {24, 0x1CCE6CCu}, {22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
+    // 3.6 / 3.5 首插表首（2026-11-28）：两版三个首字都与 3.3 一模一样（同段结构），
+    //   只能靠「各版地址表 + 文件大小」区分 ⇒ 36、35 各自先试，3.3 分支原样保留。
+    static const Probe probes[] = {{36, kOff36Show}, {35, kOff35Show}, {33, kOff33Show}, {32, kOff32Show}, {24, 0x1CCE6CCu}, {22, 0x1CA9130u}, {18, 0x1C8A9ACu}};
     for (const auto& pr : probes) {
         void* va = FileOffToVa(TPL_TARGET_LIB, pr.off);
         if (!va) continue;
         uint32_t insn = 0;
         const bool prologueOk = ReadU32Guarded("verprobe", va, &insn) && insn == 0xF81E0FFEu;
 
+        if (pr.ver == 36) {
+            // 3.6 判据（三选二，2026-11-28 静态实测；底包 旷野征途_3.6_taptap_official.apk / vc36）：
+            //   ① file 0x1D050FC == 0xF81E0FFE（ShowInternal 序言；VA 0x1D090FC）
+            //   ② file 0x19FE82C == 0xF81D0FFE（解释器帧入口序言；VA 0x1A0282C）
+            //   ③ libil2cpp.so 文件大小 == 66,383,744（sha256 cd83a34d…33323）
+            // 接受条件与 3.3 同构：① && (② || ③)  或  ② && ③。
+            // 只中 ①（另两条都不符）⇒ 证据不足，判未知并继续向后探旧版本，不硬套 3.3/3.2 地址。
+            const bool c1 = prologueOk;
+            bool c2 = false, c3 = false;
+            uint32_t insn36 = 0;
+            void* va36 = FileOffToVa(TPL_TARGET_LIB, kOff36Interp);
+            if (va36) c2 = ReadU32Guarded("verprobe", va36, &insn36) && insn36 == 0xF81D0FFEu;
+            unsigned long long fsz36 = 0;
+            c3 = LibFileSize(TPL_TARGET_LIB, &fsz36) && fsz36 == kSize36Lib;
+            LOGI(TPL_LOG " verprobe 3.6 cond show=%d interp=%d size=%d/%llu",
+                 (int)c1, (int)c2, (int)c3, fsz36);
+            DbgLog("verprobe: 3.6 cond show=%d interp=%d size=%d/%llu", (int)c1, (int)c2, (int)c3, fsz36);
+            if (!((c1 && (c2 || c3)) || (c2 && c3))) continue;
+            g_libVer.store(36);
+            kRvaShowInternal = kOff36Show;          // file；VA 0x1D090FC
+            kRvaHandleNative = kOff36HandleNative;  // file；VA 0x1D08E74（只记录，不挂）
+            kRvaEnterInterp  = kOff36Interp;        // file；VA 0x1A0282C，序言 0xF81D0FFE
+            LOGI(TPL_LOG " lib version probe: 3.6 (ShowInternal file=0x1D050FC, interp=0x19FE82C)");
+            DbgLog("verprobe: 3.6 showInternal=0x1D050FC interp=0x19FE82C");
+            return 36;
+        }
         if (pr.ver == 35) {
             // 3.5 判据（三选二，2026-11-28 静态实测）：
             //   ① file 0x1D04B30 == 0xF81E0FFE（ShowInternal 序言）
@@ -578,14 +624,27 @@ static bool IsLibMapLine(const char* line, const char* lib) {
 }
 
 // file_off → 运行时 VA：libil2cpp 是分段映射，base+RVA 会挂到错误地址，
-// 必须扫 /proc/self/maps 只取可执行段，并在覆盖该 file_off 的段里取最大 span。
+// 必须扫 /proc/self/maps，并只在「覆盖该 file_off 的段」里换算。
+//
+// 段选择口径（2026-11-28 修订，雷电 Houdini 兼容；判据同 Games/DzqsMod.cpp:53-71）：
+//   ① 优先「含 x 的段」里覆盖该 file_off 且 span 最大者 —— 真机 arm64 原生执行行为不变；
+//   ② 若覆盖该 file_off 的段全都没有 x（雷电 libhoudini 把 arm64 guest 库、含 libil2cpp.so
+//      一律映射成 r--p / rw-p，整库没有任何 x 段；此前那句「无 x 即 continue」会把所有行
+//      过滤光 ⇒ 恒返回 nullptr ⇒ DetectLibVersion 取不到 VA ⇒ ver=0 ⇒ 反篡改 hook 全跳过），
+//      则退回「按 start 升序第一个覆盖该 file_off 的段」，忽略权限。
+//      判据：/proc/self/maps 天然按 start 升序输出，首个命中即 start 最低的段；span 只在 x 段
+//      之间择优，不参与退回分支 —— 否则 0x7f9… 那种 offset=0、span 更大的整文件映射会抢到
+//      前面，把 VA 算到错误的段上。
+//   ③ 两条都取不到 ⇒ nullptr（调用方按「版本未知」处理，不硬套地址）。
+// 地址换算本身与权限无关：VA = start + (file_off - off)，逐段各算各的。
 static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
     FILE* fp = std::fopen("/proc/self/maps", "r");
     if (!fp) return nullptr;
 
     char line[768];
-    void* best = nullptr;
+    void* best = nullptr;        // 含 x 的段里 span 最大者（真机路径）
     uintptr_t bestSpan = 0;
+    void* fallback = nullptr;    // 首个（start 升序）覆盖该 file_off 的段，忽略权限（houdini 路径）
 
     while (std::fgets(line, sizeof(line), fp)) {
         if (!IsLibMapLine(line, lib)) continue;
@@ -593,19 +652,20 @@ static void* FileOffToVa(const char* lib, uintptr_t fileOff) {
         uintptr_t start = 0, end = 0, off = 0;
         char perm[8] = {};
         if (std::sscanf(line, "%lx-%lx %7s %lx", &start, &end, perm, &off) != 4) continue;
-        if (!std::strchr(perm, 'x')) continue;   // 只要可执行段
         if (end <= start) continue;
 
         uintptr_t span = end - start;
         if (fileOff >= off && fileOff < off + span) {
-            if (span > bestSpan) {
+            void* cand = reinterpret_cast<void*>(start + (fileOff - off));
+            if (!fallback) fallback = cand;          // maps 按 start 升序 ⇒ 首个命中即最低 start 的段
+            if (std::strchr(perm, 'x') && span > bestSpan) {   // 可执行段优先（真机行为不变）
                 bestSpan = span;
-                best = reinterpret_cast<void*>(start + (fileOff - off));
+                best = cand;
             }
         }
     }
     std::fclose(fp);
-    return best;
+    return best ? best : fallback;
 }
 
 // libil2cpp 在 /proc/self/maps 里的**整段 guest 映射区间**（含 r--p / r-xp 等所有段，取总跨度）。
@@ -1121,6 +1181,32 @@ static void Hooked_SetTimeScale(float value, void* method) {
     if (g_origSetTimeScale) g_origSetTimeScale(v, method);
 }
 
+// ============================================================================
+//  ⑥-b 3.6 反篡改恒通钩（内容校验 + 签名校验）—— 不调 orig 即恒返回
+//     原型（dump.cs TypeDefIndex 10254，Namespace = ET）：
+//       bool VerifyPackageContents(string apkPath, long versionCode, string abi, bool verifyFileIndex)
+//       bool VerifyCurrentSigner(AndroidJavaObject info, bool modern)
+//     Dobby 只替换函数入口、不校验原型；bool 返回值走 w0，参数一律 void* 收下不读
+//     （与先例 Hooked_ShowInternal 同款「不调 orig 即恒返回」）。
+//     注意：这两处一旦装上就是**无条件放行**，不是开关项 —— 只在 ver==36 装，
+//     其它版本由 InstallIntegrityHooks 的版本门直接跳过。
+// ============================================================================
+static void* g_origVerifyContents = nullptr;   // 只在 g_installMutex 下写
+static void* g_origVerifySigner   = nullptr;   // 只在 g_installMutex 下写
+
+static bool Hooked_VerifyPackageContents(void* /*apkPath*/, void* /*versionCode*/,
+                                         void* /*abi*/, void* /*verifyFileIndex*/) {
+    ModHitFirst("IntegrityContents");   // MODHIT：内容校验确实被调用（放行真的生效）
+    DbgLog("integrity: contents -> true (bypass, no orig)");
+    return true;   // 恒放行：不转发 g_origVerifyContents
+}
+
+static bool Hooked_VerifyCurrentSigner(void* /*info*/, bool /*modern*/) {
+    ModHitFirst("IntegritySigner");     // MODHIT：签名校验确实被调用
+    DbgLog("integrity: signer -> true (bypass, no orig)");
+    return true;   // 恒放行：不转发 g_origVerifySigner
+}
+
 // TODO：rva/expectInsn 由 dump.cs / IDA 实测后回填（0 = 仅按名）
 static HookSlot kSlots[] = {
     // rva/expectInsn 由 InitSlotAddrs() 按版本填（3.2 = 0x37B27A8 / 0xFC1E0FE8）：
@@ -1147,6 +1233,64 @@ static HookSlot kSlots[] = {
 // ============================================================================
 static const int kSlotsCount = (int)(sizeof(kSlots) / sizeof(kSlots[0]));
 
+// ---- 3.6 反篡改槽：**故意不进 kSlots[]** ----
+// 为什么不复用 kSlots[]：那套槽由 SyncHooks 驱动，受 AnyFeatureOn() 门控 + g_installedCount/
+// kSlotsCount 快路径约束。把「全关态也必须装」的恒通槽塞进去有两个实打实的副作用：
+//   ① g_installedCount 是「达到 kSlotsCount 即视为全齐」的唯一判据，混入不计门控的槽会让
+//      fast-path 提前 return，功能槽（TimeScale/NoAd/…）可能装不上；
+//   ② slot[i]/dead 的报数（install pass: ok=%d dead=%d/%d）语义会被污染。
+// ⇒ 同结构体、独立数组、独立安装入口；幂等靠 HookSlotInstall 的 *origPtr 判据。
+static HookSlot kIntegritySlots[] = {
+    // rva/expectInsn 由 InstallIntegrityHooks 在 ver==36 时填（其它版本恒留 0 ⇒ 不装）
+    {"IntegrityContents", 0x0u, 0x0u, "ET", "AndroidPackageIntegrity", "VerifyPackageContents", 4,
+     (void*)Hooked_VerifyPackageContents, (void**)&g_origVerifyContents},
+    {"IntegritySigner", 0x0u, 0x0u, "ET", "AndroidPackageIntegrity", "VerifyCurrentSigner", 2,
+     (void*)Hooked_VerifyCurrentSigner, (void**)&g_origVerifySigner},
+};
+static const int kIntegritySlotsCount = (int)(sizeof(kIntegritySlots) / sizeof(kIntegritySlots[0]));
+static std::atomic<bool> g_integrityDone{false};   // 已装齐标记（幂等快路径；只在 g_installMutex 下写）
+static std::atomic<int> g_integrityOk{0};         // 上次装钩的 ok 数（供 TryInit 的 post-delay 自检打印）
+static std::atomic<int> g_integrityDead{0};       // 上次装钩的 dead 数（供 TryInit 的 post-delay 自检打印）
+
+// 3.6 反篡改安装：**无 AnyFeatureOn 门控**（全关态也要装）+ ver==36 版本门 + 三重幂等。
+//   调用点：旷野征途_TryInit（g_libReady=true 之后、SyncHooks 之前）。
+//   幂等：① g_integrityDone 原子标记；② HookSlotInstall 内部「*origPtr 非空即已装」⇒ 同址不二次
+//         DobbyHook；③ 全程持 g_installMutex，与 SyncHooks 的装钩互斥（不会并发双挂）。
+static int InstallIntegrityHooks() {
+    std::lock_guard<std::mutex> lk(g_installMutex);
+    if (g_integrityDone.load()) return 0;             // 已装齐：直接返回，不重复装
+
+    const int ver = (g_libVer.load() == 0) ? DetectLibVersion() : g_libVer.load();
+    if (ver != 36) {
+        // 这两个 RVA 只有 3.6 底包实测依据 ⇒ 其它版本一律跳过，绝不套用旧偏移
+        DbgLog("integrity: SKIP ver=%d (只有 3.6 有这两处挂点依据；不硬套)", ver);
+        LOGI(TPL_LOG " integrity: skip ver=%d", ver);
+        return 0;
+    }
+    kIntegritySlots[0].rva = kOff36IntegrityContents;
+    kIntegritySlots[0].expectInsn = kInsnIntegrityContents;
+    kIntegritySlots[1].rva = kOff36IntegritySigner;
+    kIntegritySlots[1].expectInsn = kInsnIntegritySigner;
+
+    int ok = 0, dead = 0;
+    for (int i = 0; i < kIntegritySlotsCount; ++i) {
+        g_lastFatal = false;
+        if (HookSlotInstall(kIntegritySlots[i])) {
+            ++ok;
+        } else if (g_lastFatal) {
+            ++dead;                                     // 炸过的槽不重试（与 kSlots 熔断同理）
+            LOGW(TPL_LOG " integrity[%d] %s 装钩期致命信号，本次会话不再重试",
+                 i, kIntegritySlots[i].tag);
+        }
+    }
+    g_integrityOk.store(ok);
+    g_integrityDead.store(dead);
+    g_integrityDone.store(ok == kIntegritySlotsCount);
+    LOGI(TPL_LOG " integrity hooks: ok=%d dead=%d ver=%d", ok, dead, ver);
+    DbgLog("integrity hooks: ok=%d dead=%d ver=%d", ok, dead, ver);
+    return ok;
+}
+
 // 把版本探测结果写进挂点表（幂等；探测失败则全部保持 0 ⇒ 仅按名或失败关闭）
 static void InitSlotAddrs() {
     const int ver = (g_libVer.load() == 0) ? DetectLibVersion() : g_libVer.load();
@@ -1155,12 +1299,14 @@ static void InitSlotAddrs() {
     const uintptr_t interp = (ver == 18) ? 0x19876a8u
                            : (ver == 22) ? 0x19a5004u          // VA 0x19a9004
                            : (ver == 24) ? 0x19C9A78u          // VA 0x19cda78
+                           : (ver == 36) ? kOff36Interp        // 3.6 VA 0x1A0282C（序言 0xF81D0FFE）
                            : (ver == 35) ? kOff35Interp        // 3.5 VA 0x1A02258（序言 0xF81D0FFE）
                            : (ver == 33) ? kOff33Interp        // 3.3 VA 0x19FCA30（序言 0xF81D0FFE）
                            : (ver == 32) ? kOff32Interp : 0u;  // 3.2 VA 0x19FA364（序言 0xF81D0FFE）
     const uintptr_t noad   = (ver == 18) ? 0x1C8A9ACu
                            : (ver == 22) ? 0x1CA9130u
                            : (ver == 24) ? 0x1CCE6CCu          // VA 0x1CD26CC
+                           : (ver == 36) ? kOff36Show          // 3.6 VA 0x1D090FC
                            : (ver == 35) ? kOff35Show          // 3.5 VA 0x1D08B30
                            : (ver == 33) ? kOff33Show          // 3.3 VA 0x1D03134
                            : (ver == 32) ? kOff32Show : 0u;    // 3.2 VA 0x1D006D0
@@ -1169,6 +1315,7 @@ static void InitSlotAddrs() {
     kRvaHandleNative = (ver == 18) ? 0x1C8A724u
                      : (ver == 22) ? 0x1CA8EA8u
                      : (ver == 24) ? 0x1CCE444u            // 2.4 只记录不挂
+                     : (ver == 36) ? kOff36HandleNative    // 3.6 VA 0x1D08E74（只记录不挂）
                      : (ver == 35) ? 0x1D048A8u            // 3.5 VA 0x1D088A8（只记录不挂）
                      : (ver == 33) ? 0x1CFEEACu            // 3.3 VA 0x1D02EAC（只记录不挂）
                      : (ver == 32) ? 0x1CFC448u : 0u;      // 3.2 VA 0x1D00448（只记录不挂）
@@ -1176,13 +1323,14 @@ static void InitSlotAddrs() {
     //   UnityEngine.Time::set_timeScale 在游戏 C# 里是 **AOT 直调**（bl 到函数体），
     //   by-name 换 MethodInfo->methodPointer 影响不到直调点 ⇒ 装钩成功但零命中（MODHIT 缺失）。
     //   GameUpdate 之所以 by-name 能命中，是因为它由 Unity 引擎回调（delegate/虚表路径）。
-    const uintptr_t timescale = (ver == 35) ? kOff35Timescale    // 3.5 VA 0x37CE8F0，序言 0xFC1E0FE8
+    const uintptr_t timescale = (ver == 36) ? kOff36Timescale    // 3.6 VA 0x37D00F8，序言 0xFC1E0FE8
+                              : (ver == 35) ? kOff35Timescale    // 3.5 VA 0x37CE8F0，序言 0xFC1E0FE8
                               : (ver == 33) ? kOff33Timescale    // 3.3 VA 0x37BD344，序言 0xFC1E0FE8
                               : (ver == 32) ? kOff32Timescale    // 3.2 VA 0x37B67A8，序言 0xFC1E0FE8
                               : (ver == 24) ? 0x37541A0u          // 2.4 VA 0x37581A0（同一序言，静态文档 §2c）
                               : 0u;                               // 其它版本/未知 ⇒ 0，退回按名（已知无效，仅兜底）
     for (auto& sl : kSlots) {
-        // EnterInterp 只在 1.8 由 kSlots 装；2.2/2.4/3.2/3.3/3.5 由 InstallBattleHooks 单点显式装
+        // EnterInterp 只在 1.8 由 kSlots 装；2.2/2.4/3.2/3.3/3.5/3.6 由 InstallBattleHooks 单点显式装
         // （同址双 Dobby 叠钩会 SIGSEGV ⇒ 这里绝不能重复填 rva）
         if (std::strcmp(sl.tag, "EnterInterp") == 0) sl.rva = (ver == 18) ? interp : 0u;
         else if (std::strcmp(sl.tag, "NoAd") == 0)   sl.rva = noad;
@@ -1435,13 +1583,13 @@ static int InstallBattleHooks() {
         }
     }
 #if KYZT_BATTLE_ENABLE
-    // 帧入口（HybridCLR 解释器，无按名路径）：22 / 24 / 32 / 33 / 35 都从这里单点装，1.8 走 kSlots。
+    // 帧入口（HybridCLR 解释器，无按名路径）：22 / 24 / 32 / 33 / 35 / 36 都从这里单点装，1.8 走 kSlots。
     // 注意：HookAtRva 的参数是 **file offset**（内部走 FileOffToVa），不是 VA。
     //   · 2.2：VA 0x19a9004 ⇔ file 0x19a5004（该 VA 处为 0xB4052B20 ⇒ 传 VA 必失败）
     //   · 2.4：VA 0x19cda78 ⇔ file 0x19C9A78（序言 0xF81D0FFE = str x30,[sp,#-0x30]!）
     // 地址一律取 InitSlotAddrs 填好的 kRvaEnterInterp（不在此写版本字面量）。
     const int verHook = g_libVer.load();
-    if (verHook == 22 || verHook == 24 || verHook == 32 || verHook == 33 || verHook == 35) {
+    if (verHook == 22 || verHook == 24 || verHook == 32 || verHook == 33 || verHook == 35 || verHook == 36) {
         if (HookAtRva("Battle", kRvaEnterInterp, 0xF81D0FFEu,
                       (void*)kb::Hooked_EnterFrame, &kb::g_origEnter)) {
             ++ok;
@@ -1868,9 +2016,11 @@ static std::atomic<bool> g_atDone{false};          // 已尝试过安装（防�
 static std::atomic<int>  g_atSignerHits{0};
 static std::atomic<int>  g_atContentsHits{0};
 static uintptr_t g_atSignerVa   = 0;
+// ⚠ 符号名与 3.6 的 kIntegritySlots 钩子冲突（两版都叫 Hooked_Verify*）⇒ 3.5 这一套统一加 35 前缀；
+//   3.6 那套（Hooked_VerifyPackageContents/Hooked_VerifyCurrentSigner + kIntegritySlots）名字保持原样不动。
 static uintptr_t g_atContentsVa = 0;
-static void* g_origVerifySigner   = nullptr;       // 只记录 trampoline，**本文件不调用**
-static void* g_origVerifyContents = nullptr;
+static void* g_orig35VerifySigner   = nullptr;       // 只记录 trampoline，**本文件不调用**
+static void* g_orig35VerifyContents = nullptr;
 
 // 首次各一条：MODHIT tag=AntiTamper which=signer|contents n=1 va=..
 // （不复用 ModHitFirst：它按 tag 去重，两条钩子同 tag 会把第二条吞掉）
@@ -1882,13 +2032,13 @@ static void AntiTamperHit(const char* which, uintptr_t va, std::atomic<int>& cnt
 
 // AArch64 传参：实例方法 = (this, arg0, arg1, MethodInfo*)，静态 = (arg0..arg2, MethodInfo*)；
 // 两种都按 4 个指针槽接住即可，返回值 bool 在 w0 ⇒ C++ 的 bool 直接对上，不需要 orig。
-static bool Hooked_VerifyCurrentSigner(void* a0, void* a1, void* a2, void* a3) {
+static bool Hooked_35VerifyCurrentSigner(void* a0, void* a1, void* a2, void* a3) {
     (void)a0; (void)a1; (void)a2; (void)a3;
     AntiTamperHit("signer", g_atSignerVa, g_atSignerHits);
     return true;
 }
 
-static bool Hooked_VerifyPackageContents(void* a0, void* a1, void* a2, void* a3) {
+static bool Hooked_35VerifyPackageContents(void* a0, void* a1, void* a2, void* a3) {
     (void)a0; (void)a1; (void)a2; (void)a3;
     AntiTamperHit("contents", g_atContentsVa, g_atContentsHits);
     return true;
@@ -1907,13 +2057,13 @@ static void InstallAntiTamperHooks() {
     g_atSignerVa   = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35VerifySigner);
     g_atContentsVa = (uintptr_t)FileOffToVa(TPL_TARGET_LIB, kOff35VerifyContents);
     const int s = HookAtRva("AntiTamper", kOff35VerifySigner, kInsn35VerifySigner,
-                            (void*)Hooked_VerifyCurrentSigner, &g_origVerifySigner) ? 1 : 0;
+                            (void*)Hooked_35VerifyCurrentSigner, &g_orig35VerifySigner) ? 1 : 0;
     const int c = HookAtRva("AntiTamper", kOff35VerifyContents, kInsn35VerifyContents,
-                            (void*)Hooked_VerifyPackageContents, &g_origVerifyContents) ? 1 : 0;
+                            (void*)Hooked_35VerifyPackageContents, &g_orig35VerifyContents) ? 1 : 0;
     LOGI(TPL_LOG " antitamper: ver=35 signer=%d(slot 0x%lX) contents=%d(slot 0x%lX)",
          s, (unsigned long)kOff35VerifySigner, c, (unsigned long)kOff35VerifyContents);
     DbgLog("antitamper: ver=35 signer=%d contents=%d origSigner=%p origContents=%p",
-           s, c, g_origVerifySigner, g_origVerifyContents);
+           s, c, g_orig35VerifySigner, g_orig35VerifyContents);
 }
 
 // ============================================================================
@@ -2304,10 +2454,36 @@ bool 旷野征途_TryInit(JavaVM* /*vm*/) {
 
     InstallFaultGuard();          // §④ 先装兜底，再装钩
     g_libReady.store(true);
-    // ★ 反篡改绕行必须在这里装（§⑥-b）：C# AOT 校验跑在 GameManagerMono.Start（冷启、功能全关也跑），
+    // ★ 反篡改绕行必须在这里装：C# AOT 校验跑在 GameManagerMono.Start（冷启、功能全关也跑），
     //   与开关无关 ⇒ 不能放进 SyncHooks（那条路 AnyFeatureOn()==false 时直接 return）。
-    InstallAntiTamperHooks();
-    InstallExitProbeHooks();      // §⑥-c 退出探针：同样只需 ver==35，同样不依赖开关
+    // 版本门互斥（2026-11-28 合并 3.5/3.6）：先定版本，再按版本装各自那套，互不引用对方 RVA。
+    //   35 → §⑥-b InstallAntiTamperHooks（0x2B7BE58 / 0x2B7C680）+ §⑥-c InstallExitProbeHooks
+    //   36 → InstallIntegrityHooks（0x2B7DD40 / 0x2B7D518，kIntegritySlots 双 detour）
+    // 三个入口内部各自还有一道 ver 门 + 幂等标记 ⇒ 早线程与框架线程并发重复调用也安全（不会同址双挂）。
+    const int verGate = (g_libVer.load() == 0) ? DetectLibVersion() : g_libVer.load();
+    if (verGate == 35) {
+        InstallAntiTamperHooks();  // §⑥-b 3.5 反篡改：恒通，不调 orig
+        InstallExitProbeHooks();   // §⑥-c 3.5 退出探针：同样不依赖开关
+    } else if (verGate == 36) {
+        // ★ 2026-11-28 时序修正（houdini-safe）：merge 回 3.5 的 early-init 线程后，装钩发生在
+        //   lib appeared +18ms —— 此时 libhoudini 尚未完成翻译/页状态稳定，Dobby 写入的 patch 被
+        //   后续翻译覆盖 ⇒ 钩子在（ok=2）但 MODHIT=0，6.0s 后 nativeRender→killProcess 自杀。
+        //   同机对照：3.5 的晚装（启动后约 3.5s）不受影响。故 3.6 在这里等 lib appeared 后再 2s 装。
+        //   安全性：本分支只跑在 early-init 的 detached pthread（KyztEarlyInitThread）或框架
+        //   mod_thread（MainModern.cpp:223 起的后台线程），**都不是 Java UI 线程** ⇒ sleep 不阻塞界面。
+        //   35 分支保持立即装（3.5 不受影响，不改）。
+        LOGI(TPL_LOG " integrity: defer 2000ms (houdini-safe)");
+        DbgLog("integrity: defer 2000ms (houdini-safe)");
+        sleep(2);                                     // 2000ms：等 houdini 翻译/页状态稳定
+        InstallIntegrityHooks();   // 3.6 反篡改双 detour：恒通，不调 orig
+        // 自检：装完立刻报一次（InstallIntegrityHooks 内部已有 "integrity hooks: ok=.. dead=.. ver=.."，
+        //   此行额外固定 "post-delay" 前缀，便于在时间线上确认「延迟之后才装」且装的结果如何。）
+        LOGI(TPL_LOG " integrity: post-delay ok=%d dead=%d", g_integrityOk.load(), g_integrityDead.load());
+        DbgLog("integrity: post-delay ok=%d dead=%d", g_integrityOk.load(), g_integrityDead.load());
+    } else {
+        LOGI(TPL_LOG " antitamper/integrity: skip ver=%d（无该版挂点依据，不硬套）", verGate);
+        DbgLog("antitamper/integrity: skip ver=%d", verGate);
+    }
     SyncHooks();                  // 已 ON 的开关立即装；全关保持 0 hook
     LOGI(TPL_LOG " lib ready (dual-path, lazy hooks)");
     return true;
@@ -2367,7 +2543,7 @@ void 旷野征途_OnFeatureChanged(int featNum, bool enabled) {
         // 2.4 同口径：Economy22 的字段/属性/方法一律 il2cpp_field_get_offset 按名现取
         //（delta24 已核 2.4 HotUpdate.dll 名字齐备）⇒ 字段常量零改动，只放行版本门。
         if (g_libVer.load() == 22 || g_libVer.load() == 24 || g_libVer.load() == 32 ||
-            g_libVer.load() == 33 || g_libVer.load() == 35) {
+            g_libVer.load() == 33 || g_libVer.load() == 35 || g_libVer.load() == 36) {
             // 2.2：菜单回调（Java UI 线程）**只入队**，真正调用发生在 ET.GameManagerMono.Update
             // （Unity 线程）里 drain —— 不在 UI 线程直接碰 il2cpp 对象。
             const unsigned long ut = g_unityTid.load();
