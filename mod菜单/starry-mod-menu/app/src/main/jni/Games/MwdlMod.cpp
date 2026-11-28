@@ -166,14 +166,19 @@ static std::string SpliceCombatJs(const char* src) {
     static char kPickAllRepl[700];
     static bool once = false;
     if (!once) {
-        // 秒杀 get_ret(7)（直接 P*=99999999，绕过滑块上限）+ get_val(1) 伤害倍率 + get_ret(2) 无敌
-        // — 16.0.0/98b49 尾锚 i.target.damage=P}；无敌 P=0 在秒杀之后覆盖
+        // 秒杀 get_ret(7)：改写游戏官方处决标记 i.target.executed=!0（并 hp=0），一击必杀。
+        //   —— 不走血量/伤害倍率，故对高属性、高减伤怪同样生效。
+        //   依据 16.0.0/98b49：伤害函数 jj(t,e,i,o) 内 if(!o.target.executed){...hp=recover-floor(n)}
+        //   分支，executed 为真时跳过扣血、直接走 i.onTrigger(ej.BeDead,...)（官方斩杀/DOT 处决同用法）。
+        //   本 hook 的 i 即 jj 的 o（Hj 第三参同一上下文），故在此设 executed 后紧随的结算即判死。
+        //   另含 get_val(1) 伤害倍率 + get_ret(2) 无敌 — 16.0.0/98b49 尾锚 i.target.damage=P}；
+        //   无敌 P=0 在秒杀之后覆盖
         snprintf(
             kKhHook, sizeof(kKhHook),
             "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===TI.Hero||"
             "_su.unitType===TI.Summon||_su.unitType===TI.Guardian||"
             "_su.unitType===TI.Player||_su.unitType===TI.ParasyteGuardian)){"
-            "if(jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",7)){P*=99999999}"
+            "if(jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",7)){i.target&&(i.target.executed=!0,i.target.hp=0)}"
             "else{var _dm=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",1);"
             "_dm>1&&(P*=Math.min(_dm,1000))}}"
             "if(_su&&_su.unitType===TI.Monster&&"

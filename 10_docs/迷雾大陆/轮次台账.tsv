@@ -37,3 +37,10 @@
 2026-11-28 22:15	5	7	16.0.0/98b49 正式包 a68eab2c…；七段 splice 7102737→7104438；菜单#5=自动挂机；L3 通过（用户：功能都没有问题）	logcat [Mwdl] combat splice #1/#2	有效
 2026-11-28 22:15	6	5	16.0.0/98b49 正式包 a68eab2c…；七段 splice 7102737→7104438；菜单#6=全图拾取；L3 通过（用户：功能都没有问题）	logcat [Mwdl] combat splice #1/#2	有效
 2026-11-28 22:15	7	1	16.0.0/98b49 正式包 a68eab2c…；七段 splice 7102737→7104438；菜单#7=秒杀（新增秒杀位，需后台 feat_num=7）；L3 通过（用户：功能都没有问题）	logcat [Mwdl] combat splice #1/#2	有效
+2026-11-28 23:35	1	7	正式包 94c1c6f1…；秒杀改 executed 一击必杀；七段 splice 7102737→7104473	logcat splice #1	有效
+2026-11-28 23:35	2	6	正式包 94c1c6f1…；秒杀改 executed 一击必杀；七段 splice 7102737→7104473	logcat splice #1	有效
+2026-11-28 23:35	3	8	正式包 94c1c6f1…；秒杀改 executed 一击必杀；七段 splice 7102737→7104473	logcat splice #1	有效
+2026-11-28 23:35	4	6	正式包 94c1c6f1…；秒杀改 executed 一击必杀；七段 splice 7102737→7104473	logcat splice #1	有效
+2026-11-28 23:35	5	8	正式包 94c1c6f1…；秒杀改 executed 一击必杀；七段 splice 7102737→7104473	logcat splice #1	有效
+2026-11-28 23:35	6	6	正式包 94c1c6f1…；秒杀改 executed 一击必杀；七段 splice 7102737→7104473	logcat splice #1	有效
+2026-11-28 23:35	7	2	正式包 94c1c6f1…；秒杀改 executed 一击必杀；七段 splice 7102737→7104473	logcat splice #1	有效
