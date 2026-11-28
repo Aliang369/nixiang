@@ -3,7 +3,7 @@
  *
  *  Cocos2djs se::ScriptEngine::evalString 运行时拼接（方案 B）。
  *  功能位号与 MwdlMod.h enum 对齐（下标 = featNum）：
- *    1 伤害倍率(滑块) / 2 无敌 / 3 移动速度 / 4 无限技能 / 5 自动挂机 / 6 全图拾取
+ *    1 伤害倍率(滑块) / 2 无敌 / 3 移动速度 / 4 无限技能 / 5 自动挂机 / 6 全图拾取 / 7 秒杀
  * ================================================================
  */
 #include "ModEntry.h"
@@ -23,6 +23,7 @@ static const char* kMwdlFeatures[] = {
     "Toggle_无限技能",                // 4  MWDL_FEAT_ULTRA_SKILL
     "Toggle_自动挂机",                // 5  MWDL_FEAT_AUTO_FIGHT
     "Toggle_全图拾取",                // 6  MWDL_FEAT_PICK_ALL
+    "Toggle_秒杀",                    // 7  MWDL_FEAT_KILL
 };
 
 extern "C" const StarryGameMod* const GameMod_Get() {

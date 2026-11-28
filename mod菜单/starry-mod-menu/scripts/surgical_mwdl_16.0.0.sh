@@ -27,8 +27,23 @@ OUT="$NIXIANG/08_output/迷雾大陆"
 SIGNER="$NIXIANG/01_tools/uber-apk-signer.jar"
 SMALI_BIN="$NIXIANG/01_tools/smali/smali"
 BAKSMALI_BIN="$NIXIANG/01_tools/smali/baksmali"
-NDK="${ANDROID_NDK_HOME:-$HOME/Library/Android/sdk/ndk/27.0.12077973}"
-NDK_CXX="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
+# [win-adapt] SDK 根：mac=$HOME/Library/Android/sdk；Windows=LOCALAPPDATA 下的 Android/Sdk
+if [[ -d "$HOME/Library/Android/sdk" ]]; then
+  ANDROID_SDK="$HOME/Library/Android/sdk"
+elif [[ -n "${ANDROID_SDK_ROOT:-}" ]]; then
+  ANDROID_SDK="$(cygpath -u "$ANDROID_SDK_ROOT" 2>/dev/null || echo "$ANDROID_SDK_ROOT")"
+elif [[ -d "/c/Users/Administrator/AppData/Local/Android/Sdk" ]]; then
+  ANDROID_SDK="/c/Users/Administrator/AppData/Local/Android/Sdk"
+else
+  ANDROID_SDK="$HOME/Library/Android/sdk"
+fi
+NDK="${ANDROID_NDK_HOME:-$ANDROID_SDK/ndk/27.0.12077973}"
+# [win-adapt] 主机工具链目录按实际存在选，不写死 darwin
+NDK_PREBUILT="darwin-x86_64"
+if [[ -d "$NDK/toolchains/llvm/prebuilt/windows-x86_64" ]]; then
+  NDK_PREBUILT="windows-x86_64"
+fi
+NDK_CXX="$NDK/toolchains/llvm/prebuilt/$NDK_PREBUILT/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so"
 KS="$NIXIANG/01_tools/starry_release.jks"
 PKG="com.hortor.mwdl"
 SIGNED="$OUT/迷雾大陆_16.0.0_surgical-releaseSigned.apk"
@@ -44,14 +59,25 @@ MF_CACHE="$NIXIANG/07_patched/迷雾大陆/surgical_16.0.0/AndroidManifest.xml"
 KILLER_SMALI="${MWDL_KILLER_SMALI:-$NIXIANG/07_patched/暗影格斗3/surgical/killer_smali}"
 
 export JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
+# [win-adapt] Windows 侧 JAVA_HOME 为 C:\... 形态，转 POSIX 供 $JAVA_HOME/bin/javac 使用
+if [[ -n "${JAVA_HOME:-}" && "$JAVA_HOME" == *:* ]]; then
+  JAVA_HOME="$(cygpath -u "$JAVA_HOME")"
+  export JAVA_HOME
+fi
 export PATH="${JAVA_HOME:+$JAVA_HOME/bin:}$PATH"
 
 BT=""
-for v in 36.0.0 35.0.0 34.0.0; do
-  if [[ -x "$HOME/Library/Android/sdk/build-tools/$v/zipalign" ]]; then
-    BT="$HOME/Library/Android/sdk/build-tools/$v"; break
-  fi
+# [win-adapt] 双平台 build-tools 探测：Windows 可执行名带 .exe，且新版本为 36.1.0
+for v in 36.1.0 36.0.0 35.0.0 34.0.0; do
+  for _root in "$ANDROID_SDK" "$HOME/Library/Android/sdk"; do
+    if [[ -x "$_root/build-tools/$v/zipalign" || -x "$_root/build-tools/$v/zipalign.exe" ]]; then
+      BT="$_root/build-tools/$v"; break 2
+    fi
+  done
 done
+# [win-adapt] 无 apktool 命令 ⇒ 统一走 jar（调用点文本不变）
+APKTOOL_JAR="$NIXIANG/01_tools/apktool/apktool.jar"
+apktool() { java -jar "$APKTOOL_JAR" "$@"; }
 
 [[ -f "$ORIG_APK" ]] || { echo "ERROR: missing $ORIG_APK"; exit 1; }
 
@@ -60,16 +86,34 @@ done
 MWDL_META="${MWDL_META:-$NIXIANG/04_scripts/迷雾大陆/official_apk.json}"
 [[ -f "$MWDL_META" ]] || { echo "ERROR: 缺少底包元数据 ${MWDL_META}（先跑 pipeline.sh 迷雾大陆 run fetch_official）"; exit 1; }
 APKSIGNER_BIN="${NIXIANG_APKSIGNER:-$BT/apksigner}"
-[[ -x "$APKSIGNER_BIN" ]] || { echo "ERROR: 找不到 apksigner（BT=${BT}）"; exit 1; }
+# [win-adapt] Windows build-tools 只有 apksigner.bat / d8.bat / zipalign.exe
+# Windows build-tools 里同时存在 unix 脚本 apksigner 与 apksigner.bat；有 .bat 即用 .bat
+if [[ -f "$BT/apksigner.bat" ]]; then
+  APKSIGNER_BIN="$BT/apksigner.bat"
+fi
+D8_BIN="$BT/d8"
+[[ -f "$D8_BIN" ]] || D8_BIN="$BT/d8.bat"
+ZIPALIGN_BIN="$BT/zipalign"
+[[ -f "$ZIPALIGN_BIN" ]] || ZIPALIGN_BIN="$BT/zipalign.exe"
+# [win-adapt] python 段落用 java -jar 调 apksigner（.bat 不能被 CreateProcess 直接执行）
+export NIXIANG_JAVA="$(command -v java)"
+export NIXIANG_APKSIGNER_JAR="$BT/lib/apksigner.jar"
+[[ -f "$APKSIGNER_BIN" ]] || { echo "ERROR: 找不到 apksigner（BT=${BT}）"; exit 1; }
 python3 - "$ORIG_APK" "$MWDL_META" "$APKSIGNER_BIN" <<'PYB'
-import hashlib, json, subprocess, sys
+import hashlib, json, os, subprocess, sys
 apk, meta, signer = sys.argv[1], sys.argv[2], sys.argv[3]
 d = json.load(open(meta, encoding='utf-8'))
 raw = open(apk, 'rb').read()
 md5 = hashlib.md5(raw).hexdigest()
 errs = []
 if d.get('apk_path') != apk:
-    errs.append('meta.apk_path=%r != %r' % (d.get('apk_path'), apk))
+    # [win-adapt] meta 记的是 mac 绝对路径；跨平台只比基名，内容身份仍由 md5 + 官方证书基线锁定
+    _mb = os.path.basename(d.get('apk_path', '').replace(chr(92), '/'))
+    _ab = os.path.basename(apk.replace(chr(92), '/'))
+    if _mb != _ab:
+        errs.append('meta.apk_path=%r != %r（基名不一致）' % (d.get('apk_path'), apk))
+    else:
+        print('  [win-adapt] apk_path 前缀不同（mac vs Windows），基名一致')
 if d.get('md5') != md5:
     errs.append('md5 实测 %s != meta %s' % (md5, d.get('md5')))
 if d.get('cert_baseline_ok') is not True:
@@ -79,8 +123,12 @@ if not d.get('no_starry_lib'):
 if not signer:
     errs.append('apksigner 不可用，无法复验证书')
 else:
-    out = subprocess.run([signer, 'verify', '--print-certs', apk],
-                         capture_output=True, text=True).stdout
+    cmd = [signer, 'verify', '--print-certs', apk]
+    if signer.lower().endswith('.bat'):
+        # [win-adapt] CreateProcess 不能直跑 .bat（WinError 193）⇒ 改走 java -jar lib/apksigner.jar
+        cmd = [os.environ['NIXIANG_JAVA'], '-jar', os.environ['NIXIANG_APKSIGNER_JAR'],
+               'verify', '--print-certs', apk]
+    out = subprocess.run(cmd, capture_output=True, text=True).stdout
     s = [l.split(': ', 1)[1].strip() for l in out.splitlines()
          if l.startswith('Signer #1 certificate SHA-256 digest:')]
     if not s or s[0] != d.get('official_signer_sha256_baseline'):
@@ -111,10 +159,12 @@ trap 'rm -rf "$WORK"; rm -rf "$LOCK_DIR"' EXIT
 mkdir -p "$OUT" "$WORK" "$(dirname "$MF_CACHE")"
 
 echo "[1/6] gradle $GRADLE_TASK + ndk (starry)"
-rsync -a --delete \
-  --exclude '.gradle/' --exclude 'app/build/' --exclude 'build/' \
-  --exclude 'auth-server/.venv/' --exclude 'auth-server/data/' --exclude '.idea/' \
-  "$STARRY_SRC/" "$WORK/starry/"
+# [win-adapt] 无 rsync：tar 管道等价（--delete 无意义，$WORK 为新建空目录）
+mkdir -p "$WORK/starry"
+tar -C "$STARRY_SRC" -cf - \
+  --exclude='./.gradle' --exclude='./app/build' --exclude='./build' \
+  --exclude='./auth-server/.venv' --exclude='./auth-server/data' --exclude='./.idea' . \
+  | tar -C "$WORK/starry" -xf -
 (cd "$WORK/starry" && ./gradlew "$GRADLE_TASK" --console=plain)
 STARRY_APK="$WORK/starry/app/build/outputs/apk/$BUILD_TYPE/$APK_NAME"
 [[ -f "$STARRY_APK" ]] || { echo "ERROR: missing $STARRY_APK"; exit 1; }
@@ -124,7 +174,7 @@ apktool d -f -o "$WORK/starry_dec" "$STARRY_APK" >/dev/null
 
 echo "[2b/6] 官方签名证书 DER（v2 签名块）→ 喂 killer"
 [[ -d "$KILLER_SMALI/bin/mt/signature" ]] || { echo "ERROR: missing killer smali $KILLER_SMALI"; exit 1; }
-python3.11 - "$ORIG_APK" "$WORK/official.der" <<'PYCERT'
+python3 - "$ORIG_APK" "$WORK/official.der" <<'PYCERT'
 import struct, sys, hashlib
 apk, out = sys.argv[1], sys.argv[2]
 d = open(apk, 'rb').read()
@@ -155,7 +205,7 @@ assert der[:1] == b'\x30', 'certificate DER malformed'
 open(out, 'wb').write(der)
 print('  cert DER %d B md5 %s' % (len(der), hashlib.md5(der).hexdigest()))
 PYCERT
-SIGNER_MD5="$("$BT/apksigner" verify --print-certs "$ORIG_APK" 2>/dev/null | sed -n 's/^Signer #1 certificate MD5 digest: //p' | head -1 | tr -d '\r')"
+SIGNER_MD5="$("$APKSIGNER_BIN" verify --print-certs "$ORIG_APK" 2>/dev/null | sed -n 's/^Signer #1 certificate MD5 digest: //p' | head -1 | tr -d '\r')"
 DER_MD5="$(md5 -q "$WORK/official.der" 2>/dev/null || md5sum "$WORK/official.der" | awk '{print $1}')"
 echo "  证书 DER md5=${DER_MD5}（apksigner 报 ${SIGNER_MD5:-无}）"
 [[ -z "$SIGNER_MD5" || "$DER_MD5" == "$SIGNER_MD5" ]] || { echo "ERROR: 证书 DER 与 apksigner 不一致 —— killer 喂错证书会静默不生效"; exit 1; }
@@ -166,7 +216,9 @@ mkdir -p "$SMALI_ROOT"
 shopt -s nullglob
 for d in "$WORK/starry_dec"/smali "$WORK/starry_dec"/smali_classes*; do
   [[ -d "$d/com/starry" ]] || continue
-  rsync -a "$d/com/starry" "$SMALI_ROOT/com/"
+  # [win-adapt] cp -a 合并语义（rsync 尾斜杠 = 内容并入 com/starry，不生成嵌套）
+  mkdir -p "$SMALI_ROOT/com/starry"
+  cp -a "$d/com/starry/." "$SMALI_ROOT/com/starry/"
 done
 shopt -u nullglob
 [[ -f "$SMALI_ROOT/com/starry/magic/StarryApp.smali" ]] \
@@ -182,19 +234,22 @@ shopt -u nullglob
 HOOKS_SRC="$STARRY_SRC/app/src/main/java/com/starry/magic/cocos/MwdlHooks.java"
 [[ -f "$HOOKS_SRC" ]] || { echo "ERROR: missing $HOOKS_SRC"; exit 1; }
 AJAR=""
+# [win-adapt] android.jar 同样双根探测（Windows 侧只有 android-35/36）
 for v in android-36 android-35 android-34 android-33; do
-  if [[ -f "$HOME/Library/Android/sdk/platforms/$v/android.jar" ]]; then
-    AJAR="$HOME/Library/Android/sdk/platforms/$v/android.jar"; break
-  fi
+  for _root in "$ANDROID_SDK" "$HOME/Library/Android/sdk"; do
+    if [[ -f "$_root/platforms/$v/android.jar" ]]; then
+      AJAR="$_root/platforms/$v/android.jar"; break 2
+    fi
+  done
 done
 [[ -n "$AJAR" ]] || { echo "ERROR: 找不到 android.jar（平台没装？）"; exit 1; }
 mkdir -p "$WORK/hooks_cls"
-"$JAVA_HOME/bin/javac" -source 8 -target 8 -nowarn -bootclasspath "$AJAR" \
+"$JAVA_HOME/bin/javac" -encoding UTF-8 -source 8 -target 8 -nowarn -bootclasspath "$AJAR" \
   -d "$WORK/hooks_cls" "$HOOKS_SRC" 2>&1 | grep -v "^warning:" || true
 [[ -f "$WORK/hooks_cls/com/starry/magic/cocos/MwdlHooks.class" ]] \
   || { echo "ERROR: MwdlHooks 编译失败"; exit 1; }
 mkdir -p "$WORK/hooks_dex"
-"$BT/d8" --min-api 24 --output "$WORK/hooks_dex" "$WORK/hooks_cls/com/starry/magic/cocos/MwdlHooks.class" \
+"$D8_BIN" --min-api 24 --output "$WORK/hooks_dex" "$WORK/hooks_cls/com/starry/magic/cocos/MwdlHooks.class" \
   || { echo "ERROR: d8 失败"; exit 1; }
 "$BAKSMALI_BIN" d -o "$WORK/hooks_smali" "$WORK/hooks_dex/classes.dex" \
   || { echo "ERROR: baksmali 失败"; exit 1; }
@@ -203,7 +258,7 @@ cp "$WORK/hooks_smali/com/starry/magic/cocos/MwdlHooks.smali" \
    "$SMALI_ROOT/com/starry/magic/cocos/MwdlHooks.smali"
 echo "  hooks 类编译注入: Lcom/starry/magic/cocos/MwdlHooks;（源码 ${HOOKS_SRC}，android.jar=${AJAR}）"
 # 防重复定义：整个 smali_in 里同名 .class 声明必须恰好 1 处
-python3.11 - "$SMALI_ROOT" <<'PYDUP'
+python3 - "$SMALI_ROOT" <<'PYDUP'
 import io, os, sys
 root = sys.argv[1]
 hits = []
@@ -219,9 +274,10 @@ assert len(hits) == 1, 'MwdlHooks 定义数 %d（期望 1）: %s' % (len(hits), 
 print('  定义唯一 ✓ %s' % os.path.relpath(hits[0], root))
 PYDUP
 # 签名轨：killer 并入同一个 classes5（包名/证书按本底包现改，不写死）
-rsync -a "$KILLER_SMALI/bin" "$SMALI_ROOT/"
+mkdir -p "$SMALI_ROOT/bin"
+cp -a "$KILLER_SMALI/bin/." "$SMALI_ROOT/bin/"
 [[ -f "$SMALI_ROOT/bin/mt/signature/KillerApplication193.smali" ]] || { echo "ERROR: killer smali copy failed"; exit 1; }
-python3.11 - "$SMALI_ROOT" "$WORK/official.der" "$PKG" <<'PYKILLER'
+python3 - "$SMALI_ROOT" "$WORK/official.der" "$PKG" <<'PYKILLER'
 import base64, io, os, re, sys
 root, der_path, pkg = sys.argv[1], sys.argv[2], sys.argv[3]
 b64 = base64.b64encode(open(der_path, 'rb').read()).decode()
@@ -269,7 +325,7 @@ fi
 echo "[3b/6] patch classes3: GameApplication.attachBaseContext → loadLibrary（只加载 so）"
 unzip -p "$ORIG_APK" classes3.dex > "$WORK/classes3_orig.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c3smali" "$WORK/classes3_orig.dex"
-python3.11 - "$WORK/c3smali" <<'PY'
+python3 - "$WORK/c3smali" <<'PY'
 from pathlib import Path
 import sys
 app = Path(sys.argv[1]) / "com/hortorgames/gamesdk/GameApplication.smali"
@@ -309,7 +365,7 @@ ls -la "$WORK/classes3.dex"
 echo "[3c/6] patch classes4: AppActivity + force TapTap WebLogin + get_ret"
 unzip -p "$ORIG_APK" classes4.dex > "$WORK/classes4_orig.dex"
 "$BAKSMALI_BIN" d -o "$WORK/c4smali" "$WORK/classes4_orig.dex"
-python3.11 - "$WORK/c4smali" <<'PY'
+python3 - "$WORK/c4smali" <<'PY'
 from pathlib import Path
 import re, sys
 root = Path(sys.argv[1])
@@ -478,7 +534,7 @@ elif [[ -f "$MF_CACHE" ]]; then
 else
   echo "  generate binary Manifest once (apktool d -s + b extract)"
   apktool d -f -s -o "$WORK/orig_dec" "$ORIG_APK" >/dev/null
-  python3.11 - "$WORK/orig_dec/AndroidManifest.xml" <<'PY'
+  python3 - "$WORK/orig_dec/AndroidManifest.xml" <<'PY'
 from pathlib import Path
 import sys
 p = Path(sys.argv[1])
@@ -538,7 +594,7 @@ PY
 fi
 ls -la "$WORK/AndroidManifest.xml"
 # 硬自检：AXML 字符串池是 UTF-16LE，直接按字节找工厂类名
-python3.11 - "$WORK/AndroidManifest.xml" <<'PYMF'
+python3 - "$WORK/AndroidManifest.xml" <<'PYMF'
 import sys
 b = open(sys.argv[1], 'rb').read()
 assert b[:4] == b'\x03\x00\x08\x00', 'manifest 不是二进制 AXML'
@@ -548,7 +604,7 @@ print('  AXML appComponentFactory ✓（%d B）' % len(b))
 PYMF
 
 echo "[5/6] zip surgical merge"
-python3.11 - "$ORIG_APK" "$WORK" "$WORK/unsigned.apk" <<'PY'
+python3 - "$ORIG_APK" "$WORK" "$WORK/unsigned.apk" <<'PY'
 import sys, zipfile, hashlib
 from pathlib import Path
 
@@ -628,19 +684,19 @@ PY
 echo "[6/6] zipalign + sign → $SIGNED"
 ALIGNED="$WORK/aligned.apk"
 if [[ -n "$BT" ]]; then
-  "$BT/zipalign" -f -p 4 "$WORK/unsigned.apk" "$ALIGNED"
+  "$ZIPALIGN_BIN" -f -p 4 "$WORK/unsigned.apk" "$ALIGNED"
 else
   cp "$WORK/unsigned.apk" "$ALIGNED"
 fi
 KS_ALIAS="${STARRY_KS_ALIAS:-starry}"
 KS_PASS="${STARRY_KS_PASS:-starry2026}"
 mkdir -p "$OUT"
-if [[ -f "$KS" && -n "$BT" && -x "$BT/apksigner" ]]; then
-  "$BT/apksigner" sign \
+if [[ -f "$KS" && -n "$BT" && -f "$APKSIGNER_BIN" ]]; then
+  "$APKSIGNER_BIN" sign \
     --ks "$KS" --ks-key-alias "$KS_ALIAS" \
     --ks-pass "pass:$KS_PASS" --key-pass "pass:$KS_PASS" \
     --out "$SIGNED" "$ALIGNED"
-  "$BT/apksigner" verify --print-certs "$SIGNED" 2>&1 | head -6 || true
+  "$APKSIGNER_BIN" verify --print-certs "$SIGNED" 2>&1 | head -6 || true
 else
   java -jar "$SIGNER" -a "$ALIGNED" --out "$OUT" --allowResign \
     --ks "$KS" --ksAlias "$KS_ALIAS" --ksPass "$KS_PASS" --ksKeyPass "$KS_PASS"

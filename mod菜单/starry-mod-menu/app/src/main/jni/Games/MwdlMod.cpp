@@ -49,6 +49,7 @@ static volatile bool g_inv = false;
 static volatile bool g_ultra = false;
 static volatile bool g_autoFight = false;
 static volatile bool g_pickAll = false;
+static volatile bool g_kill = false;
 static volatile float g_speedMul = 1.f;  // 1=关，>1 倍率
 static std::atomic<int> g_spliceHits{0};
 
@@ -145,6 +146,7 @@ static void SyncJavaRets() {
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 4, g_ultra ? JNI_TRUE : JNI_FALSE);
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 5, g_autoFight ? JNI_TRUE : JNI_FALSE);
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 6, g_pickAll ? JNI_TRUE : JNI_FALSE);
+        env->CallStaticVoidMethod(g_hooksCls, g_hooksSetRet, 7, g_kill ? JNI_TRUE : JNI_FALSE);
     }
     if (g_hooksCls && g_hooksSetVal) {
         env->CallStaticVoidMethod(g_hooksCls, g_hooksSetVal, 1, (jfloat)g_dmgRate);
@@ -164,18 +166,20 @@ static std::string SpliceCombatJs(const char* src) {
     static char kPickAllRepl[700];
     static bool once = false;
     if (!once) {
-        // get_val(1) 伤害倍率滑块 + get_ret(2) 无敌 — 16.0.0/98b49 尾锚 i.target.damage=P}
+        // 秒杀 get_ret(7)（直接 P*=99999999，绕过滑块上限）+ get_val(1) 伤害倍率 + get_ret(2) 无敌
+        // — 16.0.0/98b49 尾锚 i.target.damage=P}；无敌 P=0 在秒杀之后覆盖
         snprintf(
             kKhHook, sizeof(kKhHook),
             "/*starry_mwdl_kh*/var _su=i.sourceUnit;if(_su&&(_su.unitType===TI.Hero||"
             "_su.unitType===TI.Summon||_su.unitType===TI.Guardian||"
             "_su.unitType===TI.Player||_su.unitType===TI.ParasyteGuardian)){"
-            "var _dm=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",1);"
-            "_dm>1&&(P*=Math.min(_dm,1000))}"
+            "if(jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",7)){P*=99999999}"
+            "else{var _dm=jsb.reflection.callStaticMethod(\"%s\",\"get_val\",\"(I)F\",1);"
+            "_dm>1&&(P*=Math.min(_dm,1000))}}"
             "if(_su&&_su.unitType===TI.Monster&&"
             "jsb.reflection.callStaticMethod(\"%s\",\"get_ret\",\"(I)Z\",2)){P=0}"
             "i.target.damage=P}",
-            kAct, kAct);
+            kAct, kAct, kAct);
         // get_val(3)：移速倍率 — MoveSpeed getter（16.0.0/98b49 为 Pw.MOV_SPEED）
         snprintf(
             kSpdRepl, sizeof(kSpdRepl),
@@ -472,10 +476,11 @@ void Mwdl_OnFeatureChanged(int featNum, bool enabled) {
     if (featNum == MWDL_FEAT_ULTRA_SKILL) g_ultra = enabled;
     if (featNum == MWDL_FEAT_AUTO_FIGHT) g_autoFight = enabled;
     if (featNum == MWDL_FEAT_PICK_ALL) g_pickAll = enabled;
+    if (featNum == MWDL_FEAT_KILL) g_kill = enabled;
     SyncJavaRets();
-    LOGI("[Mwdl] feature #%d=%s inv=%d spd=%.1f uls=%d af=%d pickall=%d", featNum,
+    LOGI("[Mwdl] feature #%d=%s inv=%d spd=%.1f uls=%d af=%d pickall=%d kill=%d", featNum,
          enabled ? "ON" : "OFF", g_inv ? 1 : 0, (double)g_speedMul, g_ultra ? 1 : 0,
-         g_autoFight ? 1 : 0, g_pickAll ? 1 : 0);
+         g_autoFight ? 1 : 0, g_pickAll ? 1 : 0, g_kill ? 1 : 0);
 }
 
 void Mwdl_OnValueChanged(int featNum, int value) {
@@ -494,7 +499,7 @@ void Mwdl_OnValueChanged(int featNum, int value) {
 
 void Mwdl_ForceClear() {
     g_inv = g_ultra = false;
-    g_autoFight = g_pickAll = false;
+    g_autoFight = g_pickAll = g_kill = false;
     g_dmgRate = 1.f;
     g_speedMul = 1.f;
     bool detach = false;
@@ -512,6 +517,7 @@ void Mwdl_Tick(const bool* features) {
     g_ultra = features[MWDL_FEAT_ULTRA_SKILL];
     g_autoFight = features[MWDL_FEAT_AUTO_FIGHT];
     g_pickAll = features[MWDL_FEAT_PICK_ALL];
+    g_kill = features[MWDL_FEAT_KILL];
     if (!g_ready) return;
     if (!g_evalHooked) TryHookEvalString();
     SyncJavaRets();

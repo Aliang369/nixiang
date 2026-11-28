@@ -14,6 +14,7 @@ enum MwdlFeat : int {
     MWDL_FEAT_ULTRA_SKILL = 4,  // 无限技能 Toggle
     MWDL_FEAT_AUTO_FIGHT  = 5,  // 自动挂机 Toggle（开游戏自带 autoPlay）
     MWDL_FEAT_PICK_ALL    = 6,  // 全图拾取 Toggle（借「有宠物=全图拾取」分支）
+    MWDL_FEAT_KILL        = 7,  // 秒杀 Toggle（伤害倍率直接用 99999999，绕过滑块）
 };
 
 bool Mwdl_TryInit(JavaVM* jvm);
