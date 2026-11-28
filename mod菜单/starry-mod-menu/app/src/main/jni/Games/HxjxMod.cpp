@@ -33,6 +33,9 @@
 #include <string.h>      // memmem
 #include <sys/mman.h>    // mprotect
 #include <unistd.h>      // usleep
+#include <dlfcn.h>       // dlopen/dlsym/dladdr（il2cpp API 解析）
+#include <time.h>        // clock_gettime
+#include "Dobby/dobby.h" // 抓点补全：解释器入口 + 2 处 AOT hook
 
 #include "Includes/Logger.h"
 #include "Includes/Utils.hpp"
@@ -534,6 +537,268 @@ static int RevertAll(int* verifiedOut) {
 }
 
 // ============================================================================
+//  ③b 抓点补全：无敌四点 —— 解释器入口（① ②）+ AOT 表现层（③ ④）
+//
+//  抓点依据（斌哥包 §5/§6/§7，语义逐条对应，不增不减）：
+//    ① AttackSystemLogic.EnemyAttackHit    实参块 +8（attack）= 0
+//    ② UnitUpdate.AttribChange*（≥3 参）   实参块 +0x10 为负 → 0
+//    ③ HealthViewComponent.get_ratio       hp := maxHp 后再走原逻辑（血条恒满）
+//    ④ HUDBloodSystem.Execute              对已登记玩家血量巡检回填（防回退）
+//  配套（抓点第 2 组）：HealthComponent.Create 在 CreatePlayer 窗口内、
+//    healthUnit==0 时登记玩家血量指针（+0=currentHealth，+8=maxHealth）。
+//
+//  入口说明：斌哥的「扫 opcode 找解释器入口 + 8 字节前缀 strcmp」在本包必然失效
+//  （文档 §11：扫到栈帧簿记函数 / 前缀必不等 / AOT 全 RVA 非 0）。这里保留抓点语义，
+//  入口改用**解释器真实派发函数**（0x3E30454，逐方法 stub 都汇入它），过滤用
+//  MethodInfo 的完整类指针 + 方法名，不做前缀猜测。
+// ============================================================================
+
+typedef void*       (*FnDomainGet)();
+typedef void**      (*FnDomainGetAssemblies)(void*, size_t*);
+typedef void*       (*FnAssemblyGetImage)(void*);
+typedef const char* (*FnImageGetName)(void*);
+typedef void*       (*FnClassFromName)(void*, const char*, const char*);
+typedef uint32_t    (*FnMethodParamCount)(void*);
+typedef void*       (*FnThreadAttach)(void*);
+typedef int         (*FnIsVmThread)();
+
+typedef void  (*FnInterpExec)(void* method, void* args, void* ret);
+typedef float (*FnGetRatio)(void* self);
+struct HxjxJobHandle { uint64_t a; uint64_t b; };
+typedef HxjxJobHandle (*FnHudExec)(void* self, uint64_t a, uint64_t b);
+
+// 版本内固定 RVA（1.0.212；与 AOT 两处抓点 RVA 同属「每版重标」项，装前逐条校验首指令）
+static constexpr uintptr_t kRvaInterpExec = 0x3E30454;   // HybridCLR 解释器派发入口
+static constexpr uintptr_t kRvaGetRatio   = 0x6C9FE10;   // HealthViewComponent.get_ratio
+static constexpr uintptr_t kRvaHudExec    = 0x6CA8900;   // HUDBloodSystem.Execute
+// 首指令指纹：不符即视为版本不符，拒绝 hook（不盲挂）
+static constexpr uint32_t kInsInterpExec = 0xa9ba7bfd;   // stp x29,x30,[sp,#-0x60]!
+static constexpr uint32_t kInsGetRatio   = 0xf9400408;   // ldr x8,[x0,#0x8]
+static constexpr uint32_t kInsHudExec    = 0xd10103ff;   // sub sp,sp,#0x40
+
+// MethodInfo / Il2CppClass 字段偏移（IL2CPP v31 实测）
+static constexpr size_t kMiNameOff    = 0x18;
+static constexpr size_t kMiKlassOff   = 0x20;
+static constexpr size_t kKlassNameOff = 0x10;
+
+static FnInterpExec       g_origInterpExec = nullptr;
+static FnGetRatio         g_origGetRatio   = nullptr;
+static FnHudExec          g_origHudExec    = nullptr;
+static FnMethodParamCount g_methodParamCnt = nullptr;
+
+static void* g_klassAttack       = nullptr;   // FECS.Game.AttackSystemLogic
+static void* g_klassHealth       = nullptr;   // FECS.Game.HealthComponent
+static void* g_klassUnitUpdate   = nullptr;   // HotFix.Game.UnitUpdate
+static void* g_klassPlayerSystem = nullptr;   // FECS.Game.PlayerSystemLogic
+
+static std::atomic<uint64_t> g_statAtkZero{0};   // ① 命中次数
+static std::atomic<uint64_t> g_statAttrClamp{0}; // ② 命中次数
+static std::atomic<uint64_t> g_statReg{0};       // 血量登记次数
+static std::atomic<uint64_t> g_statRatioFix{0};  // ③ 命中次数
+static std::atomic<uint64_t> g_statHudFix{0};    // ④ 回填次数
+
+// 玩家血量组件指针表（Create 时登记；CreatePlayer 时清空重登）
+static constexpr int kMaxPlayerHp = 8;
+static std::atomic<uintptr_t> g_playerHp[kMaxPlayerHp];
+static std::atomic<int> g_playerHpCount{0};
+
+static void ClearPlayerHp() {
+    for (int i = 0; i < kMaxPlayerHp; ++i) g_playerHp[i].store(0);
+    g_playerHpCount.store(0);
+}
+
+static void RegisterPlayerHp(void* ptr) {
+    const uintptr_t v = reinterpret_cast<uintptr_t>(ptr);
+    if (!v || (v & 7)) return;
+    const int n = g_playerHpCount.load(std::memory_order_relaxed);
+    for (int i = 0; i < n; ++i) {
+        if (g_playerHp[i].load(std::memory_order_relaxed) == v) return;
+    }
+    if (n < kMaxPlayerHp) {
+        g_playerHp[n].store(v);
+        g_playerHpCount.store(n + 1);
+        g_statReg.fetch_add(1, std::memory_order_relaxed);
+    }
+}
+
+// CreatePlayer 窗口：该窗口内发生的 HealthComponent.Create(unit==0) 视为玩家血量。
+static thread_local uint64_t t_execSeq  = 0;
+static thread_local uint64_t t_ctxUntil = 0;
+
+static void HookInterpExec(void* method, void* args, void* ret) {
+    if (g_inv.load(std::memory_order_relaxed) && method && args) {
+        void* klass = *reinterpret_cast<void**>(reinterpret_cast<char*>(method) + kMiKlassOff);
+        const char* name = *reinterpret_cast<const char**>(reinterpret_cast<char*>(method) + kMiNameOff);
+        if (klass && name) {
+            ++t_execSeq;
+            if (klass == g_klassPlayerSystem && std::strncmp(name, "CreatePl", 8) == 0) {
+                ClearPlayerHp();                     // 新一局/新角色：旧指针作废
+                t_ctxUntil = t_execSeq + 40000;      // 覆盖 CreatePlayer 内部调用深度
+            } else if (klass == g_klassAttack && std::strcmp(name, "EnemyAttackHit") == 0) {
+                // ① 伤害实参清零（抓点 +8=arg1）
+                *reinterpret_cast<int*>(reinterpret_cast<char*>(args) + 8) = 0;
+                g_statAtkZero.fetch_add(1, std::memory_order_relaxed);
+            } else if (klass == g_klassHealth && std::strcmp(name, "Create") == 0) {
+                // 第 2 组：登记玩家血量（+0 = this<HealthComponent*>，+0x10 = healthUnit）
+                if (t_execSeq <= t_ctxUntil) {
+                    const int unit = *reinterpret_cast<int*>(reinterpret_cast<char*>(args) + 0x10);
+                    if (unit == 0) RegisterPlayerHp(*reinterpret_cast<void**>(args));
+                }
+            } else if (klass == g_klassUnitUpdate && std::strncmp(name, "AttribCh", 8) == 0) {
+                // ② 负属性变更归零（仅当该方法确有第 2 个数值参数）
+                if (g_methodParamCnt && g_methodParamCnt(method) >= 3) {
+                    int* v = reinterpret_cast<int*>(reinterpret_cast<char*>(args) + 0x10);
+                    if (*v < 0) {
+                        *v = 0;
+                        g_statAttrClamp.fetch_add(1, std::memory_order_relaxed);
+                    }
+                }
+            }
+        }
+    }
+    if (g_origInterpExec) g_origInterpExec(method, args, ret);
+}
+
+// ③ 血条恒满：把视图组件的 currentHealth 写成 maxHealth 后再走原 getter
+static float HookGetRatio(void* self) {
+    if (g_inv.load(std::memory_order_relaxed) && self) {
+        const int64_t maxHp = *reinterpret_cast<int64_t*>(reinterpret_cast<char*>(self) + 8);
+        if (maxHp > 0 && maxHp < static_cast<int64_t>(1e15)) {
+            *reinterpret_cast<int64_t*>(self) = maxHp;
+            g_statRatioFix.fetch_add(1, std::memory_order_relaxed);
+        }
+    }
+    return g_origGetRatio ? g_origGetRatio(self) : 0.0f;
+}
+
+// ④ 已登记玩家血量巡检回填（每帧一次；只在「活着且未满」时回填，不复活）
+static HxjxJobHandle HookHudExec(void* self, uint64_t a, uint64_t b) {
+    if (g_inv.load(std::memory_order_relaxed)) {
+        const int n = g_playerHpCount.load(std::memory_order_relaxed);
+        for (int i = 0; i < n; ++i) {
+            const uintptr_t p = g_playerHp[i].load(std::memory_order_relaxed);
+            if (!p) continue;
+            volatile int64_t* cur = reinterpret_cast<volatile int64_t*>(p);
+            volatile int64_t* max = reinterpret_cast<volatile int64_t*>(p + 8);
+            const int64_t maxHp = *max;
+            const int64_t curHp = *cur;
+            if (maxHp > 0 && maxHp < static_cast<int64_t>(1e15) && curHp > 0 && curHp < maxHp) {
+                *cur = maxHp;
+                g_statHudFix.fetch_add(1, std::memory_order_relaxed);
+            }
+        }
+    }
+    return g_origHudExec ? g_origHudExec(self, a, b) : HxjxJobHandle{0, 0};
+}
+
+// ---- 一次性安装（HotFix 载入后；失败 1s 后重试，绝不阻塞 Tick） ----
+static std::atomic<bool>  g_hooksDone{false};
+static std::atomic<bool>  g_hookBusy{false};
+static std::atomic<int64_t> g_nextHookTryMs{0};
+
+static int64_t NowMsMonotonic() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return static_cast<int64_t>(ts.tv_sec) * 1000 + ts.tv_nsec / 1000000;
+}
+
+static bool TryInstallIl2CppHooks() {
+    void* h = dlopen("libil2cpp.so", RTLD_NOW);
+    if (!h) return false;
+
+    auto sym = [h](const char* n) -> void* { return dlsym(h, n); };
+    FnDomainGet            domainGet   = reinterpret_cast<FnDomainGet>(sym("il2cpp_domain_get"));
+    FnDomainGetAssemblies  getAssems   = reinterpret_cast<FnDomainGetAssemblies>(sym("il2cpp_domain_get_assemblies"));
+    FnAssemblyGetImage     asmImage    = reinterpret_cast<FnAssemblyGetImage>(sym("il2cpp_assembly_get_image"));
+    FnImageGetName         imgName     = reinterpret_cast<FnImageGetName>(sym("il2cpp_image_get_name"));
+    FnClassFromName        classFrom  = reinterpret_cast<FnClassFromName>(sym("il2cpp_class_from_name"));
+    FnThreadAttach         threadAtt  = reinterpret_cast<FnThreadAttach>(sym("il2cpp_thread_attach"));
+    FnIsVmThread           isVmThread  = reinterpret_cast<FnIsVmThread>(sym("il2cpp_is_vm_thread"));
+
+    if (!domainGet || !getAssems || !asmImage || !imgName || !classFrom) return false;
+
+    Dl_info di;
+    std::memset(&di, 0, sizeof(di));
+    if (!dladdr(reinterpret_cast<void*>(domainGet), &di) || !di.dli_fbase) return false;
+    const uintptr_t base = reinterpret_cast<uintptr_t>(di.dli_fbase);
+
+    void* domain = domainGet();
+    if (!domain) return false;
+    if (isVmThread && threadAtt && !isVmThread()) threadAtt(domain);
+
+    size_t n = 0;
+    void** asms = getAssems(domain, &n);
+    void* img = nullptr;
+    for (size_t i = 0; asms && i < n; ++i) {
+        void* im = asmImage(asms[i]);
+        const char* nm = im ? imgName(im) : nullptr;
+        if (nm && std::strcmp(nm, "HotFix.dll") == 0) { img = im; break; }
+    }
+    if (!img) return false;   // 热更还没载入：下轮再来
+
+    g_klassAttack       = classFrom(img, "FECS.Game", "AttackSystemLogic");
+    g_klassHealth       = classFrom(img, "FECS.Game", "HealthComponent");
+    g_klassUnitUpdate   = classFrom(img, "HotFix.Game", "UnitUpdate");
+    g_klassPlayerSystem = classFrom(img, "FECS.Game", "PlayerSystemLogic");
+    g_methodParamCnt    = reinterpret_cast<FnMethodParamCount>(sym("il2cpp_method_get_param_count"));
+    if (!g_klassAttack || !g_klassHealth || !g_klassUnitUpdate || !g_klassPlayerSystem) {
+        LOGW(HXJX_DLL_LOG " hook klass missing (Attack=%p Health=%p UnitUpdate=%p PlayerSys=%p) -> retry",
+             g_klassAttack, g_klassHealth, g_klassUnitUpdate, g_klassPlayerSystem);
+        return false;
+    }
+
+    // ① ② 解释器入口：先校验首指令，版本不符不挂
+    void* pExec = reinterpret_cast<void*>(base + kRvaInterpExec);
+    if (*reinterpret_cast<uint32_t*>(pExec) != kInsInterpExec) {
+        LOGE(HXJX_DLL_LOG " interp entry mismatch: %08x (expect %08x) -> abort hook",
+             *reinterpret_cast<uint32_t*>(pExec), kInsInterpExec);
+        return false;
+    }
+    if (DobbyHook(pExec, reinterpret_cast<void*>(&HookInterpExec),
+                  reinterpret_cast<void**>(&g_origInterpExec)) != 0) {
+        LOGE(HXJX_DLL_LOG " DobbyHook interp failed");
+        return false;
+    }
+
+    // ③ get_ratio
+    void* pRatio = reinterpret_cast<void*>(base + kRvaGetRatio);
+    if (*reinterpret_cast<uint32_t*>(pRatio) == kInsGetRatio) {
+        if (DobbyHook(pRatio, reinterpret_cast<void*>(&HookGetRatio),
+                      reinterpret_cast<void**>(&g_origGetRatio)) != 0) {
+            LOGW(HXJX_DLL_LOG " DobbyHook get_ratio failed");
+        }
+    } else {
+        LOGW(HXJX_DLL_LOG " get_ratio mismatch: %08x", *reinterpret_cast<uint32_t*>(pRatio));
+    }
+
+    // ④ HUDBloodSystem.Execute
+    void* pHud = reinterpret_cast<void*>(base + kRvaHudExec);
+    if (*reinterpret_cast<uint32_t*>(pHud) == kInsHudExec) {
+        if (DobbyHook(pHud, reinterpret_cast<void*>(&HookHudExec),
+                      reinterpret_cast<void**>(&g_origHudExec)) != 0) {
+            LOGW(HXJX_DLL_LOG " DobbyHook hud_exec failed");
+        }
+    } else {
+        LOGW(HXJX_DLL_LOG " hud_exec mismatch: %08x", *reinterpret_cast<uint32_t*>(pHud));
+    }
+
+    LOGI(HXJX_DLL_LOG " hooks installed base=%p exec=%p ratio=%p hud=%p", reinterpret_cast<void*>(base), pExec, pRatio, pHud);
+    return true;
+}
+
+static void EnsureIl2CppHooks() {
+    if (g_hooksDone.load(std::memory_order_relaxed) || g_hookBusy.load(std::memory_order_relaxed)) return;
+    const int64_t now = NowMsMonotonic();
+    if (now < g_nextHookTryMs.load(std::memory_order_relaxed)) return;
+    bool expect = false;
+    if (!g_hookBusy.compare_exchange_strong(expect, true)) return;
+    const bool ok = TryInstallIl2CppHooks();
+    g_hookBusy.store(false);
+    if (ok) g_hooksDone.store(true);
+    else    g_nextHookTryMs.store(now + 1000);
+}
+
+// ============================================================================
 //  ④ 后台补丁线程（懒起 / 常驻；线程内不调任何 il2cpp API ⇒ 不取引擎锁）
 //  库未映射 ⇒ 100ms 快轮询；开关 ON ⇒ 扫 rw 段 + PE 校验后写入（上升沿立即扫）；
 //  开关 OFF ⇒ 有记录就回填；打齐后 5s 一轮补漏，久未命中降到 1.5s 省电。
@@ -689,10 +954,29 @@ void Hxjx_Tick(const bool* features, const int* /*values*/) {
         EnsurePatchThread();
     }
 
+    // 抓点补全：热更载入后装一次解释器/AOT hook（失败 1s 重试；成功即原子置位）
+    EnsureIl2CppHooks();
+
+    // 判读锚点：四点各自命中计数（5s 一行，便于真机确认「哪点在跑」）
+    static int64_t s_nextStatLog = 0;
+    const int64_t nowMs = NowMsMonotonic();
+    if (g_hooksDone.load(std::memory_order_relaxed) && nowMs >= s_nextStatLog) {
+        s_nextStatLog = nowMs + 5000;
+        LOGI(HXJX_DLL_LOG " pts inv=%d atk0=%llu attr=%llu reg=%d/%llu ratio=%llu hud=%llu",
+             g_inv.load() ? 1 : 0,
+             (unsigned long long)g_statAtkZero.load(),
+             (unsigned long long)g_statAttrClamp.load(),
+             g_playerHpCount.load(),
+             (unsigned long long)g_statReg.load(),
+             (unsigned long long)g_statRatioFix.load(),
+             (unsigned long long)g_statHudFix.load());
+    }
+
     // ★ 禁止在此 SafeProbe / 扫堆 / 遍历对象（Tick 频率高，扫描全部在后台线程里做）
 }
 
 void Hxjx_ForceClear() {
     g_inv.store(false);
     LogInvIfChanged(false);
+    ClearPlayerHp();
 }

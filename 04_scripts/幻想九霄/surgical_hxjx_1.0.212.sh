@@ -45,7 +45,7 @@ SO_SRC="$STARRY_SRC/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so"
 
 ORIG_SHA_PREFIX="ff774c6e"
 ORIG_SIZE=301199144
-SO_SHA_PREFIX="ee491b7b"   # 2026-11-28 清空实验代码回归基线：只留 IL 字节补丁 A(0x48995)+Ap(0x1971A0)，AOT/interp/pulse 全删
+SO_SHA_PREFIX="633480af"   # 2026-11-28 抓点补全：解释器入口①+AttribCh②+get_ratio③+HUD巡检④（菜单仍 1 项：无敌）
 
 OUT="$NIXIANG/08_output/幻想九霄"
 SIGNED="$OUT/幻想九霄_1.0.212_surgical-releaseSigned.apk"
