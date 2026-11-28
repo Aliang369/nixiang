@@ -45,7 +45,7 @@ SO_SRC="$STARRY_SRC/app/src/main/jniLibs/arm64-v8a/libstarry_magic.so"
 
 ORIG_SHA_PREFIX="ff774c6e"
 ORIG_SIZE=301199144
-SO_SHA_PREFIX="633480af"   # 2026-11-28 抓点补全：解释器入口①+AttribCh②+get_ratio③+HUD巡检④（菜单仍 1 项：无敌）
+SO_SHA_PREFIX="8d158883"   # 2026-11-29 抓点四点 + ③仅玩家 maxHealth（修 BOSS 血条恒 100%）
 
 OUT="$NIXIANG/08_output/幻想九霄"
 SIGNED="$OUT/幻想九霄_1.0.212_surgical-releaseSigned.apk"

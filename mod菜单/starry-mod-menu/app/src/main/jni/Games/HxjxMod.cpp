@@ -600,10 +600,14 @@ static std::atomic<uint64_t> g_statHudFix{0};    // ④ 回填次数
 // 玩家血量组件指针表（Create 时登记；CreatePlayer 时清空重登）
 static constexpr int kMaxPlayerHp = 8;
 static std::atomic<uintptr_t> g_playerHp[kMaxPlayerHp];
+static std::atomic<int64_t>   g_playerMaxHp[kMaxPlayerHp];   // ③ 只认玩家：登记时的 maxHealth 快照
 static std::atomic<int> g_playerHpCount{0};
 
 static void ClearPlayerHp() {
-    for (int i = 0; i < kMaxPlayerHp; ++i) g_playerHp[i].store(0);
+    for (int i = 0; i < kMaxPlayerHp; ++i) {
+        g_playerHp[i].store(0);
+        g_playerMaxHp[i].store(0);
+    }
     g_playerHpCount.store(0);
 }
 
@@ -663,9 +667,16 @@ static void HookInterpExec(void* method, void* args, void* ret) {
 static float HookGetRatio(void* self) {
     if (g_inv.load(std::memory_order_relaxed) && self) {
         const int64_t maxHp = *reinterpret_cast<int64_t*>(reinterpret_cast<char*>(self) + 8);
+        // 只认已登记玩家的 maxHealth：敌方（BOSS/小怪）原样返回，避免敌方血条被钉在 100%
         if (maxHp > 0 && maxHp < static_cast<int64_t>(1e15)) {
-            *reinterpret_cast<int64_t*>(self) = maxHp;
-            g_statRatioFix.fetch_add(1, std::memory_order_relaxed);
+            const int n = g_playerHpCount.load(std::memory_order_relaxed);
+            for (int i = 0; i < n; ++i) {
+                if (g_playerMaxHp[i].load(std::memory_order_relaxed) == maxHp) {
+                    *reinterpret_cast<int64_t*>(self) = maxHp;
+                    g_statRatioFix.fetch_add(1, std::memory_order_relaxed);
+                    break;
+                }
+            }
         }
     }
     return g_origGetRatio ? g_origGetRatio(self) : 0.0f;
@@ -682,9 +693,12 @@ static HxjxJobHandle HookHudExec(void* self, uint64_t a, uint64_t b) {
             volatile int64_t* max = reinterpret_cast<volatile int64_t*>(p + 8);
             const int64_t maxHp = *max;
             const int64_t curHp = *cur;
-            if (maxHp > 0 && maxHp < static_cast<int64_t>(1e15) && curHp > 0 && curHp < maxHp) {
-                *cur = maxHp;
-                g_statHudFix.fetch_add(1, std::memory_order_relaxed);
+            if (maxHp > 0 && maxHp < static_cast<int64_t>(1e15)) {
+                g_playerMaxHp[i].store(maxHp, std::memory_order_relaxed);   // ③ 的敌我过滤依据
+                if (curHp > 0 && curHp < maxHp) {
+                    *cur = maxHp;
+                    g_statHudFix.fetch_add(1, std::memory_order_relaxed);
+                }
             }
         }
     }
