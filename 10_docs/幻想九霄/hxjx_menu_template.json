@@ -1,0 +1,9 @@
+{
+  "template_id": "hxjx",
+  "name": "幻想九霄",
+  "package": "com.hundunjidian.hxjx",
+  "source": "Games/HxjxEntry.cpp kHxjx_Features",
+  "features": [
+    {"feat_num": 1, "name": "无敌"}
+  ]
+}
