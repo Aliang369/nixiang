@@ -102,6 +102,7 @@ cat <<EOF
     APP_ABI="arm64-v8a x86_64" \\
     NDK_OUT=${STARRY_SRC}/obj_${LOWERTAG} NDK_LIBS_OUT=${STARRY_SRC}/libs_${LOWERTAG}
   （NDK_OUT/LIBS_OUT 必须绝对路径：相对路径会被 -C 解析到 app/ 下 → 旧 so 顶包假成功）
+  换游戏或收尾前清旧产物：bash scripts/clean_build_artifacts.sh --apply（默认 dry-run）
 
 然后填 ${GAME}Mod.cpp 的 TODO 区:
   ① 开关/orig  ② 偏移与 RVA  ⑤ hook 函数与挂点表  ⑥ 功能组

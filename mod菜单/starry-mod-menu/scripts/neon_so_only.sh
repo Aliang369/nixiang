@@ -68,8 +68,8 @@ echo "[1/4] ndk-build (Android_neon.mk)"
 MK="$JNI_DIR/Android_neon.mk"
 [[ -f "$MK" ]] || { echo "ERROR: 缺少 $MK" >&2; exit 1; }
 grep -q 'Games/NeonMod.cpp' "$MK" || { echo "ERROR: Android_neon.mk 未编译 Games/NeonMod.cpp" >&2; exit 1; }
-OBJ_OUT="$STARRY_SRC/src/obj_neon"
-LIBS_OUT="$STARRY_SRC/src/libs_neon"
+OBJ_OUT="$STARRY_SRC/obj_neon"
+LIBS_OUT="$STARRY_SRC/libs_neon"
 rm -rf "$OBJ_OUT" "$LIBS_OUT"
 (cd "$JNI_DIR" && \
   "$NDK/ndk-build" NDK_PROJECT_PATH="$JNI_DIR/../.." APP_BUILD_SCRIPT=./Android_neon.mk \
